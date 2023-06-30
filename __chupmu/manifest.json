@@ -21,9 +21,9 @@
     }
   },
   "commands": {
-    "toggle-feature": {
+    "toggle-chupmu": {
       "suggested_key": { "default": "Ctrl+Shift+U" },
-      "description": "Send a 'toggle-feature' event to the extension"
+      "description": "Send a 'toggle-chupmu' event to the extension"
     }
   },
   "background": {

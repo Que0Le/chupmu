@@ -25,6 +25,16 @@ function onError(error) {
     console.log(`Error: ${error}`);
 }
 
+function createTooltipHtml(tootipId, record) {
+    let str = `
+<span class="tooltiptext" id="${tootipId}">
+    <p>Tags: ${record["tags"]}</p>
+    <p>View full record: <a href="${record["recordUrl"]}">chup-mu.org</a></p>
+</span>
+`
+    return str;
+}
+
 function handleChupMu(dbStorage) {
     let all_acticles = document.getElementsByClassName("message message--post js-post");
     for (let i = 0; i < all_acticles.length; i++) {
@@ -47,10 +57,11 @@ function handleChupMu(dbStorage) {
 
         /* add tool tip */
         message_cell_user.classList.add("tooltip");
-        let tootip_id = `chupmu-tooltip-text-uid-${userid}`;
-        message_cell_user.innerHTML += `<span class="tooltiptext" id="${tootip_id}">Tags: ${record["tags"]}</span>`;
-        let tooltip = document.getElementById(tootip_id);
-        if (!tooltip) console.log(`Failed adding tooltip id: ${tootip_id}`);
+        let tootipId = `chupmu-tooltip-text-uid-${userid}`;
+        let tooltipHtml = createTooltipHtml(tootipId, record)
+        message_cell_user.innerHTML += tooltipHtml;
+        let tooltip = document.getElementById(tootipId);
+        if (!tooltip) console.log(`Failed adding tooltip id: ${tootipId}`);
     };
 }
 
@@ -58,10 +69,10 @@ browser.runtime.onMessage.addListener((request) => {
     console.log("Message from the background script:");
     console.log(request.greeting);
     console.log("ting tong");
-    
+
     const gettingDbStorage = browser.storage.local.get();
     gettingDbStorage.then(handleChupMu, onError);
-    
+
     // TODO: send msg back to background script to store state
     return Promise.resolve({ response: "Hi from content script" });
 });

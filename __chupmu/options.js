@@ -1,4 +1,4 @@
-const commandName = 'toggle-feature';
+const commandName = 'toggle-chupmu';
 
 /**
  * Update the UI: set the value of the shortcut textbox.

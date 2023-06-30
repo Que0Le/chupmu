@@ -24,36 +24,8 @@ let TOOLTIP_CSS = `
   visibility: visible;
 }
 `
-
-
-/**
- * Returns all of the registered extension commands for this extension
- * and their shortcut (if active).
- *
- * Since there is only one registered command in this sample extension,
- * the returned `commandsArray` will look like the following:
- *    [{
- *       name: "toggle-feature",
- *       description: "Send a 'toggle-feature' event to the extension"
- *       shortcut: "Ctrl+Shift+U"
- *    }]
- */
-let gettingAllCommands = browser.commands.getAll();
-gettingAllCommands.then((commands) => {
-  for (let command of commands) {
-    // Note that this logs to the Add-on Debugger's console: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Debugging
-    // not the regular Web console.
-    console.log(command);
-  }
-});
-
-
 var urlRegex = /^https:\/\/voz\.vn\/t\//;
 
-// A function to use as callback
-function doStuffWithDom(domContent) {
-    console.log('I received the following DOM content:\n' + domContent);
-}
 function onError(error) {
   console.error(`Error: ${error}`);
 }
@@ -76,9 +48,6 @@ fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/voz_id_db.j
         console.log(data);
         browser.storage.local.set(data);
     });
-// browser.storage.local.set({
-//   test_from_background: { name: "1", eats: "2" },
-// });
 
 /**
  * Fired when a registered command is activated using a keyboard shortcut.
@@ -102,6 +71,28 @@ browser.commands.onCommand.addListener((command) => {
     .then(sendMessageToTabs)
     .catch(onError);
 });
-//   browser.tabs.sendMessage(tab.id, {text: 'report_back'}, doStuffWithDom);
-//   // browser.tabs.create({ url: "https://developer.mozilla.org" });
+
+
+
+
+
+/**
+ * Returns all of the registered extension commands for this extension
+ * and their shortcut (if active).
+ *
+ * Since there is only one registered command in this sample extension,
+ * the returned `commandsArray` will look like the following:
+ *    [{
+ *       name: "toggle-feature",
+ *       description: "Send a 'toggle-feature' event to the extension"
+ *       shortcut: "Ctrl+Shift+U"
+ *    }]
+ */
+// let gettingAllCommands = browser.commands.getAll();
+// gettingAllCommands.then((commands) => {
+//   for (let command of commands) {
+//     // Note that this logs to the Add-on Debugger's console: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Debugging
+//     // not the regular Web console.
+//     console.log(command);
+//   }
 // });
