@@ -70,7 +70,15 @@ function sendMessageToTabs(tabs) {
   }
 }
 
-// TOOLTIP_CSS = `body { border: 20px solid red; }`;
+fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/voz_id_db.json")
+    .then((response) => response.json())
+    .then((data) => {
+        console.log(data);
+        browser.storage.local.set(data);
+    });
+// browser.storage.local.set({
+//   test_from_background: { name: "1", eats: "2" },
+// });
 
 /**
  * Fired when a registered command is activated using a keyboard shortcut.
