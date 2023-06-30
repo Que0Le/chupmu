@@ -1,3 +1,31 @@
+// https://www.w3schools.com/css/css_tooltip.asp
+let TOOLTIP_CSS = `
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+`
+
+
 /**
  * Returns all of the registered extension commands for this extension
  * and their shortcut (if active).
@@ -41,6 +69,9 @@ function sendMessageToTabs(tabs) {
       .catch(onError);
   }
 }
+
+// TOOLTIP_CSS = `body { border: 20px solid red; }`;
+
 /**
  * Fired when a registered command is activated using a keyboard shortcut.
  *
@@ -49,7 +80,12 @@ function sendMessageToTabs(tabs) {
  */
 browser.commands.onCommand.addListener((command) => {
   console.log("Keys pressed ...");
-  // if (urlRegex.test(tab.url))
+  // if (urlRegex.test(tab.url))]
+
+  // See apply-css/background.js for how to add/remove css
+  let insertingCSS = browser.tabs.insertCSS({code: TOOLTIP_CSS});
+  insertingCSS.then(null, onError);
+
   browser.tabs
     .query({
       currentWindow: true,

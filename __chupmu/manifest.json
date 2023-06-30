@@ -9,8 +9,10 @@
     "default_icon": "icons/page-32.png"
   },
 
-  "permissions": ["activeTab"],
-
+  "permissions": [
+    "activeTab",
+    "tabs"
+  ],
   "browser_specific_settings": {
     "gecko": {
       "id": "chupmu@chupmu_111222333.org",
@@ -29,8 +31,7 @@
   "content_scripts": [
     {
       "matches": ["https://voz.vn/t/*"],
-      "js": ["content-script.js"],
-      "css": ["all.css"]
+      "js": ["content-script.js"]
     }
   ],
   "options_ui": {

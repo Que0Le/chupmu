@@ -1,4 +1,7 @@
-/* styling of the tooltip display */
+
+// https://stackdiary.com/hover-tooltip-javascript/
+let TOOLTIP_CSS = `
+///* styling of the tooltip display */
 p#tooltip-text {
     display: none;
     position: absolute;
@@ -24,10 +27,13 @@ p#tooltip-text:before {
 }
 
 @keyframes fadeIn {
- from {
-   opacity: 0;
- }
- to {
-   opacity: 1;
- }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
+`
+
+export {TOOLTIP_CSS}
