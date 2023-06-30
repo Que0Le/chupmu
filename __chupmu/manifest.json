@@ -1,0 +1,40 @@
+{
+  "manifest_version": 2,
+  "description": "Chup mu nguoi dung. Press Ctrl+Shift+U to send an event (Command+Shift+U on a Mac).",
+  "name": "chupmu",
+  "version": "0.1",
+  "homepage_url": "https://github.com/",
+
+  "browser_action": {
+    "default_icon": "icons/page-32.png"
+  },
+
+  "permissions": ["activeTab"],
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "chupmu@chupmu_111222333.org",
+      "strict_min_version": "60.0b5"
+    }
+  },
+  "commands": {
+    "toggle-feature": {
+      "suggested_key": { "default": "Ctrl+Shift+U" },
+      "description": "Send a 'toggle-feature' event to the extension"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://voz.vn/t/*"],
+      "js": ["content-script.js"],
+      "css": ["all.css"]
+    }
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "browser_style": true
+  }
+}
