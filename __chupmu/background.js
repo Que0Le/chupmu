@@ -1,3 +1,73 @@
+const urlRegex = /^https:\/\/voz\.vn\/t\//;
+
+
+/*  Init  page action */
+const TITLE_APPLY = "Apply CSS";
+const TITLE_REMOVE = "Remove CSS";
+const APPLICABLE_PROTOCOLS = ["http:", "https:"];
+/*
+Toggle CSS: based on the current title, insert or remove the CSS.
+Update the page action's title and icon to reflect its state.
+*/
+function toggleCSS(tab) {
+
+  function gotTitle(title) {
+    if (title === TITLE_APPLY) {
+      browser.pageAction.setIcon({tabId: tab.id, path: "icons/on.svg"});
+      browser.pageAction.setTitle({tabId: tab.id, title: TITLE_REMOVE});
+      browser.tabs.insertCSS({code: CSS});
+    } else {
+      browser.pageAction.setIcon({tabId: tab.id, path: "icons/off.svg"});
+      browser.pageAction.setTitle({tabId: tab.id, title: TITLE_APPLY});
+      browser.tabs.removeCSS({code: CSS});
+    }
+  }
+
+  let gettingTitle = browser.pageAction.getTitle({tabId: tab.id});
+  gettingTitle.then(gotTitle);
+}
+/*
+Returns true only if the URL's protocol is in APPLICABLE_PROTOCOLS.
+Argument url must be a valid URL string.
+*/
+function protocolIsApplicable(url) {
+  const protocol = (new URL(url)).protocol;
+  return APPLICABLE_PROTOCOLS.includes(protocol);
+}
+
+/*
+Initialize the page action: set icon and title, then show.
+Only operates on tabs whose URL's protocol is applicable.
+*/
+function initializePageAction(tab) {
+  if (protocolIsApplicable(tab.url) && urlRegex.test(tab.url)) {
+    browser.pageAction.setIcon({tabId: tab.id, path: "icons/off.svg"});
+    browser.pageAction.setTitle({tabId: tab.id, title: TITLE_APPLY});
+    browser.pageAction.show(tab.id);
+  }
+}
+
+/*
+When first loaded, initialize the page action for all tabs.
+*/
+let gettingAllTabs = browser.tabs.query({});
+gettingAllTabs.then((tabs) => {
+  for (let tab of tabs) {
+    initializePageAction(tab);
+  }
+});
+
+/*
+Each time a tab is updated, reset the page action for that tab.
+*/
+browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
+  initializePageAction(tab);
+});
+/*
+Toggle CSS when the page action is clicked.
+*/
+// browser.pageAction.onClicked.addListener(toggleCSS);
+
 // https://www.w3schools.com/css/css_tooltip.asp
 let TOOLTIP_CSS = `
 .tooltip {
@@ -24,7 +94,9 @@ let TOOLTIP_CSS = `
   visibility: visible;
 }
 `
-var urlRegex = /^https:\/\/voz\.vn\/t\//;
+
+browser.storage.local.set({"__TOOLTIP_CSS": {"css": TOOLTIP_CSS}});
+
 
 function onError(error) {
   console.error(`Error: ${error}`);
@@ -57,17 +129,21 @@ fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/voz_id_db.j
  */
 browser.commands.onCommand.addListener((command) => {
   console.log("Keys pressed ...");
+  // toggleCSS();
+  console.log("toggled css");
   // if (urlRegex.test(tab.url))]
 
   // See apply-css/background.js for how to add/remove css
-  let insertingCSS = browser.tabs.insertCSS({code: TOOLTIP_CSS});
-  insertingCSS.then(null, onError);
+  const gettingCssStorage = browser.storage.local.get("__TOOLTIP_CSS");
+  gettingCssStorage.then(css => {
+    console.log(css);
+    let insertingCSS = browser.tabs.insertCSS({code: css["__TOOLTIP_CSS"]["css"]});
+    insertingCSS.then(null, onError);
+  }, onError);
+  // let insertingCSS = browser.tabs.insertCSS({code: TOOLTIP_CSS});
+  // insertingCSS.then(null, onError);
 
-  browser.tabs
-    .query({
-      currentWindow: true,
-      active: true,
-    })
+  browser.tabs.query({currentWindow: true, active: true})
     .then(sendMessageToTabs)
     .catch(onError);
 });

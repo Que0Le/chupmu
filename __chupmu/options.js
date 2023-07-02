@@ -10,6 +10,7 @@ async function updateUI() {
       document.querySelector('#shortcut').value = command.shortcut;
     }
   }
+  // update css
 }
 
 /**
@@ -40,3 +41,5 @@ document.addEventListener('DOMContentLoaded', updateUI);
  */
 document.querySelector('#update').addEventListener('click', updateShortcut)
 document.querySelector('#reset').addEventListener('click', resetShortcut)
+
+// document.querySelector("form").addEventListener("submit", saveOptions);

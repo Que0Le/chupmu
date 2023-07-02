@@ -36,6 +36,7 @@ function createTooltipHtml(tootipId, record) {
 }
 
 function handleChupMu(dbStorage) {
+    console.log({dbStorage: dbStorage});
     let all_acticles = document.getElementsByClassName("message message--post js-post");
     for (let i = 0; i < all_acticles.length; i++) {
         article = all_acticles[i];
