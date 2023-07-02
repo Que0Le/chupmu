@@ -2,14 +2,39 @@
 {
     "meta": {
         "dbname": "voz_test_db",
-        "tags": ["xao_lol", "ga_con", "hieu_biet", "dot_con_hay_noi"]
+        "description": "A test DB for Voz forum",
+        "tags": [
+            {
+                "id": 0,
+                "description": "Xao lol",
+                "tag": "xao_lol"
+            },
+            {
+                "id": 1,
+                "description": "Ga Con",
+                "tag": "ga_con"
+            },
+            {
+                "id": 2,
+                "description": "Hieu Biet",
+                "tag": "hieu_biet"
+            },
+            {
+                "id": 3,
+                "description": "Dot Con Hay Noi",
+                "tag": "dot_con_hay_noi"
+            }
+        ]
     },
+    "test_ground": [
+        "https://voz.vn/t/noi-quy-cua-dien-dan-chi-tiet-tung-muc.1583/"
+    ],
     "db": {
-        "1": { "tags": ["xao_lol"], "recordUrl": "url_1" },
-        "71866": { "tags": ["ga_con"], "recordUrl": "url_71866" },
-        "42178": { "tags": ["pro", "hieu_biet"], "recordUrl": "url_42178" },
-        "1815170": { "tags": ["ga_con"], "recordUrl": "url_1815170" },
-        "1453845": { "tags": ["xao_lol", "dot_con_hay_noi"], "recordUrl": "url_1453845" },
-        "1749431": { "tags": ["xao_lol", "dot_con_hay_noi"], "recordUrl": "url_1749431" }
+        "1": { "tags": [0], "recordUrl": "url_1" },
+        "71866": { "tags": [1], "recordUrl": "url_71866" },
+        "42178": { "tags": [2, 3], "recordUrl": "url_42178" },
+        "1815170": { "tags": [2], "recordUrl": "url_1815170" },
+        "1453845": { "tags": [0], "recordUrl": "url_1453845" },
+        "1749431": { "tags": [2], "recordUrl": "url_1749431" }
     }
 }
