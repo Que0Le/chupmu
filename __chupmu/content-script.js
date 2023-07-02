@@ -1,4 +1,6 @@
-
+const chupmu_class_prefix = "chupmu_";
+const chupmu_css_class_prefix = "chupmu_css_";
+const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
 
 // https://voz.vn/t/noi-quy-cua-dien-dan-chi-tiet-tung-muc.1583/
 // let userid_db = {
@@ -10,13 +12,6 @@
 //     1749431: { "tags": ["xao_lol", "dot_con_hay_noi"] },
 // };
 
-// TODO: move this to local storage, and make it possible to be edited by user
-let action_db = {
-    "xao_lol": { "background": "pink" },
-    "pro": { "background": "green" },
-    "ga_con": { "background": "blue" },
-    "dot_con_hay_noi": { "background": "red" },
-};
 
 // let keys = Object.keys(userid_db);
 // console.log({ keys: keys })
@@ -27,7 +22,7 @@ function onError(error) {
 
 function createTooltipHtml(tootipId, record) {
     let str = `
-<span class="tooltiptext" id="${tootipId}">
+<span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
     <p>Tags: ${record["tags"]}</p>
     <p>View full record: <a href="${record["recordUrl"]}">chup-mu.org</a></p>
 </span>
@@ -35,14 +30,14 @@ function createTooltipHtml(tootipId, record) {
     return str;
 }
 
-function handleChupMu(dbStorage) {
+function handleLabel(dbStorage) {
+    // TODO: handle errors
     console.log({dbStorage: dbStorage});
     let all_acticles = document.getElementsByClassName("message message--post js-post");
     for (let i = 0; i < all_acticles.length; i++) {
         article = all_acticles[i];
         let a_username = article.getElementsByClassName("username")[0];
         let userid = a_username.getAttribute("href").split(".").pop().replace("/", "");
-        // let userid = parseInt(a_username.getAttribute("href").split(".").pop().replace("/", ""));
         if (!userid) continue;
         let record = dbStorage[userid]
         if (!record) continue;
@@ -50,10 +45,11 @@ function handleChupMu(dbStorage) {
         let message_cell_user = article.getElementsByClassName("message-cell message-cell--user")[0];
         for (let j = 0; j < record["tags"].length; j++) {
             let tag = record["tags"][j];
-            let action = action_db[tag]
-            if (!action) continue;
-            let style_str = message_cell_user.getAttribute('style') ? message_cell_user.getAttribute('style') + `;background:${action["background"]};` : `background:${action["background"]};`
-            message_cell_user.setAttribute('style', style_str);
+            // let action = action_db[tag]
+            // if (!action) continue;
+            // let style_str = message_cell_user.getAttribute('style') ? message_cell_user.getAttribute('style') + `;background:${action["background"]};` : `background:${action["background"]};`
+            message_cell_user.classList.add(`${chupmu_css_class_prefix}${tag}`);
+            // message_cell_user.setAttribute('style', style_str);
         }
 
         /* add tool tip */
@@ -66,14 +62,38 @@ function handleChupMu(dbStorage) {
     };
 }
 
+function handleRemoveLabel() {
+    // Remove css
+    let divs = document.querySelectorAll(`div[class^="${chupmu_css_class_prefix}"]`);
+    for (let i = 0; i < divs.length; i++) {
+        divs[i].classList.remove(chupmu_css_class_prefix_Regex.exec(divs[i].className)[0]);
+    }
+    // Tooltips
+    const elements = document.getElementsByClassName(chupmu_class_prefix);
+    while(elements.length > 0){
+        elements[0].parentNode.removeChild(elements[0]);
+    }
+}
+
 browser.runtime.onMessage.addListener((request) => {
+    console.log(request);
+    if (request["info"] != "chupmu_extension" ||
+        request["source"] != "chupmu_background_script" ||
+        request["target"] != "chupmu_content_script") {
+        return;
+    }
     console.log("Message from the background script:");
-    console.log(request.greeting);
-    console.log("ting tong");
+    console.log(request["message"]);
 
     const gettingDbStorage = browser.storage.local.get();
-    gettingDbStorage.then(handleChupMu, onError);
+    gettingDbStorage.then(db => {
+        if (request["message"] == "label") {
+            handleLabel(db);
+        } else if (request["message"] == "remove_label") {
+            handleRemoveLabel();
+        }
+    }, onError);
 
     // TODO: send msg back to background script to store state
-    return Promise.resolve({ response: "Hi from content script" });
+    return Promise.resolve({ response: `Chupmu Content script: Done for command '${request["message"]}'` });
 });

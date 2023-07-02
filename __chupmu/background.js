@@ -1,4 +1,74 @@
 const urlRegex = /^https:\/\/voz\.vn\/t\//;
+// https://www.w3schools.com/css/css_tooltip.asp
+let TOOLTIP_CSS = `
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+`
+let tags = ["xao_lol", "ga_con", "hieu_biet", "dot_con_hay_noi"]
+let VOZ_CSS = `
+.chupmu_css_${tags[0]} {
+  background: pink !important;
+}
+
+.chupmu_css_${tags[1]} {
+  background: green !important;
+}
+
+.chupmu_css_${tags[2]} {
+  background: blue !important;
+}
+
+.chupmu_css_${tags[3]} {
+  background: red !important;
+}
+`;
+
+// TODO: move this to local storage, and make it possible to be edited by user
+let action_db = {
+    "xao_lol": { "background": "pink" },
+    "pro": { "background": "green" },
+    "ga_con": { "background": "blue" },
+    "dot_con_hay_noi": { "background": "red" },
+};
+
+// TODO: if not found in local storage, set to TOOLTIP_CSS as default
+browser.storage.local.set({"__TOOLTIP_CSS": {"css": TOOLTIP_CSS}});
+
+function sendMessageToTab(tab, msg) {
+  browser.tabs
+    .sendMessage(
+      tab.id, 
+      { 
+        info: "chupmu_extension", source: "chupmu_background_script", target: "chupmu_content_script", 
+        message: msg
+      })
+    .then((response) => {
+      console.log("Message from the content script:");
+      console.log(response.response);
+    })
+    .catch(onError);
+}
 
 
 /*  Init  page action */
@@ -9,23 +79,47 @@ const APPLICABLE_PROTOCOLS = ["http:", "https:"];
 Toggle CSS: based on the current title, insert or remove the CSS.
 Update the page action's title and icon to reflect its state.
 */
-function toggleCSS(tab) {
+function toggleLabelify(tab) {
+  function toggle(title) {
+    if (title === TITLE_APPLY) {
+      sendMessageToTab(tab, "label");
+      browser.pageAction.setIcon({tabId: tab.id, path: "icons/on.svg"});
+      browser.pageAction.setTitle({tabId: tab.id, title: TITLE_REMOVE});
+      browser.tabs.insertCSS({code: TOOLTIP_CSS});
+      browser.tabs.insertCSS({code: VOZ_CSS});
+    } else {
+      sendMessageToTab(tab, "remove_label");
+      browser.pageAction.setIcon({tabId: tab.id, path: "icons/off.svg"});
+      browser.pageAction.setTitle({tabId: tab.id, title: TITLE_APPLY});
+      browser.tabs.removeCSS({code: TOOLTIP_CSS});
+      browser.tabs.removeCSS({code: VOZ_CSS});
+    }
+  }
 
+  // TODO: comfirm msg from content script
+  let gettingTitle = browser.pageAction.getTitle({tabId: tab.id});
+  gettingTitle.then(title => {
+    toggle(title);
+  });
+}
+
+function toggleCSS(tab) {
   function gotTitle(title) {
     if (title === TITLE_APPLY) {
       browser.pageAction.setIcon({tabId: tab.id, path: "icons/on.svg"});
       browser.pageAction.setTitle({tabId: tab.id, title: TITLE_REMOVE});
-      browser.tabs.insertCSS({code: CSS});
+      browser.tabs.insertCSS({code: TOOLTIP_CSS});
     } else {
       browser.pageAction.setIcon({tabId: tab.id, path: "icons/off.svg"});
       browser.pageAction.setTitle({tabId: tab.id, title: TITLE_APPLY});
-      browser.tabs.removeCSS({code: CSS});
+      browser.tabs.removeCSS({code: TOOLTIP_CSS});
     }
   }
 
   let gettingTitle = browser.pageAction.getTitle({tabId: tab.id});
   gettingTitle.then(gotTitle);
 }
+
 /*
 Returns true only if the URL's protocol is in APPLICABLE_PROTOCOLS.
 Argument url must be a valid URL string.
@@ -63,39 +157,6 @@ Each time a tab is updated, reset the page action for that tab.
 browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
   initializePageAction(tab);
 });
-/*
-Toggle CSS when the page action is clicked.
-*/
-// browser.pageAction.onClicked.addListener(toggleCSS);
-
-// https://www.w3schools.com/css/css_tooltip.asp
-let TOOLTIP_CSS = `
-.tooltip {
-  position: relative;
-  display: inline-block;
-  border-bottom: 1px dotted black;
-}
-
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 120px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-
-  /* Position the tooltip */
-  position: absolute;
-  z-index: 1;
-}
-
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-}
-`
-
-browser.storage.local.set({"__TOOLTIP_CSS": {"css": TOOLTIP_CSS}});
 
 
 function onError(error) {
@@ -114,11 +175,11 @@ function sendMessageToTabs(tabs) {
   }
 }
 
-fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/voz_id_db.json")
+fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json")
     .then((response) => response.json())
     .then((data) => {
         console.log(data);
-        browser.storage.local.set(data);
+        browser.storage.local.set(data["db"]);
     });
 
 /**
@@ -128,26 +189,34 @@ fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/voz_id_db.j
  * On Mac, this command will automatically be converted to "Command+Shift+U".
  */
 browser.commands.onCommand.addListener((command) => {
-  console.log("Keys pressed ...");
-  // toggleCSS();
-  console.log("toggled css");
+  // console.log("Keys pressed ...");
+  // const gettingCurrent = browser.tabs.getCurrent();
+  // gettingCurrent.then(tab => {toggleCSS(tab)}, onError);
+  browser.tabs.query({active: true, windowId: browser.windows.WINDOW_ID_CURRENT})
+  .then(tabs => browser.tabs.get(tabs[0].id))
+  .then(tab => {
+    toggleLabelify(tab);
+    // toggleCSS(tab);
+  });
+  // console.log("toggled css");
   // if (urlRegex.test(tab.url))]
 
   // See apply-css/background.js for how to add/remove css
-  const gettingCssStorage = browser.storage.local.get("__TOOLTIP_CSS");
-  gettingCssStorage.then(css => {
-    console.log(css);
-    let insertingCSS = browser.tabs.insertCSS({code: css["__TOOLTIP_CSS"]["css"]});
-    insertingCSS.then(null, onError);
-  }, onError);
-  // let insertingCSS = browser.tabs.insertCSS({code: TOOLTIP_CSS});
-  // insertingCSS.then(null, onError);
+  // const gettingCssStorage = browser.storage.local.get("__TOOLTIP_CSS");
+  // gettingCssStorage.then(css => {
+  //   console.log(css);
+  //   let insertingCSS = browser.tabs.insertCSS({code: css["__TOOLTIP_CSS"]["css"]});
+  //   insertingCSS.then(null, onError);
+  // }, onError);
 
-  browser.tabs.query({currentWindow: true, active: true})
-    .then(sendMessageToTabs)
-    .catch(onError);
+  // browser.tabs.query({currentWindow: true, active: true})
+  //   .then(sendMessageToTabs)
+  //   .catch(onError);
 });
-
+/*
+Toggle CSS when the page action is clicked.
+*/
+browser.pageAction.onClicked.addListener(toggleLabelify);
 
 
 
