@@ -30,11 +30,11 @@
         "https://voz.vn/t/noi-quy-cua-dien-dan-chi-tiet-tung-muc.1583/"
     ],
     "db": {
-        "1": { "tags": [0], "recordUrl": "url_1" },
-        "71866": { "tags": [1], "recordUrl": "url_71866" },
-        "42178": { "tags": [2, 3], "recordUrl": "url_42178" },
-        "1815170": { "tags": [2], "recordUrl": "url_1815170" },
-        "1453845": { "tags": [0], "recordUrl": "url_1453845" },
-        "1749431": { "tags": [2], "recordUrl": "url_1749431" }
+        "1": { "userid": 1, "tags": [0], "recordUrl": "url_1" },
+        "71866": {  "userid": 71866, "tags": [1], "recordUrl": "url_71866" },
+        "42178": { "userid": 42178, "tags": [2, 3], "recordUrl": "url_42178" },
+        "1815170": { "userid": 1815170, "tags": [2], "recordUrl": "url_1815170" },
+        "1453845": { "userid": 1453845, "tags": [0], "recordUrl": "url_1453845" },
+        "1749431": { "userid": 1749431, "tags": [2], "recordUrl": "url_1749431" }
     }
 }
