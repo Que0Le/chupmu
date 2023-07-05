@@ -1,3 +1,6 @@
+# TODO:
+- Switch to IndexedDB for DB storing, and local storage for css and settings and stuffs
+
 # ESLint Example
 
 ## What it shows

@@ -55,7 +55,7 @@ let action_db = {
 // TODO: if not found in local storage, set to TOOLTIP_CSS as default
 browser.storage.local.set({"__TOOLTIP_CSS": {"css": TOOLTIP_CSS}});
 
-function sendMessageToTab(tab, msg) {
+function sendCommandToTab(tab, msg) {
   browser.tabs
     .sendMessage(
       tab.id, 
@@ -82,13 +82,13 @@ Update the page action's title and icon to reflect its state.
 function toggleLabelify(tab) {
   function toggle(title) {
     if (title === TITLE_APPLY) {
-      sendMessageToTab(tab, "label");
+      sendCommandToTab(tab, "label");
       browser.pageAction.setIcon({tabId: tab.id, path: "icons/on.svg"});
       browser.pageAction.setTitle({tabId: tab.id, title: TITLE_REMOVE});
       browser.tabs.insertCSS({code: TOOLTIP_CSS});
       browser.tabs.insertCSS({code: VOZ_CSS});
     } else {
-      sendMessageToTab(tab, "remove_label");
+      sendCommandToTab(tab, "remove_label");
       browser.pageAction.setIcon({tabId: tab.id, path: "icons/off.svg"});
       browser.pageAction.setTitle({tabId: tab.id, title: TITLE_APPLY});
       browser.tabs.removeCSS({code: TOOLTIP_CSS});
@@ -103,38 +103,29 @@ function toggleLabelify(tab) {
   });
 }
 
-function toggleCSS(tab) {
-  function gotTitle(title) {
-    if (title === TITLE_APPLY) {
-      browser.pageAction.setIcon({tabId: tab.id, path: "icons/on.svg"});
-      browser.pageAction.setTitle({tabId: tab.id, title: TITLE_REMOVE});
-      browser.tabs.insertCSS({code: TOOLTIP_CSS});
-    } else {
-      browser.pageAction.setIcon({tabId: tab.id, path: "icons/off.svg"});
-      browser.pageAction.setTitle({tabId: tab.id, title: TITLE_APPLY});
-      browser.tabs.removeCSS({code: TOOLTIP_CSS});
-    }
-  }
+// function toggleCSS(tab) {
+//   function gotTitle(title) {
+//     if (title === TITLE_APPLY) {
+//       browser.pageAction.setIcon({tabId: tab.id, path: "icons/on.svg"});
+//       browser.pageAction.setTitle({tabId: tab.id, title: TITLE_REMOVE});
+//       browser.tabs.insertCSS({code: TOOLTIP_CSS});
+//     } else {
+//       browser.pageAction.setIcon({tabId: tab.id, path: "icons/off.svg"});
+//       browser.pageAction.setTitle({tabId: tab.id, title: TITLE_APPLY});
+//       browser.tabs.removeCSS({code: TOOLTIP_CSS});
+//     }
+//   }
 
-  let gettingTitle = browser.pageAction.getTitle({tabId: tab.id});
-  gettingTitle.then(gotTitle);
-}
-
-/*
-Returns true only if the URL's protocol is in APPLICABLE_PROTOCOLS.
-Argument url must be a valid URL string.
-*/
-function protocolIsApplicable(url) {
-  const protocol = (new URL(url)).protocol;
-  return APPLICABLE_PROTOCOLS.includes(protocol);
-}
+//   let gettingTitle = browser.pageAction.getTitle({tabId: tab.id});
+//   gettingTitle.then(gotTitle);
+// }
 
 /*
 Initialize the page action: set icon and title, then show.
 Only operates on tabs whose URL's protocol is applicable.
 */
 function initializePageAction(tab) {
-  if (protocolIsApplicable(tab.url) && urlRegex.test(tab.url)) {
+  if (urlRegex.test(tab.url)) {
     browser.pageAction.setIcon({tabId: tab.id, path: "icons/off.svg"});
     browser.pageAction.setTitle({tabId: tab.id, title: TITLE_APPLY});
     browser.pageAction.show(tab.id);
@@ -163,17 +154,17 @@ function onError(error) {
   console.error(`Error: ${error}`);
 }
 
-function sendMessageToTabs(tabs) {
-  for (const tab of tabs) {
-    browser.tabs
-      .sendMessage(tab.id, { greeting: "Hi from background script" })
-      .then((response) => {
-        console.log("Message from the content script:");
-        console.log(response.response);
-      })
-      .catch(onError);
-  }
-}
+// function sendMessageToTabs(tabs) {
+//   for (const tab of tabs) {
+//     browser.tabs
+//       .sendMessage(tab.id, { greeting: "Hi from background script" })
+//       .then((response) => {
+//         console.log("Message from the content script:");
+//         console.log(response.response);
+//       })
+//       .catch(onError);
+//   }
+// }
 
 fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json")
     .then((response) => response.json())

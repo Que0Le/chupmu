@@ -2,24 +2,11 @@ const chupmu_class_prefix = "chupmu_";
 const chupmu_css_class_prefix = "chupmu_css_";
 const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
 
-// 
-// let userid_db = {
-//     1: { "tags": ["xao_lol"] },
-//     71866: { "tags": ["ga_con"] },
-//     42178: { "tags": ["pro", "hieu_biet"] },
-//     1815170: { "tags": ["ga_con"] },
-//     1453845: { "tags": ["xao_lol", "dot_con_hay_noi"] },
-//     1749431: { "tags": ["xao_lol", "dot_con_hay_noi"] },
-// };
-
-
-// let keys = Object.keys(userid_db);
-// console.log({ keys: keys })
 
 function onError(error) {
     console.log(`Error: ${error}`);
 }
-
+/* 
 function createTooltipHtml(tootipId, record) {
     let str = `
 <span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
@@ -57,7 +44,6 @@ function handleLabel(dbStorage) {
             // message_cell_user.setAttribute('style', style_str);
         }
 
-        /* add tool tip */
         message_cell_user.classList.add("tooltip");
         let tootipId = `chupmu-tooltip-text-uid-${userid}`;
         let tooltipHtml = createTooltipHtml(tootipId, record)
@@ -79,25 +65,105 @@ function handleRemoveLabel() {
         elements[0].parentNode.removeChild(elements[0]);
     }
 }
+ */
 
+const DB_NAME = 'myDatabase';
+const DB_VERSION = 1;
+const DB_STORE_NAME = 'myStore';
+
+// Open the IndexedDB
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onerror = function (event) {
+      reject("Error opening database");
+    };
+
+    request.onupgradeneeded = function (event) {
+      const db = event.target.result;
+      const objectStore = db.createObjectStore(DB_STORE_NAME, { keyPath: 'userid', autoIncrement: false });
+      objectStore.createIndex('userid', 'userid', { unique: true });
+      objectStore.createIndex('record', 'record', { unique: false });
+    };
+
+    request.onsuccess = function (event) {
+      const db = event.target.result;
+      resolve(db);
+    };
+  });
+}
+
+// function readData() {
+//     openDb()
+//       .then(db => {
+//         const transaction = db.transaction(DB_STORE_NAME, 'readonly');
+//         const objectStore = transaction.objectStore(DB_STORE_NAME);
+  
+//         const request = objectStore.getAll();
+//         request.onerror = function (event) {
+//           console.error('Error reading data', event.target.error);
+//         };
+//         request.onsuccess = function (event) {
+//           const data = event.target.result;
+//           console.log('Data read successfully:', data);
+//           db.close();
+//         };
+//       })
+//       .catch(error => {
+//         console.error('Error opening database:', error);
+//       });
+//   }
+
+function sendMsgToBackground(reference, msg) {
+    browser.runtime
+      .sendMessage(
+        null,
+        {
+          info: "chupmu_extension", reference: reference,
+          source: "chupmu_content_script", target: "chupmu_background_script",
+          message: msg
+        })
+      .then((response) => {
+        console.log(`Answer B->C:`);
+        console.log(response.response);
+      })
+      .catch(onError);
+}
+
+function askBackgroundForRecords(obj) {
+    sendMsgToBackground("get_records", obj);
+    
+}
+
+function handleLabel(dbStorage) {
+    console.log("handleLabel");
+}
+
+function handleRemoveLabel() {
+    console.log("handleRemoveLabel")
+}
 browser.runtime.onMessage.addListener((request) => {
-    console.log(request);
     if (request["info"] != "chupmu_extension" ||
         request["source"] != "chupmu_background_script" ||
         request["target"] != "chupmu_content_script") {
         return;
     }
-    console.log("Message from the background script:");
-    console.log(request["message"]);
 
-    const gettingDbStorage = browser.storage.local.get();
-    gettingDbStorage.then(db => {
-        if (request["message"] == "label") {
-            handleLabel(db);
-        } else if (request["message"] == "remove_label") {
-            handleRemoveLabel();
-        }
-    }, onError);
+    if (request["reference"] == "toggleLabelify") {
+        console.log("Request B->C: toggleLabelify ...");
+        askBackgroundForRecords({"ids": [1, 2, 3, 4]});
+
+        // const gettingDbStorage = browser.storage.local.get();
+        // gettingDbStorage.then(db => {
+        //     if (request["message"] == "label") {
+        //         handleLabel(db);
+        //     } else if (request["message"] == "remove_label") {
+        //         handleRemoveLabel();
+        //     }
+        // }, onError);
+    }
+
 
     // TODO: send msg back to background script to store state
     return Promise.resolve({ response: `Chupmu Content script: Done for command '${request["message"]}'` });
