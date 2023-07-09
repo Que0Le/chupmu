@@ -258,7 +258,7 @@ const DEFAULT_SETTINGS = {
   "dbSources": [
     {
       "dbName": "voz1",
-      "css": `.chupmu_css_voz1_xao_lol} {
+      "dbCss": `.chupmu_css_voz1_xao_lol} {
         background: pink !important;
       }
       .chupmu_css__voz1_ga_con} {
@@ -270,7 +270,7 @@ const DEFAULT_SETTINGS = {
       .chupmu_css__voz1_dot_con_hay_noi} {
         background: red !important;
       }`,
-      "url": "https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json"
+      "dbUrl": "https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json"
     }
   ],
   "action": {
@@ -294,7 +294,7 @@ browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
 fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json")
   .then((response) => response.json())
   .then((data) => {
-    console.log(data);
+    // console.log(data);
     // browser.storage.local.set(data["db"]);
     openDb()
       .then(db => {
@@ -303,7 +303,8 @@ fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz
         Object.entries(data["db"]).forEach(([key, value]) => {
           const request = objectStore.add(value);
           request.onerror = function (event) {
-            console.error('Error adding data', event.target.error);
+            // TODO: better error handler
+            // console.error('Error adding data', event.target.error);
           };
           request.onsuccess = function (event) {
             console.log('Data added successfully');

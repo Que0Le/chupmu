@@ -36,6 +36,27 @@ function sendMsgToBackground(reference, msg) {
     .catch(onError);
 }
 
+function loadDbDataFromLocalStorage() {
+  browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
+    console.log(config)
+    if (config[`${EXT_NAME}_config`]["dbSources"] && config[`${EXT_NAME}_config`]["dbSources"].length > 0) {
+      let dbSources = config[`${EXT_NAME}_config`]["dbSources"];
+      let allDbContainers = document.getElementsByClassName("db-container");
+      // If DB has more sources than DOM container:
+      if (allDbContainers.length < dbSources.length) {
+        for (let j = 0; j < dbSources.length - allDbContainers.length; j++) {
+          handleAddTextareaButton();
+        }
+      }
+      allDbContainers = document.getElementsByClassName("db-container");
+      for (let i = 0; i < dbSources.length; i++) {
+        allDbContainers[i].querySelector('textarea[name="dbName"]').value = dbSources[i]["dbName"];
+        allDbContainers[i].querySelector('textarea[name="dbUrl"]').value = dbSources[i]["dbUrl"];
+        allDbContainers[i].querySelector('textarea[name="dbCss"]').value = dbSources[i]["dbCss"];
+      }
+    }
+  });
+}
 
 // TODO: add more fields: apply url (voz, voz_tan, ...)
 function handleRemoveButton(event) {
@@ -56,13 +77,15 @@ function handleSaveTextareaButton() {
     let dbName = allDbContainers[i].querySelector('textarea[name="dbName"]');
     let dbUrl = allDbContainers[i].querySelector('textarea[name="dbUrl"]');
     let dbCss = allDbContainers[i].querySelector('textarea[name="dbCss"]');
-    dbSources.push({ "dbName": dbName.value, "css": dbCss.value, "dbUrl": dbUrl.value });
+    dbSources.push({ "dbName": dbName.value, "dbCss": dbCss.value, "dbUrl": dbUrl.value });
   }
   // Store current db in local storage
   browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
     console.log(config);
-    config["dbSources"] = dbSources;
-    // Object.keys(r).length > 0 ? console.log(r) : console.log("non")
+    config[`${EXT_NAME}_config`]["dbSources"] = dbSources;
+    // let obj = {};
+    // obj[`${EXT_NAME}_config`] = config;
+    browser.storage.local.set(config);
   });
 
 }
@@ -74,6 +97,7 @@ function addRemoveEventHandlerForAllRemoveButtons() {
   }
 }
 
+loadDbDataFromLocalStorage();
 document.getElementById("addTextarea").addEventListener("click", handleAddTextareaButton);
 document.getElementById("saveTextareas").addEventListener("click", handleSaveTextareaButton);
 addRemoveEventHandlerForAllRemoveButtons();
