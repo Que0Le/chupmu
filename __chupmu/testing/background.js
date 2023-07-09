@@ -28,153 +28,7 @@ browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
   initializePageAction(tab);
 });
 
-
-function onError(error) {
-  console.error(`Error: ${error}`);
-}
-
-
-
-
-
-/* IndexedDB */
-const DB_NAME = 'chupmuDb';
-const DB_VERSION = 1;
-const DB_STORE_NAME = 'voz1';
-
-// Open the IndexedDB
-function openDb() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = function (event) {
-      reject("Error opening database");
-    };
-
-    request.onupgradeneeded = function (event) {
-      const db = event.target.result;
-      const objectStore = db.createObjectStore(DB_STORE_NAME, { keyPath: 'userid', autoIncrement: false });
-      objectStore.createIndex('userid', 'userid', { unique: true });
-      objectStore.createIndex('record', 'record', { unique: false });
-    };
-
-    request.onsuccess = function (event) {
-      const db = event.target.result;
-      resolve(db);
-    };
-  });
-}
-
-// Write data to the IndexedDB
-function writeData() {
-  openDb()
-    .then(db => {
-      const transaction = db.transaction(DB_STORE_NAME, 'readwrite');
-      const objectStore = transaction.objectStore(DB_STORE_NAME);
-
-      const data = [
-        { name: 'John', age: 25, userid: 0 },
-        { name: 'Jane', age: 30, userid: 3 },
-        { name: 'Bob', age: 35, userid: 4 }
-      ];
-
-      data.forEach(item => {
-        const request = objectStore.add(item);
-        request.onerror = function (event) {
-          console.error('Error adding data', event.target.error);
-        };
-        request.onsuccess = function (event) {
-          console.log('Data added successfully');
-        };
-      });
-
-      transaction.oncomplete = function () {
-        console.log('Transaction completed');
-        db.close();
-      };
-    })
-    .catch(error => {
-      console.error('Error opening database:', error);
-    });
-}
-
-// Read data from the IndexedDB
-function readData() {
-  openDb()
-    .then(db => {
-      const transaction = db.transaction(DB_STORE_NAME, 'readonly');
-      const objectStore = transaction.objectStore(DB_STORE_NAME);
-
-      const request = objectStore.getAll();
-      request.onerror = function (event) {
-        console.error('Error reading data', event.target.error);
-      };
-      request.onsuccess = function (event) {
-        const data = event.target.result;
-        console.log('Data read successfully:', data);
-        db.close();
-      };
-    })
-    .catch(error => {
-      console.error('Error opening database:', error);
-    });
-}
-
-// Call the writeData function to write data to the IndexedDB
-// writeData();
-
-// Call the readData function to read data from the IndexedDB
-// readData();
-
-const DEFAULT_SETTINGS = {
-  "tooltipCss": `.tooltip {
-    position: relative;
-    display: inline-block;
-    border-bottom: 1px dotted black;
-  }
-  
-  .tooltip .tooltiptext {
-    visibility: hidden;
-    width: 120px;
-    background-color: black;
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px 0;
-  
-    /* Position the tooltip */
-    position: absolute;
-    z-index: 1;
-  }
-  
-  .tooltip:hover .tooltiptext {
-    visibility: visible;
-  }`,
-  "dbSources": [
-    {
-      "dbName": "voz1",
-      "dbCss": `.chupmu_css_voz1_xao_lol} {
-        background: pink !important;
-      }
-      .chupmu_css__voz1_ga_con} {
-        background: green !important;
-      }
-      .chupmu_css__voz1_hieu_biet} {
-        background: blue !important;
-      }
-      .chupmu_css__voz1_dot_con_hay_noi} {
-        background: red !important;
-      }`,
-      "dbUrl": "https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json"
-    }
-  ],
-  "action": {
-
-  }
-}
-
 /* Read Setting */
-const EXT_NAME = "chupmu"
 browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
   if (Object.keys(config).length == 0) {
     console.log("No config found. Set to default ...");
@@ -182,7 +36,6 @@ browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
     obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
     browser.storage.local.set(obj);
   }
-  // Object.keys(r).length > 0 ? console.log(r) : console.log("non")
 });
 
 
@@ -190,7 +43,6 @@ fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz
   .then((response) => response.json())
   .then((data) => {
     console.log(data);
-    // browser.storage.local.set(data["db"]);
     openDb()
       .then(db => {
         const transaction = db.transaction(DB_STORE_NAME, 'readwrite');
@@ -232,6 +84,8 @@ browser.commands.onCommand.addListener((command) => {
       toggleLabelify(tab);
     });
 });
+
+
 /*
 Toggle CSS when the page action is clicked.
 */

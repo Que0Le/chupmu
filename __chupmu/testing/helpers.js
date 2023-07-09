@@ -104,3 +104,10 @@ function initializePageAction(tab) {
     browser.pageAction.show(tab.id);
   }
 }
+
+
+
+function onError(error) {
+    console.error(`Error: ${error}`);
+  }
+  

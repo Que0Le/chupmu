@@ -27,7 +27,7 @@
     }
   },
   "background": {
-    "scripts": ["helpers.js", "background.js"]
+    "scripts": ["params.js", "helpers.js", "db.js", "background.js"]
   },
   "content_scripts": [
     {
