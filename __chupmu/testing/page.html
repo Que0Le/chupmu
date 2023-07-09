@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="page.css">
+</head>
+<body>
+  <div class="dbs" id="dbs">
+    <div class="db-container">
+      <div>
+        <div>
+          <p><label>DB url:</label></p>
+          <textarea cols=50 rows=2 name="dbUrl"
+            oninput="this.style.height = ''; this.style.height = this.scrollHeight +'px'"></textarea>
+        </div>
+        <div>
+          <p><label>tooltipCss:</label></p>
+          <textarea cols=50 rows=5 name="dbCss"
+            oninput="this.style.height = ''; this.style.height = this.scrollHeight +'px'"></textarea>
+        </div>
+      </div>
+      <button class="removeButton" onClick="handleRemoveButton(this)">Remove Textarea</button>
+    </div>
+  </div>
+  <div class="sidebyside-container">
+    <button id="addTextarea" onClick="handleAddTextareaButton(this)">Add More Textarea</button>
+    <button id="saveTextareas" onClick="handleSaveTextareaButton(this)">Save All Textareas</button>
+  </div>
+
+
+  <script src="page.js"></script>
+
+
+</body>
+
+</html>

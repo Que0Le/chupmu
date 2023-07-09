@@ -281,11 +281,13 @@ const DEFAULT_SETTINGS = {
 /* Read Setting */
 const EXT_NAME = "chupmu"
 browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
-  if (Object.keys(r).length == 0) {
+  if (Object.keys(config).length == 0) {
     console.log("No config found. Set to default ...");
-
+    let obj = {};
+    obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
+    browser.storage.local.set(obj);
   }
-  Object.keys(r).length > 0 ? console.log(r) : console.log("non")
+  // Object.keys(r).length > 0 ? console.log(r) : console.log("non")
 });
 
 
