@@ -408,3 +408,12 @@ browser.runtime.onMessage.addListener((request) => {
   // TODO: send msg back to background script to store state
   // return Promise.resolve({ response: `Chupmu Content script: Done for command '${request["message"]}'` });
 });
+
+
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Handle the received message from the options script
+  console.log("Received message in background script:", message);
+  
+  // Send a response back if needed
+  sendResponse("Message received by background script");
+});
