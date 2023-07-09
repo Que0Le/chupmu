@@ -70,23 +70,25 @@ function handleRemoveLabel() {
 
 function sendMsgToBackground(reference, msg) {
     browser.runtime
-      .sendMessage(
-        null,
-        {
-          info: "chupmu_extension", reference: reference,
-          source: "chupmu_content_script", target: "chupmu_background_script",
-          message: msg
+        .sendMessage(
+            null,
+            {
+                info: "chupmu_extension", reference: reference,
+                source: "chupmu_content_script", target: "chupmu_background_script",
+                message: msg
+            })
+        .then((response) => {
+            console.log(`Answer B->C:`);
+            console.log(response.response);
         })
-      .then((response) => {
-        console.log(`Answer B->C:`);
-        console.log(response.response);
-      })
-      .catch(onError);
+        .catch(onError);
 }
 
-function askBackgroundForRecords(obj) {
-    sendMsgToBackground("get_records", obj);
-    
+function askBackgroundForRecords(ids) {
+    browser.tabs.query({ active: true, currentWindow: true }).then(function (tabs) {
+        sendMsgToBackground("get_records", { "currentUrl": tabs[0].url, "ids": ids });
+    });
+
 }
 
 function handleLabel(dbStorage) {
@@ -106,7 +108,7 @@ browser.runtime.onMessage.addListener((request) => {
 
     if (request["reference"] == "toggleLabelify") {
         console.log("Request B->C: toggleLabelify ...");
-        askBackgroundForRecords({"ids": [1, 2, 3, 4]});
+        askBackgroundForRecords([1, 2, 3, 4]);
 
         // const gettingDbStorage = browser.storage.local.get();
         // gettingDbStorage.then(db => {

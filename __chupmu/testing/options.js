@@ -38,7 +38,6 @@ function sendMsgToBackground(reference, msg) {
 
 function loadDbDataFromLocalStorage() {
   browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
-    console.log(config)
     if (config[`${EXT_NAME}_config`]["dbSources"] && config[`${EXT_NAME}_config`]["dbSources"].length > 0) {
       let dbSources = config[`${EXT_NAME}_config`]["dbSources"];
       let allDbContainers = document.getElementsByClassName("db-container");
@@ -68,6 +67,8 @@ function handleAddTextareaButton(event) {
     let dbs = document.getElementById("dbs");
     dbs.innerHTML += db_container;
     addRemoveEventHandlerForAllRemoveButtons();
+    // DOM will reload after we update innerHtml. Need to reload the values from localstorage
+    loadDbDataFromLocalStorage();
 }
 
 function handleSaveTextareaButton() {
@@ -81,10 +82,7 @@ function handleSaveTextareaButton() {
   }
   // Store current db in local storage
   browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
-    console.log(config);
     config[`${EXT_NAME}_config`]["dbSources"] = dbSources;
-    // let obj = {};
-    // obj[`${EXT_NAME}_config`] = config;
     browser.storage.local.set(config);
   });
 
@@ -101,8 +99,3 @@ loadDbDataFromLocalStorage();
 document.getElementById("addTextarea").addEventListener("click", handleAddTextareaButton);
 document.getElementById("saveTextareas").addEventListener("click", handleSaveTextareaButton);
 addRemoveEventHandlerForAllRemoveButtons();
-
-// browser.runtime.sendMessage({ greeting: "Hello from options script" }, response => {
-//   // Handle the response received from the background script
-//   console.log("Response from background script:", response);
-// });
