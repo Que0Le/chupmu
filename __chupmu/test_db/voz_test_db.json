@@ -4,6 +4,10 @@
         "dbname": "voz_test_db.12345",
         "description": "A test DB for Voz forum",
         "onlineRecordUrlPrefix": "chupmu.org/voz_test_db.12345/userid=",
+        "urls": [
+            "https://voz.vn/t/noi-quy-cua-dien-dan-chi-tiet-tung-muc.1583/",
+            "voz.vn/t/"
+        ],
         "tags": [
             {
                 "id": 0,
@@ -27,10 +31,6 @@
             }
         ]
     },
-    "urls": [
-        "https://voz.vn/t/noi-quy-cua-dien-dan-chi-tiet-tung-muc.1583/",
-        "voz.vn/t/"
-    ],
     "db": {
         "1": { "userid": 1, "tags": [0], "note": "" },
         "71866": {  "userid": 71866, "tags": [1], "note": "" },
