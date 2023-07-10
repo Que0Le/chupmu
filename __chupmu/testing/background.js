@@ -59,6 +59,7 @@ browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
 });
 
 /* Read Setting */
+const META_DB_PREFIX = "meta_db_";
 browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
     if (Object.keys(config).length == 0) {
         console.log("No config found. Set to default ...");
@@ -73,6 +74,11 @@ fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz
     .then((response) => response.json())
     .then((data) => {
         console.log(data);
+        // Store meta data in local storage
+        let meta_db = {};
+        meta_db[`${META_DB_PREFIX}${data.meta.dbname}`] = data.meta;
+        browser.storage.local.set(meta_db);
+        // Write db to indexeddb
         openDb()
             .then(db => {
                 const transaction = db.transaction(DB_STORE_NAME, 'readwrite');
@@ -123,7 +129,7 @@ browser.pageAction.onClicked.addListener(toggleLabelify);
  * @param {Int[]} ids Array of user id. Integer, but wil be changed to support i.e uuid
  * @returns Array of record objects
  */
-function getRawRecordFromIndexedDb(dbStoreName, ids) {
+function getRawRecordsFromIndexedDb(dbStoreName, ids) {
     return new Promise((resolve, reject) => {
         console.log(`getting records for id: `, ids);
         openDb()
@@ -193,12 +199,19 @@ function getRawRecordFromIndexedDb(dbStoreName, ids) {
 
 
 //TODO: generalization. For now, hardcoded voz
+// { currentUrl: "https://voz.vn/t/...", ids: (6) […] }
 function handleRequestRecord(message) {
     return new Promise((resolve, reject) => {
-        getRawRecordFromIndexedDb(DB_STORE_NAME, message.ids)
-            .then(record => {
-                // process raw records
-                resolve(record);
+        getRawRecordsFromIndexedDb(DB_STORE_NAME, message.ids)
+            .then(records => {
+                browser.storage.local.get(`${META_DB_PREFIX}${DB_STORE_NAME}`)
+                    .then(meta => {
+                        let result = { meta: meta, records: records };
+                        resolve(result);
+                    })
+                    .catch(error => {
+                        reject(error);
+                    });
             })
             .catch(error => {
                 reject(error);
@@ -223,14 +236,13 @@ function connected(p) {
             console.log("Request C->B: requestRecords ...");
             console.log(msg.message)
             handleRequestRecord(msg.message)
-                .then(record => {
+                .then(result => {
                     portFromCS.postMessage({
                         info: "chupmu_extension", reference: "responseRecords",
                         source: "chupmu_background_script", target: "chupmu_content_script",
-                        message: record
+                        message: result
                     });
-                }
-            )
+                })
         }
         // else if (msg.reference == "") {
         // }

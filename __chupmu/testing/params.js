@@ -3,7 +3,7 @@
 const EXT_NAME = "chupmu"
 const DB_NAME = 'chupmuDb';
 const DB_VERSION = 1;
-const DB_STORE_NAME = 'voz1';
+const DB_STORE_NAME = 'voz_test_db.12345';
 
 const DEFAULT_SETTINGS = {
     "tooltipCss": `.tooltip {
