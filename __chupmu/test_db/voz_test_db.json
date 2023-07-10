@@ -1,7 +1,7 @@
 
 {
     "meta": {
-        "dbname": "voz_test_db",
+        "dbname": "voz_test_db.12345",
         "description": "A test DB for Voz forum",
         "onlineRecordUrlPrefix": "chupmu.org/voz_test_db.12345/userid=",
         "tags": [
