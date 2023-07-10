@@ -45,20 +45,25 @@ let VOZ_CSS = `
 }
 `;
 
+// function logTabs(tabs) {
+//   console.log(tabs);
+// }
+
+// browser.tabs.query({ currentWindow: true }, logTabs);
 function sendMsgToTab(tab, reference, msg) {
-    browser.tabs
-        .sendMessage(
-            tab.id,
-            {
-                info: "chupmu_extension", reference: reference,
-                source: "chupmu_background_script", target: "chupmu_content_script",
-                message: msg
-            })
-        .then((response) => {
-            console.log(`Answer C->B:`);
-            console.log(response.response);
-        })
-        .catch(onError);
+  console.log(reference)
+  browser.tabs.sendMessage(
+    tab.id,
+    {
+      info: "chupmu_extension", reference: reference,
+      source: "chupmu_background_script", target: "chupmu_content_script",
+      message: msg
+    })
+    .then((response) => {
+      console.log(`Answer C->B:`);
+      console.log(response);
+    })
+    .catch(exception => console.log(exception));
 }
 
 /*  Init  page action */
@@ -72,17 +77,29 @@ Update the page action's title and icon to reflect its state.
 function toggleLabelify(tab) {
   function toggle(title) {
     if (title === TITLE_APPLY) {
-      sendMsgToTab(tab, "toggleLabelify", "label");
+      // sendMsgToTab(tab, "toggleLabelify", "label");
       browser.pageAction.setIcon({ tabId: tab.id, path: "icons/on.svg" });
       browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_REMOVE });
       browser.tabs.insertCSS({ code: TOOLTIP_CSS });
       browser.tabs.insertCSS({ code: VOZ_CSS });
+      portFromCS.postMessage(
+        {
+            info: "chupmu_extension", reference: "toggleLabelify",
+            source: "chupmu_background_script", target: "chupmu_content_script",
+            message: "label"
+        });
     } else {
-      sendMsgToTab(tab, "toggleLabelify", "remove_label");
+      // sendMsgToTab(tab, "toggleLabelify", "remove_label");
       browser.pageAction.setIcon({ tabId: tab.id, path: "icons/off.svg" });
       browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
       browser.tabs.removeCSS({ code: TOOLTIP_CSS });
       browser.tabs.removeCSS({ code: VOZ_CSS });
+      portFromCS.postMessage(
+        {
+            info: "chupmu_extension", reference: "toggleLabelify",
+            source: "chupmu_background_script", target: "chupmu_content_script",
+            message: "removeLabel"
+        });
     }
   }
 
@@ -105,9 +122,4 @@ function initializePageAction(tab) {
   }
 }
 
-
-
-function onError(error) {
-    console.error(`Error: ${error}`);
-  }
   

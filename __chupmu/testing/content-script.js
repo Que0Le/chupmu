@@ -66,61 +66,93 @@ function handleRemoveLabel() {
     }
 }
 */
+let myPort = browser.runtime.connect({ name: "port-from-cs" });
+myPort.postMessage({ greeting: "hello from content script" });
 
-
-function sendMsgToBackground(reference, msg) {
-    browser.runtime
-        .sendMessage(
-            null,
-            {
-                info: "chupmu_extension", reference: reference,
-                source: "chupmu_content_script", target: "chupmu_background_script",
-                message: msg
-            })
-        .then((response) => {
-            console.log(`Answer B->C:`);
-            console.log(response.response);
-        })
-        .catch(onError);
-}
-
-function askBackgroundForRecords(ids) {
-    browser.tabs.query({ active: true, currentWindow: true }).then(function (tabs) {
-        sendMsgToBackground("get_records", { "currentUrl": tabs[0].url, "ids": ids });
-    });
-
-}
-
-function handleLabel(dbStorage) {
-    console.log("handleLabel");
-}
-
-function handleRemoveLabel() {
-    console.log("handleRemoveLabel")
-}
-
-browser.runtime.onMessage.addListener((request) => {
-    if (request["info"] != "chupmu_extension" ||
-        request["source"] != "chupmu_background_script" ||
-        request["target"] != "chupmu_content_script") {
+myPort.onMessage.addListener((msg) => {
+    if (msg.info != "chupmu_extension" ||
+        msg.source != "chupmu_background_script" ||
+        msg.target != "chupmu_content_script") {
         return;
     }
 
-    if (request["reference"] == "toggleLabelify") {
+    if (msg.reference == "toggleLabelify") {
         console.log("Request B->C: toggleLabelify ...");
-        askBackgroundForRecords([1, 2, 3, 4]);
-
-        // const gettingDbStorage = browser.storage.local.get();
-        // gettingDbStorage.then(db => {
-        //     if (request["message"] == "label") {
-        //         handleLabel(db);
-        //     } else if (request["message"] == "remove_label") {
-        //         handleRemoveLabel();
-        //     }
-        // }, onError);
+        // myPort.postMessage({ response: `Chupmu Content script: Working on command '${msg.message}'` });
+        if (msg.message ==  "label") {
+            console.log("command: label")
+            //         handleLabel(db);
+            askBackgroundForRecords([1, 2, 3, 4]);
+        } else if (msg.message == "removeLabel") {
+            console.log("command: removeLabel")
+            //         handleRemoveLabel();
+        }
+    } else if (msg.reference == "responseRecords") {
+        console.log(`records from background:`);
+        console.log(msg.message)
     }
 
-
-    // TODO: send msg back to background script to store state
-    return Promise.resolve({ response: `Chupmu Content script: Done for command '${request["message"]}'` });
 });
+
+function askBackgroundForRecords(ids) {
+    myPort.postMessage(
+        {
+            info: "chupmu_extension", reference: "requestRecords",
+            source: "chupmu_content_script", target: "chupmu_background_script",
+            message: { "currentUrl": document.location.href, "ids": ids }
+        });
+}
+
+// function sendMsgToBackground(reference, msg) {
+//     browser.runtime
+//         .sendMessage(
+//             null,
+//             {
+//                 info: "chupmu_extension", reference: reference,
+//                 source: "chupmu_content_script", target: "chupmu_background_script",
+//                 message: msg
+//             })
+//         .then((response) => {
+//             console.log(`Answer B->C:`);
+//             console.log(response.response);
+//         })
+//         .catch(onError);
+// }
+
+
+// function handleLabel(dbStorage) {
+//     console.log("handleLabel");
+// }
+
+// function handleRemoveLabel() {
+//     console.log("handleRemoveLabel")
+// }
+
+// browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
+//     if (request["info"] != "chupmu_extension" ||
+//         request["source"] != "chupmu_background_script" ||
+//         request["target"] != "chupmu_content_script") {
+//         return;
+//     }
+
+//     if (request["reference"] == "toggleLabelify") {
+//         console.log("Request B->C: toggleLabelify ...");
+//         // browser.runtime.sendMessage({ response: `Chupmu Content script: Done for command '${request["message"]}'` });
+//         sendResponse({ response: `Chupmu Content script: Done for command '${request["message"]}'` });
+//         askBackgroundForRecords([1, 2, 3, 4]);
+
+//         // const gettingDbStorage = browser.storage.local.get();
+//         // gettingDbStorage.then(db => {
+//         //     if (request["message"] == "label") {
+//         //         handleLabel(db);
+//         //     } else if (request["message"] == "remove_label") {
+//         //         handleRemoveLabel();
+//         //     }
+//         // }, onError);
+//     }
+
+
+//     // TODO: send msg back to background script to store state
+//     // return Promise.resolve({ response: `Chupmu Content script: Done for command '${request["message"]}'` })
+// });
+// askBackgroundForRecords([1, 2, 3, 4]);
