@@ -7,11 +7,12 @@ function onError(error) {
     console.log(`Error: ${error}`);
 }
 
-function createTooltipHtml(tootipId, record) {
+function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
     let str = `
 <span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
-    <p>Tags: ${record["tags"]}</p>
-    <p>View full record: <a href="${record["recordUrl"]}">chup-mu.org</a></p>
+    <p>Tags: ${tagnames}</p>
+    <p>Note: ${note}</p>
+    <p>View full record: <a href="${recordUrl}">chup-mu.org</a></p>
 </span>
 `
     return str;
@@ -37,10 +38,9 @@ function getAllUserIdsOnPageVoz() {
 }
 
 function applyLabel(data) {
-    let tag_meta = data.meta.tags;
+    let tag_metas = data.meta.tags;
     let records = data.records; // object: {1: { userid: 1, tags: (1) […], note: "" }}
-    console.log(data)
-    console.log(records)
+    let tagnames = [];
     let all_acticles = document.getElementsByClassName("message message--post js-post");
     for (let i = 0; i < all_acticles.length; i++) {
         article = all_acticles[i];
@@ -52,18 +52,22 @@ function applyLabel(data) {
         console.log(record);
 
         let message_cell_user = article.getElementsByClassName("message-cell message-cell--user")[0];
-        for (let j = 0; j < record.tagIds.length; j++) { 
+        for (let j = 0; j < record.tagIds.length; j++) {
             let tag_id = record.tagIds[j];
-            if (tag_id) {
-                let tag = tag_meta[tag_id].tag;
-                message_cell_user.classList.add(`${chupmu_css_class_prefix}${tag}`);
+            if (tag_metas[tag_id]) {
+                let tagname = tag_metas[tag_id].tag;
+                message_cell_user.classList.add(`${chupmu_css_class_prefix}${tagname}`);
+                tagnames.push(tagname);
             }
             break; // TODO: support only the first tag for now. Need more css ideas!
         }
 
         message_cell_user.classList.add("tooltip");
         let tootipId = `chupmu-tooltip-text-uid-${userid}`;
-        let tooltipHtml = createTooltipHtml(tootipId, record)
+        let tooltipHtml = createTooltipHtml(
+            tootipId, tagnames, record.note,
+            data.meta.onlineRecordUrlPrefix + userid
+        );
         message_cell_user.innerHTML += tooltipHtml;
         let tooltip = document.getElementById(tootipId);
         if (!tooltip) console.log(`Failed adding tooltip id: ${tootipId}`);
