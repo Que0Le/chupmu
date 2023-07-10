@@ -17,31 +17,48 @@ function createTooltipHtml(tootipId, record) {
     return str;
 }
 
-function handleLabel(dbStorage) {
-    // TODO: handle errors
-    console.log({dbStorage: dbStorage});
-    const tagObj = {};
-    dbStorage["meta"]["tags"].forEach(tag => {
-        tagObj[tag.id] = tag.tag;
-    });
+
+/**
+ * 
+ * @returns {String[]}
+ */
+function getAllUserIdsOnPageVoz() {
+    let all_acticles = document.getElementsByClassName("message message--post js-post");
+    let userIds = [];
+    for (let i = 0; i < all_acticles.length; i++) {
+        article = all_acticles[i];
+        let a_username = article.getElementsByClassName("username")[0];
+        let userid = a_username.getAttribute("href").split(".").pop().replace("/", "");
+        if (userid) {
+            userIds.push(userid);
+        }
+    };
+    return userIds.filter((item, index) => userIds.indexOf(item) === index);
+}
+
+function applyLabel(data) {
+    let tag_meta = data.meta.tags;
+    let records = data.records; // object: {1: { userid: 1, tags: (1) […], note: "" }}
+    console.log(data)
+    console.log(records)
     let all_acticles = document.getElementsByClassName("message message--post js-post");
     for (let i = 0; i < all_acticles.length; i++) {
         article = all_acticles[i];
         let a_username = article.getElementsByClassName("username")[0];
         let userid = a_username.getAttribute("href").split(".").pop().replace("/", "");
         if (!userid) continue;
-        let record = dbStorage["db"][userid]
+        let record = records[userid];
         if (!record) continue;
+        console.log(record);
 
         let message_cell_user = article.getElementsByClassName("message-cell message-cell--user")[0];
-        for (let j = 0; j < record["tags"].length; j++) { // support only 1 tag for now
-            let tag_id = record["tags"][j];
-            let tag = tagObj[tag_id];
-            // let action = action_db[tag]
-            // if (!action) continue;
-            // let style_str = message_cell_user.getAttribute('style') ? message_cell_user.getAttribute('style') + `;background:${action["background"]};` : `background:${action["background"]};`
-            message_cell_user.classList.add(`${chupmu_css_class_prefix}${tag}`);
-            // message_cell_user.setAttribute('style', style_str);
+        for (let j = 0; j < record.tagIds.length; j++) { 
+            let tag_id = record.tagIds[j];
+            if (tag_id) {
+                let tag = tag_meta[tag_id].tag;
+                message_cell_user.classList.add(`${chupmu_css_class_prefix}${tag}`);
+            }
+            break; // TODO: support only the first tag for now. Need more css ideas!
         }
 
         message_cell_user.classList.add("tooltip");
@@ -51,24 +68,6 @@ function handleLabel(dbStorage) {
         let tooltip = document.getElementById(tootipId);
         if (!tooltip) console.log(`Failed adding tooltip id: ${tootipId}`);
     };
-}
-
-/**
- * 
- * @returns {Int[]}
- */
-function getAllUserIdsOnPageVoz() {
-    let all_acticles = document.getElementsByClassName("message message--post js-post");
-    let userIds = [];
-    for (let i = 0; i < all_acticles.length; i++) {
-        article = all_acticles[i];
-        let a_username = article.getElementsByClassName("username")[0];
-        let userid = parseInt(a_username.getAttribute("href").split(".").pop().replace("/", ""));
-        if (userid) {
-            userIds.push(userid);
-        }
-    };
-    return userIds.filter((item, index) => userIds.indexOf(item) === index);
 }
 
 function handleRemoveLabel() {
@@ -107,8 +106,9 @@ myPort.onMessage.addListener((msg) => {
             //         handleRemoveLabel();
         }
     } else if (msg.reference == "responseRecords") {
-        console.log(`records from background:`);
-        console.log(msg.message)
+        console.log(`Get records data from background:`);
+        // console.log(msg.message);
+        applyLabel(msg.message);
     }
 
 });
@@ -121,57 +121,3 @@ function askBackgroundForRecords(ids) {
             message: { "currentUrl": document.location.href, "ids": ids }
         });
 }
-
-// function sendMsgToBackground(reference, msg) {
-//     browser.runtime
-//         .sendMessage(
-//             null,
-//             {
-//                 info: "chupmu_extension", reference: reference,
-//                 source: "chupmu_content_script", target: "chupmu_background_script",
-//                 message: msg
-//             })
-//         .then((response) => {
-//             console.log(`Answer B->C:`);
-//             console.log(response.response);
-//         })
-//         .catch(onError);
-// }
-
-
-// function handleLabel(dbStorage) {
-//     console.log("handleLabel");
-// }
-
-// function handleRemoveLabel() {
-//     console.log("handleRemoveLabel")
-// }
-
-// browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-//     if (request["info"] != "chupmu_extension" ||
-//         request["source"] != "chupmu_background_script" ||
-//         request["target"] != "chupmu_content_script") {
-//         return;
-//     }
-
-//     if (request["reference"] == "toggleLabelify") {
-//         console.log("Request B->C: toggleLabelify ...");
-//         // browser.runtime.sendMessage({ response: `Chupmu Content script: Done for command '${request["message"]}'` });
-//         sendResponse({ response: `Chupmu Content script: Done for command '${request["message"]}'` });
-//         askBackgroundForRecords([1, 2, 3, 4]);
-
-//         // const gettingDbStorage = browser.storage.local.get();
-//         // gettingDbStorage.then(db => {
-//         //     if (request["message"] == "label") {
-//         //         handleLabel(db);
-//         //     } else if (request["message"] == "remove_label") {
-//         //         handleRemoveLabel();
-//         //     }
-//         // }, onError);
-//     }
-
-
-//     // TODO: send msg back to background script to store state
-//     // return Promise.resolve({ response: `Chupmu Content script: Done for command '${request["message"]}'` })
-// });
-// askBackgroundForRecords([1, 2, 3, 4]);

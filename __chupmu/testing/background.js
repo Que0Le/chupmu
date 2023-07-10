@@ -5,30 +5,6 @@ function onError(error) {
     console.error(`Error: ${error}`);
 }
 
-// function sendMessageToTabs(tab) {
-//     browser.tabs.sendMessage(tab.id, { greeting: "Hi from background script" })
-//       .then((response) => {
-//         console.log("Message from the content script:");
-//         console.log(response.response);
-//       })
-//       .catch(onError);
-// }
-// browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT })
-// .then(tabs => browser.tabs.get(tabs[0].id))
-// .then(tab => {
-//   sendMessageToTabs(tabs[0]);
-// });
-
-// browser.browserAction.onClicked.addListener(() => {
-//   browser.tabs
-//     .query({
-//       currentWindow: true,
-//       active: true,
-//     })
-//     .then(sendMessageToTabs)
-//     .catch(onError);
-// });
-
 
 // TODO: move this to local storage, and make it possible to be edited by user
 let action_db = {
@@ -173,40 +149,16 @@ function getRawRecordsFromIndexedDb(dbStoreName, ids) {
     });
 }
 
-// browser.runtime.onMessage.addListener((request) => {
-//     if (
-//         request["info"] != "chupmu_extension" ||
-//         request["source"] != "chupmu_content_script" ||
-//         request["target"] != "chupmu_background_script"
-//     ) {
-//         return;
-//     }
-//     if (request["reference"] == "get_records") {
-//         console.log(`Request C->B: get_records ...`);
-//         return handleGetRecords(request["message"])
-//             .then(result => {
-//                 console.log(result);
-//                 return { response: result };
-//             })
-//             .catch(error => {
-//                 console.error('Error retrieving records:', error);
-//                 return { error: "Error getting records" };
-//             });
-//     }
-//     // TODO: send msg back to background script to store state
-//     // return Promise.resolve({ response: `Chupmu Content script: Done for command '${request["message"]}'` });
-// });
-
-
 //TODO: generalization. For now, hardcoded voz
 // { currentUrl: "https://voz.vn/t/...", ids: (6) […] }
 function handleRequestRecord(message) {
     return new Promise((resolve, reject) => {
         getRawRecordsFromIndexedDb(DB_STORE_NAME, message.ids)
             .then(records => {
+                console.log(records)
                 browser.storage.local.get(`${META_DB_PREFIX}${DB_STORE_NAME}`)
                     .then(meta => {
-                        let result = { meta: meta, records: records };
+                        let result = { meta: meta[`${META_DB_PREFIX}${DB_STORE_NAME}`], records: records };
                         resolve(result);
                     })
                     .catch(error => {

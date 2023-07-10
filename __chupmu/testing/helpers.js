@@ -1,6 +1,6 @@
-
 const urlRegex = /^https:\/\/voz\.vn\/t\//;
 // https://www.w3schools.com/css/css_tooltip.asp
+
 let TOOLTIP_CSS = `
 .tooltip {
   position: relative;
@@ -27,6 +27,7 @@ let TOOLTIP_CSS = `
 }
 `
 let tags = ["xao_lol", "ga_con", "hieu_biet", "dot_con_hay_noi"]
+
 let VOZ_CSS = `
 .chupmu_css_${tags[0]} {
   background: pink !important;
@@ -45,11 +46,7 @@ let VOZ_CSS = `
 }
 `;
 
-// function logTabs(tabs) {
-//   console.log(tabs);
-// }
 
-// browser.tabs.query({ currentWindow: true }, logTabs);
 function sendMsgToTab(tab, reference, msg) {
   console.log(reference)
   browser.tabs.sendMessage(

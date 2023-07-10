@@ -9,29 +9,33 @@
     ],
     "tags": {
       "0": {
+        "tagId": "0",
         "description": "Xao lol",
         "tag": "xao_lol"
       },
       "1": {
+        "tagId": "1",
         "description": "Ga Con",
         "tag": "ga_con"
       },
       "2": {
+        "tagId": "2",
         "description": "Hieu Biet",
         "tag": "hieu_biet"
       },
       "3": {
+        "tagId": "3",
         "description": "Dot Con Hay Noi",
         "tag": "dot_con_hay_noi"
       }
     }
   },
   "db": {
-    "1": { "userid": "1", "tagIds": ["0"], "note": "" },
-    "71866": { "userid": "71866", "tagIds": ["1"], "note": "" },
-    "42178": { "userid": "42178", "tagIds": ["2", "3"], "note": "" },
-    "1815170": { "userid": "1815170", "tagIds": ["2"], "note": "" },
-    "1453845": { "userid": "1453845", "tagIds": ["0"], "note": "" },
-    "1749431": { "userid": "1749431", "tagIds": ["2"], "note": "" }
+    "1": { "userid": "1", "tagIds": ["0"], "note": "Note for @'fRzzy'" },
+    "71866": { "userid": "71866", "tagIds": ["1"], "note": "Note for @'Baby | DieHard'" },
+    "42178": { "userid": "42178", "tagIds": ["2", "3"], "note": "Note for @'thuyvan'" },
+    "1815170": { "userid": "1815170", "tagIds": ["2"], "note": "Note for @''" },
+    "1453845": { "userid": "1453845", "tagIds": ["0"], "note": "Note for @'anhdao1522'" },
+    "1749431": { "userid": "1749431", "tagIds": ["2"], "note": "Note for @''" }
   }
 }
