@@ -6,7 +6,7 @@ const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
 function onError(error) {
     console.log(`Error: ${error}`);
 }
-/* 
+
 function createTooltipHtml(tootipId, record) {
     let str = `
 <span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
@@ -53,6 +53,24 @@ function handleLabel(dbStorage) {
     };
 }
 
+/**
+ * 
+ * @returns {Int[]}
+ */
+function getAllUserIdsOnPageVoz() {
+    let all_acticles = document.getElementsByClassName("message message--post js-post");
+    let userIds = [];
+    for (let i = 0; i < all_acticles.length; i++) {
+        article = all_acticles[i];
+        let a_username = article.getElementsByClassName("username")[0];
+        let userid = parseInt(a_username.getAttribute("href").split(".").pop().replace("/", ""));
+        if (userid) {
+            userIds.push(userid);
+        }
+    };
+    return userIds.filter((item, index) => userIds.indexOf(item) === index);
+}
+
 function handleRemoveLabel() {
     // Remove css
     let divs = document.querySelectorAll(`div[class^="${chupmu_css_class_prefix}"]`);
@@ -65,7 +83,8 @@ function handleRemoveLabel() {
         elements[0].parentNode.removeChild(elements[0]);
     }
 }
-*/
+
+
 let myPort = browser.runtime.connect({ name: "port-from-cs" });
 myPort.postMessage({ greeting: "hello from content script" });
 
@@ -82,7 +101,7 @@ myPort.onMessage.addListener((msg) => {
         if (msg.message ==  "label") {
             console.log("command: label")
             //         handleLabel(db);
-            askBackgroundForRecords([1, 2, 3, 4]);
+            askBackgroundForRecords(getAllUserIdsOnPageVoz());
         } else if (msg.message == "removeLabel") {
             console.log("command: removeLabel")
             //         handleRemoveLabel();
