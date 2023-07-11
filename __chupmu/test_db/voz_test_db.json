@@ -11,22 +11,22 @@
       "0": {
         "tagId": "0",
         "description": "Xao lol",
-        "tag": "xao_lol"
+        "tagname": "xao_lol"
       },
       "1": {
         "tagId": "1",
         "description": "Ga Con",
-        "tag": "ga_con"
+        "tagname": "ga_con"
       },
       "2": {
         "tagId": "2",
         "description": "Hieu Biet",
-        "tag": "hieu_biet"
+        "tagname": "hieu_biet"
       },
       "3": {
         "tagId": "3",
         "description": "Dot Con Hay Noi",
-        "tag": "dot_con_hay_noi"
+        "tagname": "dot_con_hay_noi"
       }
     }
   },
