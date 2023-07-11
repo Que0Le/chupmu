@@ -2,65 +2,66 @@ const chupmu_class_prefix = "chupmu_";
 const chupmu_css_class_prefix = "chupmu_css_";
 const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
 
-// 
-// let userid_db = {
-//     1: { "tags": ["xao_lol"] },
-//     71866: { "tags": ["ga_con"] },
-//     42178: { "tags": ["pro", "hieu_biet"] },
-//     1815170: { "tags": ["ga_con"] },
-//     1453845: { "tags": ["xao_lol", "dot_con_hay_noi"] },
-//     1749431: { "tags": ["xao_lol", "dot_con_hay_noi"] },
-// };
-
-
-// let keys = Object.keys(userid_db);
-// console.log({ keys: keys })
-
-function onError(error) {
-    console.log(`Error: ${error}`);
-}
-
-function createTooltipHtml(tootipId, record) {
+function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
     let str = `
 <span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
-    <p>Tags: ${record["tags"]}</p>
-    <p>View full record: <a href="${record["recordUrl"]}">chup-mu.org</a></p>
+    <p>Tags: ${tagnames}</p>
+    <p>Note: ${note}</p>
+    <p>View full record: <a href="${recordUrl}">chup-mu.org</a></p>
 </span>
 `
     return str;
 }
 
-function handleLabel(dbStorage) {
-    // TODO: handle errors
-    console.log({dbStorage: dbStorage});
-    const tagObj = {};
-    dbStorage["meta"]["tags"].forEach(tag => {
-        tagObj[tag.id] = tag.tag;
-    });
+
+/**
+ * 
+ * @returns {String[]}
+ */
+function getAllUserIdsOnPageVoz() {
+    let all_acticles = document.getElementsByClassName("message message--post js-post");
+    let userIds = [];
+    for (let i = 0; i < all_acticles.length; i++) {
+        article = all_acticles[i];
+        let a_username = article.getElementsByClassName("username")[0];
+        let userid = a_username.getAttribute("href").split(".").pop().replace("/", "");
+        if (userid) {
+            userIds.push(userid);
+        }
+    };
+    return userIds.filter((item, index) => userIds.indexOf(item) === index);
+}
+
+function applyLabel(data) {
+    let tag_metas = data.meta.tags;
+    let records = data.records; // object: {1: { userid: 1, tags: (1) […], note: "" }}
+    let tagnames = [];
     let all_acticles = document.getElementsByClassName("message message--post js-post");
     for (let i = 0; i < all_acticles.length; i++) {
         article = all_acticles[i];
         let a_username = article.getElementsByClassName("username")[0];
         let userid = a_username.getAttribute("href").split(".").pop().replace("/", "");
         if (!userid) continue;
-        let record = dbStorage["db"][userid]
+        let record = records[userid];
         if (!record) continue;
 
         let message_cell_user = article.getElementsByClassName("message-cell message-cell--user")[0];
-        for (let j = 0; j < record["tags"].length; j++) { // support only 1 tag for now
-            let tag_id = record["tags"][j];
-            let tag = tagObj[tag_id];
-            // let action = action_db[tag]
-            // if (!action) continue;
-            // let style_str = message_cell_user.getAttribute('style') ? message_cell_user.getAttribute('style') + `;background:${action["background"]};` : `background:${action["background"]};`
-            message_cell_user.classList.add(`${chupmu_css_class_prefix}${tag}`);
-            // message_cell_user.setAttribute('style', style_str);
+        for (let j = 0; j < record.tagIds.length; j++) {
+            let tag_id = record.tagIds[j];
+            if (tag_metas[tag_id]) {
+                let tagname = tag_metas[tag_id].tagname;
+                message_cell_user.classList.add(`${chupmu_css_class_prefix}${tagname}`);
+                tagnames.push(tagname);
+            }
+            break; // TODO: support only the first tag for now. Need more css ideas!
         }
 
-        /* add tool tip */
         message_cell_user.classList.add("tooltip");
         let tootipId = `chupmu-tooltip-text-uid-${userid}`;
-        let tooltipHtml = createTooltipHtml(tootipId, record)
+        let tooltipHtml = createTooltipHtml(
+            tootipId, tagnames, record.note,
+            data.meta.onlineRecordUrlPrefix + userid
+        );
         message_cell_user.innerHTML += tooltipHtml;
         let tooltip = document.getElementById(tootipId);
         if (!tooltip) console.log(`Failed adding tooltip id: ${tootipId}`);
@@ -80,25 +81,39 @@ function handleRemoveLabel() {
     }
 }
 
-browser.runtime.onMessage.addListener((request) => {
-    console.log(request);
-    if (request["info"] != "chupmu_extension" ||
-        request["source"] != "chupmu_background_script" ||
-        request["target"] != "chupmu_content_script") {
+
+let myPort = browser.runtime.connect({ name: "port-from-cs" });
+myPort.postMessage({ greeting: "hello from content script" });
+
+myPort.onMessage.addListener((msg) => {
+    if (msg.info != "chupmu_extension" ||
+        msg.source != "chupmu_background_script" ||
+        msg.target != "chupmu_content_script") {
         return;
     }
-    console.log("Message from the background script:");
-    console.log(request["message"]);
 
-    const gettingDbStorage = browser.storage.local.get();
-    gettingDbStorage.then(db => {
-        if (request["message"] == "label") {
-            handleLabel(db);
-        } else if (request["message"] == "remove_label") {
+    if (msg.reference == "toggleLabelify") {
+        console.log("Request B->C: toggleLabelify ...");
+        // myPort.postMessage({ response: `Chupmu Content script: Working on command '${msg.message}'` });
+        if (msg.message ==  "label") {
+            console.log("command: label")
+            askBackgroundForRecords(getAllUserIdsOnPageVoz());
+        } else if (msg.message == "removeLabel") {
+            console.log("command: removeLabel")
             handleRemoveLabel();
         }
-    }, onError);
+    } else if (msg.reference == "responseRecords") {
+        console.log(`Get records data from background:`);
+        applyLabel(msg.message);
+    }
 
-    // TODO: send msg back to background script to store state
-    return Promise.resolve({ response: `Chupmu Content script: Done for command '${request["message"]}'` });
 });
+
+function askBackgroundForRecords(ids) {
+    myPort.postMessage(
+        {
+            info: "chupmu_extension", reference: "requestRecords",
+            source: "chupmu_content_script", target: "chupmu_background_script",
+            message: { "currentUrl": document.location.href, "ids": ids }
+        });
+}

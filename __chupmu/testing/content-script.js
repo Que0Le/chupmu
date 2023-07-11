@@ -2,11 +2,6 @@ const chupmu_class_prefix = "chupmu_";
 const chupmu_css_class_prefix = "chupmu_css_";
 const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
 
-
-function onError(error) {
-    console.log(`Error: ${error}`);
-}
-
 function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
     let str = `
 <span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
@@ -49,13 +44,12 @@ function applyLabel(data) {
         if (!userid) continue;
         let record = records[userid];
         if (!record) continue;
-        console.log(record);
 
         let message_cell_user = article.getElementsByClassName("message-cell message-cell--user")[0];
         for (let j = 0; j < record.tagIds.length; j++) {
             let tag_id = record.tagIds[j];
             if (tag_metas[tag_id]) {
-                let tagname = tag_metas[tag_id].tag;
+                let tagname = tag_metas[tag_id].tagname;
                 message_cell_user.classList.add(`${chupmu_css_class_prefix}${tagname}`);
                 tagnames.push(tagname);
             }
@@ -103,15 +97,13 @@ myPort.onMessage.addListener((msg) => {
         // myPort.postMessage({ response: `Chupmu Content script: Working on command '${msg.message}'` });
         if (msg.message ==  "label") {
             console.log("command: label")
-            //         handleLabel(db);
             askBackgroundForRecords(getAllUserIdsOnPageVoz());
         } else if (msg.message == "removeLabel") {
             console.log("command: removeLabel")
-            //         handleRemoveLabel();
+            handleRemoveLabel();
         }
     } else if (msg.reference == "responseRecords") {
         console.log(`Get records data from background:`);
-        // console.log(msg.message);
         applyLabel(msg.message);
     }
 

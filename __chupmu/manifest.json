@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "description": "Chup mu nguoi dung. Press Ctrl+Shift+U to send an event (Command+Shift+U on a Mac).",
-  "name": "chupmu",
+  "description": "Testing",
+  "name": "testing",
   "version": "0.1",
   "homepage_url": "https://github.com/",
 
@@ -16,7 +16,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "chupmu@chupmu_111222333.org",
+      "id": "testing@testing.org",
       "strict_min_version": "60.0b5"
     }
   },
@@ -27,7 +27,7 @@
     }
   },
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["params.js", "helpers.js", "db.js", "background.js"]
   },
   "content_scripts": [
     {
