@@ -5,13 +5,19 @@
   "version": "0.1",
   "homepage_url": "https://github.com/",
 
+
   "browser_action": {
-    "default_icon": "icons/page-32.png"
+    "default_icon": {
+     "32" : "icons/page-32.png"
+    },
+    "default_title": "Chupmu popup",
+    "default_popup": "browseraction_popup/popup.html"
   },
 
   "permissions": [
     "activeTab",
     "tabs",
+    "contextMenus",
     "storage"
   ],
   "browser_specific_settings": {
@@ -31,7 +37,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://voz.vn/t/*"],
+      "matches": ["https://*/*", "http://*/*"],
       "js": ["content-script.js"]
     }
   ],

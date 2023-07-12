@@ -1,9 +1,29 @@
 // background-script.js
 "use strict";
 
-function onError(error) {
-    console.error(`Error: ${error}`);
-}
+browser.contextMenus.create({
+    id: "chupmu_pick_this_user",
+    title: "Chupmu: Pick this user ...",
+    contexts: ["link"],
+},
+    // See https://extensionworkshop.com/documentation/develop/manifest-v3-migration-guide/#event-pages-and-backward-compatibility
+    // for information on the purpose of this error capture.
+    () => void browser.runtime.lastError,
+);
+
+let currentPickedUrl = "";
+
+browser.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === "chupmu_pick_this_user") {
+        currentPickedUrl = info.linkUrl;
+
+        // TODO: if supported platform, get all urls for that platform to display to user
+        browser.runtime.onMessage.addListener(msg => {
+            if (msg.reference === 'getCurrentPickedUrl') return Promise.resolve({"currentPickedUrl": currentPickedUrl});
+        });
+        browser.browserAction.openPopup()
+    }
+});
 
 
 // TODO: move this to local storage, and make it possible to be edited by user
