@@ -31,17 +31,17 @@ const DEFAULT_SETTINGS = {
     }`,
     "dbSources": [
       {
-        "dbName": "voz1",
-        "dbCss": `.chupmu_css_voz1_xao_lol} {
+        "dbName": "voz_test_db.12345",
+        "dbCss": `.chupmu_css_voz_test_db.12345_xao_lol} {
           background: pink !important;
         }
-        .chupmu_css__voz1_ga_con} {
+        .chupmu_css__voz_test_db.12345_ga_con} {
           background: green !important;
         }
-        .chupmu_css__voz1_hieu_biet} {
+        .chupmu_css__voz_test_db.12345_hieu_biet} {
           background: blue !important;
         }
-        .chupmu_css__voz1_dot_con_hay_noi} {
+        .chupmu_css__voz_test_db.12345_dot_con_hay_noi} {
           background: red !important;
         }`,
         "dbUrl": "https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json"

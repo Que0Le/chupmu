@@ -1,5 +1,5 @@
 
-
+// TODO: click on extension icon should also work
 browser.runtime.sendMessage({reference: 'getCurrentPickedUrl'})
 .then(msg => {
     let currentPickedUrl = msg.currentPickedUrl;
