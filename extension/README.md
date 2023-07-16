@@ -26,9 +26,10 @@ Popup: https://github.com/gorhill/uBlock/blob/master/src/popup-fenix.html.<br>Co
 - Dynamic content script registration: https://github.com/mdn/webextensions-examples/tree/main/content-script-register. 
 - Context menu: https://github.com/mdn/webextensions-examples/tree/master/context-menu-copy-link-with-types
 - Menu key: https://github.com/mdn/webextensions-examples/tree/main/menu-accesskey-visible
+- Setup the project in a more organized way: https://code.visualstudio.com/api/extension-guides/web-extensions
 
 # TODO:
 - [x] Switch to IndexedDB for DB storing, and local storage for css and settings and stuffs
-- [ ] Implement pick account and add to DB (similar to ublock's `element picker`)
+- [ ] Implement pick account and add to DB (similar to ublock's `element picker`) (WIP)
 - [ ] Define and store supported platform based on the URL (come with each db)
-- [ ] Popup
+- [ ] Popup to enter text for picker (WIP)

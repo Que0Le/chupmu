@@ -1,6 +1,6 @@
 
 
-const EXT_NAME = "chupmu"
+// const EXT_NAME = "chupmu"
 
 const db_container = `<div class="db-container">
 <div>
