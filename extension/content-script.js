@@ -2,6 +2,8 @@ const chupmu_class_prefix = "chupmu_";
 const chupmu_css_class_prefix = "chupmu_css_";
 const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
 
+let currentCss = [];
+
 function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
     let str = `
 <span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
@@ -34,7 +36,12 @@ function getAllUserIdsOnPageVoz() {
 
 function applyLabel(data) {
     // BIG TODO: update this function to work with results from multiple filter databases
-    data  = data[0]
+    // Also, if an account is listed in multiple dbs with different tags, then how is the effect displayed?
+    data.forEach(d => {
+        currentCss.push(d.meta.dbCss);
+    });
+    data  = data[0];
+
     let tag_metas = data.meta.tags;
     let records = data.records; // object: {1: { userid: 1, tags: (1) […], note: "" }}
     let dbName = data.meta.dbName;
@@ -98,47 +105,21 @@ myPort.onMessage.addListener((msg) => {
     if (msg.reference == "toggleLabelify") {
         console.log("Request B->C: toggleLabelify ...");
         // myPort.postMessage({ response: `Chupmu Content script: Working on command '${msg.message}'` });
-        if (msg.message ==  "label") {
+        if (msg.message == "label") {
             console.log("command: label")
             askBackgroundForRecords(getAllUserIdsOnPageVoz());
         } else if (msg.message == "removeLabel") {
             console.log("command: removeLabel")
             handleRemoveLabel();
+            // Send the current CSS code back to background to be removed
+            myPort.postMessage({
+                info: "chupmu_extension", reference: "currentCss",
+                source: "chupmu_content_script", target: "chupmu_background_script",
+                message: { "currentCss": currentCss }
+            });
         }
     } else if (msg.reference == "responseRecords") {
-        /* Data is a array in form:
-        [
-            {
-                "meta": {
-                "dbName": "voz_test_db.12345",
-                "description": "A test DB for Voz forum",
-                "urls": [
-                    "https://voz.vn/t/noi-quy-cua-dien-dan-chi-tiet-tung-muc.1583/",
-                    "voz.vn/t/"
-                ],
-                "dbCss": ".chupmu_css_.voz_test_db.12345_.xao_lol .......}",
-                "dbUrl": "https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json"
-                },
-                "records": {
-                "1": {
-                    "userid": "1",
-                    "tagIds": [
-                    "0"
-                    ],
-                    "note": "Note for @'fRzzy'"
-                },
-                "42178": {
-                    "userid": "42178",
-                    "tagIds": [
-                    "2",
-                    "3"
-                    ],
-                    "note": "Note for @'thuyvan'"
-                }
-                }
-            }
-        ]
-        */
+        /* Data is a array of db's meta, and records */
         console.log(`Get responseRecords records data from background:`);
         console.log(msg.message)
         applyLabel(msg.message);
@@ -147,10 +128,9 @@ myPort.onMessage.addListener((msg) => {
 });
 
 function askBackgroundForRecords(ids) {
-    myPort.postMessage(
-        {
-            info: "chupmu_extension", reference: "requestRecords",
-            source: "chupmu_content_script", target: "chupmu_background_script",
-            message: { "currentUrl": document.location.href, "ids": ids }
-        });
+    myPort.postMessage({
+        info: "chupmu_extension", reference: "requestRecords",
+        source: "chupmu_content_script", target: "chupmu_background_script",
+        message: { "currentUrl": document.location.href, "ids": ids }
+    });
 }

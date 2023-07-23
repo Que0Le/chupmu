@@ -156,7 +156,7 @@ browser.pageAction.onClicked.addListener(toggleLabelify);
  */
 function getRawRecordsFromIndexedDb(dbStoreName, ids) {
     return new Promise((resolve, reject) => {
-        console.log(`getting records (if any) for id set: `, ids, dbStoreName);
+        // console.log(`getting records (if any) for id set: `, ids, dbStoreName);
         openDb()
             .then(db => {
                 const transaction = db.transaction(dbStoreName, 'readonly');
@@ -218,7 +218,6 @@ function handleRequestRecord3(message) {
                     });
                     Promise.all(promiseArray)
                         .then(() => {
-                            console.log(results);
                             resolve(results); // Resolve the outer Promise with the results
                         })
                         .catch(error => {
@@ -238,64 +237,12 @@ function handleRequestRecord3(message) {
     });
 }
 
-// function handleRequestRecord2(message) {
-//     return new Promise((resolve, reject) => {
-//         let results = [];
-//         getFilterDbsForUrl(message.currentUrl)
-//             .then(supportedDbs => {
-//                 console.log(supportedDbs)
-//                 const promiseArray = supportedDbs.map(supportedDb => {
-//                     return getRawRecordsFromIndexedDb(supportedDb, message.ids)
-//                         .then(records => {
-//                             return browser.storage.local.get(`${META_DB_PREFIX}${supportedDb}`)
-//                                 .then(meta => {
-//                                     let resultForThisDb = { meta: meta[`${META_DB_PREFIX}${supportedDb}`], records: records };
-//                                     results.push(resultForThisDb);
-//                                 });
-//                         });
-//                 });
-//                 Promise.all(promiseArray)
-//                     .then(() => {
-//                         resolve(results);
-//                     })
-//                     .catch(error => {
-//                         console.error("An error occurred:", error);
-//                         reject(error);
-//                     });
-//             })
-//             .catch(error => {
-//                 console.error("An error occurred:", error);
-//                 reject(error);
-//             });
-//     });
-// }
-
-// //TODO: generalization. For now, hardcoded voz
-// // { currentUrl: "https://voz.vn/t/...", ids: (6) […] }
-// function handleRequestRecord(message) {
-//     return new Promise((resolve, reject) => {
-//         getRawRecordsFromIndexedDb(DB_STORE_NAME, message.ids)
-//             .then(records => {
-//                 console.log(records)
-//                 browser.storage.local.get(`${META_DB_PREFIX}${DB_STORE_NAME}`)
-//                     .then(meta => {
-//                         let result = { meta: meta[`${META_DB_PREFIX}${DB_STORE_NAME}`], records: records };
-//                         resolve(result);
-//                     })
-//                     .catch(error => {
-//                         reject(error);
-//                     });
-//             })
-//             .catch(error => {
-//                 reject(error);
-//             });
-//     });
-// }
-
 // TODO: support multiple content script
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_scripts#connection-based_messaging
 let portFromCS;
 
+// TODO: inject css using tab id: sender.sender.tab.id
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/insertCSS
 function connected(p) {
     portFromCS = p;
     portFromCS.onMessage.addListener((msg, sender) => {
@@ -310,10 +257,7 @@ function connected(p) {
             console.log(msg.message)
             handleRequestRecord3(msg.message)
                 .then(results => {
-                    console.log(results)
                     results.forEach(r => {
-                        // TODO: inject css using tab id: sender.sender.tab.id
-                        // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/insertCSS
                         browser.tabs.insertCSS({ code: r.meta.dbCss });
                     });
                     portFromCS.postMessage({
@@ -321,9 +265,10 @@ function connected(p) {
                         source: "chupmu_background_script", target: "chupmu_content_script",
                         message: results
                     });
-                })
-        } else if (msg.reference == "removeCss") {
-
+                }
+            );
+        } else if (msg.reference == "currentCss") {
+            msg.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
         }
         // else if (msg.reference == "") {
         // }
