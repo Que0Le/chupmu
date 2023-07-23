@@ -6,7 +6,7 @@ const urlRegex = /^https:\/\/voz\.vn\/t\//;
 const EXT_NAME = "chupmu"
 const DB_NAME = 'chupmuDb';
 const DB_VERSION = 1;
-const DB_STORE_NAME = 'voz_test_db.12345';
+const DB_STORE_NAME = 'voz_test_db-12345';
 
 const DEFAULT_SETTINGS = {
   "tooltipCss": `.tooltip {
@@ -34,22 +34,48 @@ const DEFAULT_SETTINGS = {
     }`,
   "dbSources": [
     {
-      "dbName": "voz_test_db.12345",
+      "dbName": "voz_test_db-12345",
       "description": "A test DB for Voz forum",
-      "urls": ["https://voz.vn/t/noi-quy-cua-dien-dan-chi-tiet-tung-muc.1583/", "voz.vn/t/"],
-      "dbCss": `.chupmu_css_.voz_test_db.12345_.xao_lol {
-          background: pink !important;
+      "dbSource": "https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json",
+      "onlineRecordUrlPrefix": "chupmu.org/voz_test_db-12345/userid=",
+      "urls": [
+        "https://voz.vn/t/noi-quy-cua-dien-dan-chi-tiet-tung-muc.1583/",
+        "voz.vn/t/"
+      ],
+      "tags": {
+        "0": {
+          "tagId": "0",
+          "description": "Xao lol",
+          "tagname": "xao_lol"
+        },
+        "1": {
+          "tagId": "1",
+          "description": "Ga Con",
+          "tagname": "ga_con"
+        },
+        "2": {
+          "tagId": "2",
+          "description": "Hieu Biet",
+          "tagname": "hieu_biet"
+        },
+        "3": {
+          "tagId": "3",
+          "description": "Dot Con Hay Noi",
+          "tagname": "dot_con_hay_noi"
         }
-        .chupmu_css_.voz_test_db.12345_.ga_con {
-          background: green !important;
-        }
-        .chupmu_css_.voz_test_db.12345_.hieu_biet {
-          background: blue !important;
-        }
-        .chupmu_css_.voz_test_db.12345_.dot_con_hay_noi {
-          background: red !important;
-        }`,
-      "dbUrl": "https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json"
+      },
+      "dbCss": `.chupmu_css__voz_test_db-12345__xao_lol {
+        background: pink !important;
+      }
+      .chupmu_css__voz_test_db-12345__ga_con {
+        background: green !important;
+      }
+      .chupmu_css__voz_test_db-12345__hieu_biet {
+        background: blue !important;
+      }
+      .chupmu_css__voz_test_db-12345__dot_con_hay_noi {
+        background: red !important;
+      }`
     }
   ],
   "action": {
@@ -136,7 +162,7 @@ function toggleLabelify(tab) {
       browser.pageAction.setIcon({ tabId: tab.id, path: "icons/on.svg" });
       browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_REMOVE });
       browser.tabs.insertCSS({ code: TOOLTIP_CSS });
-      browser.tabs.insertCSS({ code: VOZ_CSS });
+      // browser.tabs.insertCSS({ code: VOZ_CSS });
       portFromCS.postMessage(
         {
           info: "chupmu_extension", reference: "toggleLabelify",
@@ -148,7 +174,7 @@ function toggleLabelify(tab) {
       browser.pageAction.setIcon({ tabId: tab.id, path: "icons/off.svg" });
       browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
       browser.tabs.removeCSS({ code: TOOLTIP_CSS });
-      browser.tabs.removeCSS({ code: VOZ_CSS });
+      // browser.tabs.removeCSS({ code: VOZ_CSS });
       portFromCS.postMessage(
         {
           info: "chupmu_extension", reference: "toggleLabelify",

@@ -33,9 +33,11 @@ function getAllUserIdsOnPageVoz() {
 }
 
 function applyLabel(data) {
+    // BIG TODO: update this function to work with results from multiple filter databases
+    data  = data[0]
     let tag_metas = data.meta.tags;
     let records = data.records; // object: {1: { userid: 1, tags: (1) […], note: "" }}
-    let dbname = data.meta.dbname;
+    let dbName = data.meta.dbName;
     let tagnames = [];
     let all_acticles = document.getElementsByClassName("message message--post js-post");
     for (let i = 0; i < all_acticles.length; i++) {
@@ -51,7 +53,7 @@ function applyLabel(data) {
             let tag_id = record.tagIds[j];
             if (tag_metas[tag_id]) {
                 let tagname = tag_metas[tag_id].tagname;
-                message_cell_user.classList.add(`${chupmu_css_class_prefix}_.${dbname}_.${tagname}`);
+                message_cell_user.classList.add(`${chupmu_css_class_prefix}_${dbName}__${tagname}`);
                 tagnames.push(tagname);
             }
             break; // TODO: support only the first tag for now. Need more css ideas!
@@ -104,7 +106,41 @@ myPort.onMessage.addListener((msg) => {
             handleRemoveLabel();
         }
     } else if (msg.reference == "responseRecords") {
-        console.log(`Get records data from background:`);
+        /* Data is a array in form:
+        [
+            {
+                "meta": {
+                "dbName": "voz_test_db.12345",
+                "description": "A test DB for Voz forum",
+                "urls": [
+                    "https://voz.vn/t/noi-quy-cua-dien-dan-chi-tiet-tung-muc.1583/",
+                    "voz.vn/t/"
+                ],
+                "dbCss": ".chupmu_css_.voz_test_db.12345_.xao_lol .......}",
+                "dbUrl": "https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json"
+                },
+                "records": {
+                "1": {
+                    "userid": "1",
+                    "tagIds": [
+                    "0"
+                    ],
+                    "note": "Note for @'fRzzy'"
+                },
+                "42178": {
+                    "userid": "42178",
+                    "tagIds": [
+                    "2",
+                    "3"
+                    ],
+                    "note": "Note for @'thuyvan'"
+                }
+                }
+            }
+        ]
+        */
+        console.log(`Get responseRecords records data from background:`);
+        console.log(msg.message)
         applyLabel(msg.message);
     }
 
