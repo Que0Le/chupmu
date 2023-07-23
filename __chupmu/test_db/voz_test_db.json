@@ -1,6 +1,6 @@
 {
   "meta": {
-    "dbName": "voz_test_db.12345",
+    "dbName": "voz_test_db-12345",
     "description": "A test DB for Voz forum",
     "dbSource": "https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json",
     "onlineRecordUrlPrefix": "chupmu.org/voz_test_db.12345/userid=",
