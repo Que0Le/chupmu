@@ -228,3 +228,42 @@ function reloadSupportedUrl(config) {
   return dbUrls;
 }
 
+
+function handleRequestRecord(message) {
+  return new Promise((resolve, reject) => {
+    let results = [];
+    browser.storage.local.get(`${EXT_NAME}_config`)
+      .then(data => data[`${EXT_NAME}_config`])
+      .then(config => {
+        getFilterDbNamesForUrl(message.currentUrl)
+          .then(supportedDbs => {
+            const promiseArray = supportedDbs.map(supportedDb => {
+              return getRawRecordsFromIndexedDb(supportedDb, message.ids)
+                .then(records => {
+                  let resultForThisDb = {
+                    meta: config.dbSources.filter(dbs => dbs.dbName == supportedDb)[0],
+                    records: records
+                  };
+                  results.push(resultForThisDb);
+                });
+            });
+            Promise.all(promiseArray)
+              .then(() => {
+                resolve(results); // Resolve the outer Promise with the results
+              })
+              .catch(error => {
+                console.error("An error occurred:", error);
+                reject(error);
+              });
+          })
+          .catch(error => {
+            console.error("An error occurred:", error);
+            reject(error);
+          });
+      })
+      .catch(error => {
+        console.error("An error occurred:", error);
+        reject(error);
+      });
+  });
+}

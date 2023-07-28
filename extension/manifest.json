@@ -5,21 +5,15 @@
   "version": "0.1",
   "homepage_url": "https://github.com/",
 
-
   "browser_action": {
     "default_icon": {
-     "32" : "icons/page-32.png"
+      "32": "icons/page-32.png"
     },
     "default_title": "Chupmu popup",
     "default_popup": "browseraction_popup/popup.html"
   },
 
-  "permissions": [
-    "activeTab",
-    "tabs",
-    "contextMenus",
-    "storage"
-  ],
+  "permissions": ["activeTab", "tabs", "contextMenus", "storage"],
   "browser_specific_settings": {
     "gecko": {
       "id": "testing@testing.org",
@@ -33,7 +27,7 @@
     }
   },
   "background": {
-    "scripts": ["js/helpers.js", "js/db.js", "background.js"]
+    "scripts": ["js/db.js", "js/helpers.js", "background.js"]
   },
   "content_scripts": [
     {

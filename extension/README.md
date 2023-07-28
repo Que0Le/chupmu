@@ -20,7 +20,7 @@ Labeling can be activated using hotkey `Ctrl+Shift+U` on Windows, or press on th
 Popup: https://github.com/gorhill/uBlock/blob/master/src/popup-fenix.html.<br>Contentscript: https://github.com/gorhill/uBlock/blob/master/src/js/contentscript.js
 
 
-# To evaluate
+# Resources to evaluate
 - Extension example from MDN: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Examples
 - SQLite for js: https://github.com/sql-js/sql.js/
 - Dynamic content script registration: https://github.com/mdn/webextensions-examples/tree/main/content-script-register. 

@@ -1,7 +1,4 @@
 
-
-// const EXT_NAME = "chupmu"
-
 const db_container = `<div class="db-container">
 <div>
   <div>
@@ -87,17 +84,17 @@ function loadDbDataFromLocalStorage() {
 
 // TODO: add more fields: apply url (voz, voz_tan, ...)
 function handleRemoveButton(event) {
-    let dbContainer = event.target.parentNode;
-    dbContainer.parentNode.removeChild(dbContainer);
+  let dbContainer = event.target.parentNode;
+  dbContainer.parentNode.removeChild(dbContainer);
 }
 
 function handleAddTextareaButton(event) {
-    // let dbs = document.getElementById("dbs");
-    // dbs.innerHTML += db_container;
-    // addRemoveEventHandlerForAllRemoveButtons();
-    addDbEntry();
-    // DOM will reload after we update innerHtml. Need to reload the values from localstorage
-    loadDbDataFromLocalStorage();
+  // let dbs = document.getElementById("dbs");
+  // dbs.innerHTML += db_container;
+  // addRemoveEventHandlerForAllRemoveButtons();
+  addDbEntry();
+  // DOM will reload after we update innerHtml. Need to reload the values from localstorage
+  loadDbDataFromLocalStorage();
 }
 
 function handleSaveTextareaButton() {
@@ -109,24 +106,24 @@ function handleSaveTextareaButton() {
     let urls = allDbContainers[i].querySelector('textarea[name="urls"]').value;
     let dbUrl = allDbContainers[i].querySelector('textarea[name="dbUrl"]').value;
     let dbCss = allDbContainers[i].querySelector('textarea[name="dbCss"]').value;
-    dbSources.push({ 
-      "dbName": dbName, "dbDescription": dbDescription, 
+    dbSources.push({
+      "dbName": dbName, "dbDescription": dbDescription,
       "urls": urls.split(",").map(url => url.trim()),
-      "dbCss": dbCss, "dbUrl": dbUrl 
+      "dbCss": dbCss, "dbUrl": dbUrl
     });
   }
   // Store current db in local storage
   browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
     config[`${EXT_NAME}_config`]["dbSources"] = dbSources;
     browser.storage.local.set(config)
-    .then(() => {
-      // Generate matching URL set
-      browser.storage.local.get(`${EXT_NAME}_config`).then(data => {
-        // console.log(data)
-        let config = data[`${EXT_NAME}_config`];
-        reloadSupportedUrl(config);
-      });
-    })
+      .then(() => {
+        // Generate matching URL set
+        browser.storage.local.get(`${EXT_NAME}_config`).then(data => {
+          // console.log(data)
+          let config = data[`${EXT_NAME}_config`];
+          reloadSupportedUrl(config);
+        });
+      })
   });
 
 
