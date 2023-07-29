@@ -30,6 +30,7 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
           browser.runtime.onMessage.removeListener(handleMessage); // Remove the listener
           return getAllFilterDbNames()
             .then(dbNames => ({ "currentPickedUrl": currentPickedUrl, "availableDbNames": dbNames }));
+            //TODO: tags of each DB
         }
       };
 
@@ -142,8 +143,7 @@ function connected(p) {
     }
 
     if (msg.reference == "requestRecords") {
-      console.log("Request C->B: requestRecords ...");
-      console.log(msg.message)
+      console.log("Request C->B: requestRecords", msg.message);
       handleRequestRecord(msg.message)
         .then(results => {
           results.forEach(r => {
@@ -156,7 +156,8 @@ function connected(p) {
           });
         }
         );
-    } else if (msg.reference == "currentCss") {
+    } else if (msg.reference == "removeCurrentCss") {
+      console.log("Request C->B: removeCurrentCss", msg.message);
       msg.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
     }
   });

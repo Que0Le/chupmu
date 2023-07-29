@@ -113,7 +113,7 @@ myPort.onMessage.addListener((msg) => {
       handleRemoveLabel();
       // Send the current CSS code back to background to be removed
       myPort.postMessage({
-        info: "chupmu_extension", reference: "currentCss",
+        info: "chupmu_extension", reference: "removeCurrentCss",
         source: "chupmu_content_script", target: "chupmu_background_script",
         message: { "currentCss": currentCss }
       });
