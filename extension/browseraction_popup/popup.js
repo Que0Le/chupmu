@@ -2,7 +2,9 @@
 // TODO: click on extension icon should also work
 browser.runtime.sendMessage({reference: 'getCurrentPickedUrl'})
 .then(msg => {
+    console.log(msg)
     let currentPickedUrl = msg.currentPickedUrl;
+    document.getElementById("raw_url").innerText = currentPickedUrl;
     // TODO: set focus so user can write right away
     
     function handleClearButton(event) {

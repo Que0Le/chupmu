@@ -1,6 +1,7 @@
 const urlRegex = /^https:\/\/voz\.vn\/t\//;
+const isHttpOrHttps = /^(http:\/\/|https:\/\/)/i;
+const SUPPORTED_PROTOCOL = ["http", "https"];
 // https://www.w3schools.com/css/css_tooltip.asp
-
 
 
 const EXT_NAME = "chupmu"
@@ -9,29 +10,6 @@ const DB_VERSION = 1;
 const DB_STORE_NAME = 'voz_test_db-12345';
 
 const DEFAULT_SETTINGS = {
-  "tooltipCss": `.tooltip {
-      position: relative;
-      display: inline-block;
-      border-bottom: 1px dotted black;
-    }
-    
-    .tooltip .tooltiptext {
-      visibility: hidden;
-      width: 120px;
-      background-color: black;
-      color: #fff;
-      text-align: center;
-      border-radius: 6px;
-      padding: 5px 0;
-    
-      /* Position the tooltip */
-      position: absolute;
-      z-index: 1;
-    }
-    
-    .tooltip:hover .tooltiptext {
-      visibility: visible;
-    }`,
   "dbSources": [
     {
       "dbName": "voz_test_db-12345",
@@ -75,6 +53,27 @@ const DEFAULT_SETTINGS = {
       }
       .chupmu_css__voz_test_db-12345__dot_con_hay_noi {
         background: red !important;
+      }
+      .tooltip {
+        position: relative;
+        display: inline-block;
+        border-bottom: 1px dotted black;
+      }
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 120px;
+        background-color: black;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+      
+        /* Position the tooltip */
+        position: absolute;
+        z-index: 1;
+      }
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
       }`
     }
   ],
@@ -82,51 +81,6 @@ const DEFAULT_SETTINGS = {
 
   }
 }
-
-let TOOLTIP_CSS = `
-.tooltip {
-  position: relative;
-  display: inline-block;
-  border-bottom: 1px dotted black;
-}
-
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 120px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-
-  /* Position the tooltip */
-  position: absolute;
-  z-index: 1;
-}
-
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-}
-`
-let tags = ["xao_lol", "ga_con", "hieu_biet", "dot_con_hay_noi"]
-
-let VOZ_CSS = `
-.chupmu_css_${tags[0]} {
-  background: pink !important;
-}
-
-.chupmu_css_${tags[1]} {
-  background: green !important;
-}
-
-.chupmu_css_${tags[2]} {
-  background: blue !important;
-}
-
-.chupmu_css_${tags[3]} {
-  background: red !important;
-}
-`;
 
 
 function sendMsgToTab(tab, reference, msg) {
@@ -161,7 +115,7 @@ function toggleLabelify(tab) {
       // sendMsgToTab(tab, "toggleLabelify", "label");
       browser.pageAction.setIcon({ tabId: tab.id, path: "icons/on.svg" });
       browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_REMOVE });
-      browser.tabs.insertCSS({ code: TOOLTIP_CSS });
+      // browser.tabs.insertCSS({ code: TOOLTIP_CSS });
       // browser.tabs.insertCSS({ code: VOZ_CSS });
       portFromCS.postMessage(
         {
@@ -173,7 +127,7 @@ function toggleLabelify(tab) {
       // sendMsgToTab(tab, "toggleLabelify", "remove_label");
       browser.pageAction.setIcon({ tabId: tab.id, path: "icons/off.svg" });
       browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
-      browser.tabs.removeCSS({ code: TOOLTIP_CSS });
+      // browser.tabs.removeCSS({ code: TOOLTIP_CSS });
       // browser.tabs.removeCSS({ code: VOZ_CSS });
       portFromCS.postMessage(
         {
@@ -204,7 +158,8 @@ function initializePageAction(tab) {
 }
 
 /**
- * 
+ * Generate a list of url and database name that supports the url.
+ * Store the data in local storage of the extension
  * @param {Object} config config object from local storage
  * @returns dbUrls array of {"url1": "db1"}
  */
@@ -238,7 +193,7 @@ function handleRequestRecord(message) {
         getFilterDbNamesForUrl(message.currentUrl)
           .then(supportedDbs => {
             const promiseArray = supportedDbs.map(supportedDb => {
-              return getRawRecordsFromIndexedDb(supportedDb, message.ids)
+              return getRawRecordsFromFilterDb(supportedDb, message.ids)
                 .then(records => {
                   let resultForThisDb = {
                     meta: config.dbSources.filter(dbs => dbs.dbName == supportedDb)[0],

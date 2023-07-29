@@ -13,21 +13,35 @@ browser.contextMenus.create({
 
 let currentPickedUrl = "";
 
+
+// TODO: more suggestion if url is in supported list
 browser.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "chupmu_pick_this_user") {
     currentPickedUrl = info.linkUrl;
+    try {
+      let parsedUrl = new URL(currentPickedUrl);
+      if (!SUPPORTED_PROTOCOL.includes(parsedUrl.protocol.slice(0, -1))) {
+        console.log(`Picker: Only supported '${SUPPORTED_PROTOCOL}' protocols. Url is '${currentPickedUrl}'`);
+        return; // Added a return statement to exit the function early
+      }
 
-    // TODO: if supported platform, get all urls for that platform to display to user
-    browser.runtime.onMessage.addListener(msg => {
-      if (msg.reference === 'getCurrentPickedUrl') return Promise.resolve({ "currentPickedUrl": currentPickedUrl });
-    });
-    browser.browserAction.openPopup()
+      const handleMessage = (msg) => {
+        if (msg.reference === 'getCurrentPickedUrl') {
+          browser.runtime.onMessage.removeListener(handleMessage); // Remove the listener
+          return getAllFilterDbNames()
+            .then(dbNames => ({ "currentPickedUrl": currentPickedUrl, "availableDbNames": dbNames }));
+        }
+      };
+
+      browser.runtime.onMessage.addListener(handleMessage); // Add the listener
+      browser.browserAction.openPopup();
+    } catch (error) {
+      console.log(`Picker: Error parsing url '${currentPickedUrl}'`);
+      return;
+    }
   }
 });
 
-
-// TODO: if not found in local storage, set to TOOLTIP_CSS as default
-browser.storage.local.set({ "__TOOLTIP_CSS": { "css": TOOLTIP_CSS } });
 
 /*
 When first loaded, initialize the page action for all tabs.
@@ -55,15 +69,9 @@ browser.storage.local.get(`${EXT_NAME}_config`)
       obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
       browser.storage.local.set(obj);
       /* Download DB */
-      // const META_DB_PREFIX = "meta_db_";
       fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json")
         .then((response) => response.json())
         .then((data) => {
-          // console.log(data);
-          // Store meta data in local storage
-          // let meta_db = {};
-          // meta_db[`${META_DB_PREFIX}${data.meta.dbName}`] = data.meta;
-          // browser.storage.local.set(meta_db);
           // Write db to indexeddb
           openDb()
             .then(db => {
@@ -151,8 +159,6 @@ function connected(p) {
     } else if (msg.reference == "currentCss") {
       msg.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
     }
-    // else if (msg.reference == "") {
-    // }
   });
 }
 

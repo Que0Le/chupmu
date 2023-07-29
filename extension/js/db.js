@@ -103,11 +103,28 @@ function getFilterDbNamesForUrl(url) {
 
 
 /**
+ * Get all dbNammes from local storage setting
+ * @returns Array of db names
+ */
+function getAllFilterDbNames() {
+  return new Promise((resolve, reject) => {
+    browser.storage.local.get(`${EXT_NAME}_config`).then(data => {
+      let config = data[`${EXT_NAME}_config`];
+      const dbNames = config.dbSources.map(source => source.dbName);
+      resolve(dbNames)
+    }).catch(error => {
+      reject(error);
+    });
+  });
+}
+
+
+/**
  * 
  * @param {Int[]} ids Array of user id. Integer, but wil be changed to support i.e uuid
  * @returns Array of record objects
  */
-function getRawRecordsFromIndexedDb(dbStoreName, ids) {
+function getRawRecordsFromFilterDb(dbStoreName, ids) {
   return new Promise((resolve, reject) => {
     // console.log(`getting records (if any) for id set: `, ids, dbStoreName);
     openDb()
