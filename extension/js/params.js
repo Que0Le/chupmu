@@ -1,6 +1,7 @@
 const urlRegex = /^https:\/\/voz\.vn\/t\//;
 const isHttpOrHttps = /^(http:\/\/|https:\/\/)/i;
 const SUPPORTED_PROTOCOL = ["http", "https"];
+const getUserFromUrl = /\/([^/]+)\/?$/;
 // https://www.w3schools.com/css/css_tooltip.asp
 
 

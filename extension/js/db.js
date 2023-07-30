@@ -118,6 +118,29 @@ function getAllFilterDbNames() {
   });
 }
 
+/**
+ * Get all dbNammes and their tags from local storage setting
+ * @returns Array of objects {dbName and tags}
+ */
+function getAllFilterDbNamesAndTheirTagNames() {
+  return new Promise((resolve, reject) => {
+    browser.storage.local.get(`${EXT_NAME}_config`).then(data => {
+      let config = data[`${EXT_NAME}_config`];
+      let result = {};
+      const dbNames = config.dbSources.map(source => {
+        let tags = [];
+        for (const [key, value] of Object.entries(source.tags)) {
+          tags.push(value.tagname);
+        }
+        result[source.dbName] = tags;
+      });
+      resolve(result)
+    }).catch(error => {
+      reject(error);
+    });
+  });
+}
+
 
 /**
  * 

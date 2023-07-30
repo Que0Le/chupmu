@@ -1,4 +1,8 @@
 
+function splitTrimFilterEmpty(string, delimiterChar) {
+  return string.split.map(substring => substring.trim()).filter(item => item !== '')
+}
+
 function sendMsgToTab(tab, reference, msg) {
   console.log(reference)
   browser.tabs.sendMessage(

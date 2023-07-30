@@ -14,7 +14,6 @@ browser.contextMenus.create({
 let currentPickedUrl = "";
 
 
-// TODO: more suggestion if url is in supported list
 browser.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "chupmu_pick_this_user") {
     currentPickedUrl = info.linkUrl;
@@ -22,19 +21,26 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
       let parsedUrl = new URL(currentPickedUrl);
       if (!SUPPORTED_PROTOCOL.includes(parsedUrl.protocol.slice(0, -1))) {
         console.log(`Picker: Only supported '${SUPPORTED_PROTOCOL}' protocols. Url is '${currentPickedUrl}'`);
-        return; // Added a return statement to exit the function early
+        return;
       }
+      // TODO: improve guessing
+      let suggestedPlatformUrl = parsedUrl.origin.replace(parsedUrl.protocol, "").slice(2);
+      let suggestedUserId = parsedUrl.pathname.match(getUserFromUrl)[1];
 
       const handleMessage = (msg) => {
         if (msg.reference === 'getCurrentPickedUrl') {
-          browser.runtime.onMessage.removeListener(handleMessage); // Remove the listener
-          return getAllFilterDbNames()
-            .then(dbNames => ({ "currentPickedUrl": currentPickedUrl, "availableDbNames": dbNames }));
-            //TODO: tags of each DB
+          return getAllFilterDbNamesAndTheirTagNames()
+            .then(dbNamesAndTheirTagNames => ({
+              "currentPickedUrl": currentPickedUrl, "availableDbNames": dbNamesAndTheirTagNames,
+              "suggestedPlatformUrl": suggestedPlatformUrl, "suggestedUserId": suggestedUserId
+            }));
+        } else if (msg.reference === 'submitNewUser') {
+          browser.runtime.onMessage.removeListener(handleMessage);
+          console.log(msg)
         }
       };
 
-      browser.runtime.onMessage.addListener(handleMessage); // Add the listener
+      browser.runtime.onMessage.addListener(handleMessage);
       browser.browserAction.openPopup();
     } catch (error) {
       console.log(`Picker: Error parsing url '${currentPickedUrl}'`);
