@@ -163,6 +163,7 @@ function addNewTagToTagsObject(tagsObject, tagNames) {
   let maxTagId = -1;
   let toAddTagNames = JSON.parse(JSON.stringify(tagNames));
   let oldAndNewTagIds = [];
+  let newTagIds = [];
   // Get highest id and also filter out existing tag names
   for (const [key, value] of Object.entries(tagsObject)) {
     const numericTagId = parseInt(tagsObject[key].tagId, 10);
@@ -181,8 +182,9 @@ function addNewTagToTagsObject(tagsObject, tagNames) {
     const newTagId = (maxTagId += 1).toString();
     newTagsObject[newTagId] = { tagId: newTagId, description: "", tagname: newTag };
     oldAndNewTagIds.push(newTagId);
+    newTagIds.push(newTagId);
   });
-  return { newTagsObject, oldAndNewTagIds };
+  return { newTagsObject, oldAndNewTagIds, newTagIds };
 }
 
 function handleSubmitNewUserToDb(data) {
@@ -206,16 +208,34 @@ function handleSubmitNewUserToDb(data) {
       for (const targetDbNameAndTagNames of data.targetDbNamesAndTheirTagNames) {
         if (dbNamesAndTheirTags[targetDbNameAndTagNames.dbName]) {
           // add new tags to temp settings
-          const { newTagsObject, oldAndNewTagIds } = addNewTagToTagsObject(
+          const { newTagsObject, oldAndNewTagIds, newTagIds } = addNewTagToTagsObject(
             dbNamesAndTheirTags[targetDbNameAndTagNames.dbName], targetDbNameAndTagNames.tagNames
           );
-          // TODO: add to existing db
-          console.log(newTagsObject, {
-            "userid": data.userId,
-            "note": data.note,
-            "tagIds": oldAndNewTagIds
-          })
-          // TODO: save to settings
+          // if there is new tag, then update the settings
+          if (oldAndNewTagIds.length >= newTagIds.length) {
+            browser.storage.local.get(`${EXT_NAME}_config`).then(data => {
+              let config = data[`${EXT_NAME}_config`];
+              for (let i =0; i < config.dbSources.length; i++) {
+                if (config.dbSources[i].dbName === targetDbNameAndTagNames.dbName) {
+                  config.dbSources[i].tags = newTagsObject;
+                  let obj = {};
+                  obj[`${EXT_NAME}_config`] = config;
+                  browser.storage.local.set(obj);
+                  break;
+                }
+              }
+              reloadSupportedUrl(config);
+            })
+          }
+          // add to the existing db
+          writeEntryToDb(
+            targetDbNameAndTagNames.dbName, 
+            {
+              "userid": data.userId,
+              "note": data.note,
+              "tagIds": oldAndNewTagIds
+            }
+          );
         } else {
           // Create new db
         }

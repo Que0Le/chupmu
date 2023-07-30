@@ -21,6 +21,30 @@ function openDb() {
   });
 }
 
+
+function writeEntryToDb(dbName, date) {
+  openDb()
+    .then(db => {
+      const transaction = db.transaction(dbName, 'readwrite');
+      const objectStore = transaction.objectStore(dbName);
+      const request = objectStore.add(date);
+      request.onerror = function (event) {
+        // TODO: better error handler
+        console.error('Error adding data', event.target.error);
+      };
+      request.onsuccess = function (event) {
+        console.log('Data added successfully');
+      };
+      transaction.oncomplete = function () {
+        console.log('Transaction completed');
+        db.close();
+      };
+    })
+    .catch(error => {
+      console.error('Error opening database:', error);
+    });
+}
+
 // Write data to the IndexedDB
 function writeData() {
   openDb()
