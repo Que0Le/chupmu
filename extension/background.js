@@ -29,14 +29,14 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 
       const handleMessage = (msg) => {
         if (msg.reference === 'getCurrentPickedUrl') {
-          return getAllFilterDbNamesAndTheirTagNames()
+          return getAllFilterDbNamesAndTheirTags(true)
             .then(dbNamesAndTheirTagNames => ({
-              "currentPickedUrl": currentPickedUrl, "availableDbNames": dbNamesAndTheirTagNames,
+              "currentPickedUrl": currentPickedUrl, "dbNamesAndTheirTagNames": dbNamesAndTheirTagNames,
               "suggestedPlatformUrl": suggestedPlatformUrl, "suggestedUserId": suggestedUserId
             }));
         } else if (msg.reference === 'submitNewUser') {
           browser.runtime.onMessage.removeListener(handleMessage);
-          console.log(msg)
+          handleSubmitNewUserToDb(msg.data);
         }
       };
 

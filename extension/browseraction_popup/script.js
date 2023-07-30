@@ -46,7 +46,7 @@ function addDomOnStartUp(msg) {
   document.getElementById("platform-url").value = msg.suggestedPlatformUrl;
   document.getElementById("user-id").value = msg.suggestedUserId;
   let dbArea = document.getElementById("db-area");
-  for (const [key, value] of Object.entries(msg.availableDbNames)) {
+  for (const [key, value] of Object.entries(msg.dbNamesAndTheirTagNames)) {
     dbArea.innerHTML += generateInnerHtmlDbContainer(key, value)
   }
   dbArea.innerHTML += generateContainerForNewDb("__newDb")
@@ -59,24 +59,24 @@ function getDbTagData() {
   // Existing DBs
   for (const cd of checkedDbs) {
     let dbName = cd.value;
-    let tags = [];
+    let tagNames = [];
     let tagInputs = document.querySelectorAll(`input[type='checkbox'][dbname='${dbName}']:checked`);
     for (const ti of tagInputs) {
-      tags.push(ti.value)
+      tagNames.push(ti.value)
     }
-    let newTags = document.querySelector(`input[type='text'][dbname='${dbName}']`)
+    let newTagNames = document.querySelector(`input[type='text'][dbname='${dbName}']`)
       .value.split(",")
       .map(substring => substring.trim()).filter(item => item !== '')
-    tags.push(...newTags)
-    tags = [...new Set(tags)]
-    dbAndTags.push({ "dbName": dbName, "tags": tags });
+    tagNames.push(...newTagNames)
+    tagNames = [...new Set(tagNames)]
+    dbAndTags.push({ "dbName": dbName, "tagNames": tagNames });
   }
   // New DB
   let newDbName = document.getElementById(newDbNameInputId).value.trim();
-  let newTags = document.getElementById(newTagInputId).value.split(",")
+  let newTagNames = document.getElementById(newTagInputId).value.split(",")
     .map(substring => substring.trim()).filter(item => item !== '');
   if (newDbName.length > 0) {
-    dbAndTags.push({ "dbName": newDbName, "tags": newTags });
+    dbAndTags.push({ "dbName": newDbName, "tagNames": newTagNames });
   }
   return dbAndTags;
 }
@@ -86,7 +86,7 @@ function runAsStandAloneHtml() {
     "currentPickedUrl": "https://voz.vn/u/baby-diehard.71866/",
     "suggestedPlatformUrl": "voz.vn",
     "suggestedUserId": "baby-diehard.71866",
-    "availableDbNames": {
+    "dbNamesAndTheirTagNames": {
       "_db1": ["_tag11", "_tag12"],
       "_db2": ["_tag22", "_tag23"],
     }
@@ -97,12 +97,12 @@ function runAsStandAloneHtml() {
     let platformUrls = splitTrimFilterEmpty(document.getElementById("platform-url").value, ",");
     let userId = document.getElementById("user-id").value;
     let note = document.getElementById("note").value;
-    let dbAndTags = getDbTagData();
+    let dbNamesAndTheirTagNames = getDbTagData();
     console.log({
       "platformUrls": platformUrls,
       "userId": userId,
       "note": note,
-      "dbAndTags": dbAndTags
+      "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
     })
   }
 
@@ -115,19 +115,19 @@ if (window.location.protocol === "moz-extension:") {
   browser.runtime.sendMessage({ "reference": 'getCurrentPickedUrl' })
     .then(msg => {
       addDomOnStartUp(msg);
-
+      console.log(msg)
       function handleSubmit() {
         let platformUrls = splitTrimFilterEmpty(document.getElementById("platform-url").value, ",");
         let userId = document.getElementById("user-id").value;
         let note = document.getElementById("note").value;
-        let dbAndTags = getDbTagData();
+        let dbNamesAndTheirTagNames = getDbTagData();
         browser.runtime.sendMessage({
           "reference": "submitNewUser",
           "data": {
             "platformUrls": platformUrls,
             "userId": userId,
             "note": note,
-            "dbAndTags": dbAndTags
+            "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
           }
         })
         // console.log({

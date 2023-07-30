@@ -3,6 +3,21 @@ function splitTrimFilterEmpty(string, delimiterChar) {
   return string.split.map(substring => substring.trim()).filter(item => item !== '')
 }
 
+function getConfigFromLocalStorage() {
+  return new Promise((resolve, reject) => {
+    const storageKey = `${EXT_NAME}_config`;
+
+    browser.storage.local.get(storageKey)
+      .then(data => {
+        const config = data[storageKey];
+        resolve(config);
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+}
+
 function sendMsgToTab(tab, reference, msg) {
   console.log(reference)
   browser.tabs.sendMessage(
@@ -141,4 +156,70 @@ function handleRequestRecord(message) {
         reject(error);
       });
   });
+}
+
+
+function addNewTagToTagsObject(tagsObject, tagNames) {
+  let maxTagId = -1;
+  let toAddTagNames = JSON.parse(JSON.stringify(tagNames));
+  let oldAndNewTagIds = [];
+  // Get highest id and also filter out existing tag names
+  for (const [key, value] of Object.entries(tagsObject)) {
+    const numericTagId = parseInt(tagsObject[key].tagId, 10);
+    if (!isNaN(numericTagId) && numericTagId > maxTagId) {
+      maxTagId = numericTagId;
+    }
+    if (tagNames.includes(value.tagname)) {
+      oldAndNewTagIds.push(key);
+      toAddTagNames = toAddTagNames.filter(str => str !== value.tagname);
+      continue;
+    }
+  }
+  // Now, add new tag names
+  let newTagsObject = JSON.parse(JSON.stringify(tagsObject));
+  toAddTagNames.forEach(newTag => {
+    const newTagId = (maxTagId += 1).toString();
+    newTagsObject[newTagId] = { tagId: newTagId, description: "", tagname: newTag };
+    oldAndNewTagIds.push(newTagId);
+  });
+  return { newTagsObject, oldAndNewTagIds };
+}
+
+function handleSubmitNewUserToDb(data) {
+  // let msg = {
+  //   "reference": "submitNewUser",
+  //   "data": {
+  //     "platformUrls": platformUrls,
+  //     "userId": userId,
+  //     "note": note,
+  //     "targetDbNamesAndTheirTagNames": dbAndTags
+  //   }
+  // }
+  console.log(data);
+  getAllFilterDbNamesAndTheirTags()
+    .then(dbNamesAndTheirTags => {
+      return getConfigFromLocalStorage().then(config => { 
+        return { dbNamesAndTheirTags, config }; 
+      })
+    })
+    .then(({dbNamesAndTheirTags, config}) => {
+      for (const targetDbNameAndTagNames of data.targetDbNamesAndTheirTagNames) {
+        if (dbNamesAndTheirTags[targetDbNameAndTagNames.dbName]) {
+          // add new tags to temp settings
+          const { newTagsObject, oldAndNewTagIds } = addNewTagToTagsObject(
+            dbNamesAndTheirTags[targetDbNameAndTagNames.dbName], targetDbNameAndTagNames.tagNames
+          );
+          // TODO: add to existing db
+          console.log(newTagsObject, {
+            "userid": data.userId,
+            "note": data.note,
+            "tagIds": oldAndNewTagIds
+          })
+          // TODO: save to settings
+        } else {
+          // Create new db
+        }
+      }
+
+    })
 }

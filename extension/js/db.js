@@ -118,21 +118,27 @@ function getAllFilterDbNames() {
   });
 }
 
+
 /**
- * Get all dbNammes and their tags from local storage setting
+ * Get all dbNammes and their tags (name or full with id) from local storage setting
+ * @param {boolean} onlyTagName 
  * @returns Array of objects {dbName and tags}
  */
-function getAllFilterDbNamesAndTheirTagNames() {
+function getAllFilterDbNamesAndTheirTags(onlyTagName = false) {
   return new Promise((resolve, reject) => {
     browser.storage.local.get(`${EXT_NAME}_config`).then(data => {
       let config = data[`${EXT_NAME}_config`];
       let result = {};
       const dbNames = config.dbSources.map(source => {
-        let tags = [];
-        for (const [key, value] of Object.entries(source.tags)) {
-          tags.push(value.tagname);
+        if (onlyTagName) {
+          let tags = [];
+          for (const [key, value] of Object.entries(source.tags)) {
+            tags.push(value.tagname);
+          }
+          result[source.dbName] = tags;
+        } else {
+          result[source.dbName] = source.tags;
         }
-        result[source.dbName] = tags;
       });
       resolve(result)
     }).catch(error => {
@@ -189,4 +195,68 @@ function getRawRecordsFromFilterDb(dbStoreName, ids) {
         reject(error);
       });
   });
+}
+
+function test() {
+  let tags = { 
+    "0": { "tagId": "0", "description": "Xao lol", "tagname": "xao_lol" }, 
+    "1": { "tagId": "1", "description": "Ga Con", "tagname": "ga_con" }, 
+    "2": { "tagId": "2", "description": "Hieu Biet", "tagname": "hieu_biet" }, 
+    "3": { "tagId": "3", "description": "Dot Con Hay Noi", "tagname": "dot_con_hay_noi" } 
+  }
+
+  let maxKeyId = -Infinity;
+  
+  for (const key in tags) {
+    const numericKey = parseInt(key, 10);
+    if (!isNaN(numericKey) && numericKey > maxKeyId) {
+      maxKeyId = numericKey;
+    }
+  }
+  let newTagsObject = JSON.parse(JSON.stringify(tags));
+  
+  let msg = {
+    "reference": "submitNewUser",
+    "data": {
+      "platformUrls": [
+        "voz.vn"
+      ],
+      "userId": "dinhdinhbk.1734821",
+      "note": "this is note for this user",
+      "dbAndTags": [
+        {
+          "dbName": "voz_test_db-12345",
+          "tags": [
+            "xao_lol",
+            "ga_con",
+            "dot_con_hay_noi",
+            "test11"
+          ]
+        },
+        {
+          "dbName": "newdb",
+          "tags": [
+            "t1",
+            "t2",
+            "t3"
+          ]
+        }
+      ]
+    }
+  }
+  getAllFilterDbNamesAndTheirTags(true)
+  .then(dbNamesAndTheirTagNames => {
+    for (const toAddDbNameAndTagName of msg.data.dbAndTags) {
+      if (dbNamesAndTheirTagNames[toAddDbNameAndTagName.dbName]) {
+        // add to existing db
+        // get tag ids
+        for (const [key, value] of Object.entries(msg.dbNamesAndTheirTagNames)) {
+
+        }
+
+      } else {
+        // Create new db
+      }
+    }
+  })
 }
