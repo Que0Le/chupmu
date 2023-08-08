@@ -12,8 +12,13 @@
     "default_title": "Chupmu popup",
     "default_popup": "browseraction_popup/popup.html"
   },
+  "sidebar_action": {
+    "default_icon": "icons/page-32.png",
+    "default_title" : "ChupMuSidebar",
+    "default_panel": "sidebar/panel.html"
+  },
 
-  "permissions": ["activeTab", "tabs", "contextMenus", "storage"],
+  "permissions": ["activeTab", "tabs", "contextMenus", "storage", "sidebar"],
   "browser_specific_settings": {
     "gecko": {
       "id": "testing@testing.org",

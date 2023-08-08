@@ -1,0 +1,23 @@
+
+.db-container {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    margin: 10px;
+    font-size: 16px;
+    border: 5px solid orange;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    height: 90%;
+    padding: 5px;
+    font: caption;
+    background-color: #F4F7F8;
+  }

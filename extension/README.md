@@ -30,9 +30,16 @@ Popup: https://github.com/gorhill/uBlock/blob/master/src/popup-fenix.html.<br>Co
 - Design suggest by Firefox: https://acorn.firefox.com/latest/acorn-aRSAh0Sp
 - More about popup, size, how to debug, disable auto hide when click outside, ...: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/user_interface/Popups
 - Open popup with hotkey specify in manifest: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/commands#special_shortcuts
+- Cross platform: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Build_a_cross_browser_extension
+- ublock `element picker`: https://github.com/gorhill/uBlock/wiki/Element-picker
+- css selector: https://www.w3.org/TR/selectors/#overview
+
 
 # TODO:
 - [x] Switch to IndexedDB for DB storing, and local storage for css and settings and stuffs
 - [ ] Implement pick account and add to DB (similar to ublock's `element picker`) (WIP)
 - [ ] Define and store supported platform based on the URL (come with each db)
 - [ ] Popup to enter text for picker (WIP)
+
+
+- [ ] Move all messages to a `json` file like this: https://github.com/gorhill/uBlock/blob/master/platform/mv3/extension/_locales/oc/messages.json. This is helpful for translating to other languages.

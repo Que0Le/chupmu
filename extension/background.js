@@ -17,35 +17,8 @@ let currentPickedUrl = "";
 browser.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "chupmu_pick_this_user") {
     currentPickedUrl = info.linkUrl;
-    try {
-      let parsedUrl = new URL(currentPickedUrl);
-      if (!SUPPORTED_PROTOCOL.includes(parsedUrl.protocol.slice(0, -1))) {
-        console.log(`Picker: Only supported '${SUPPORTED_PROTOCOL}' protocols. Url is '${currentPickedUrl}'`);
-        return;
-      }
-      // TODO: improve guessing
-      let suggestedPlatformUrl = parsedUrl.origin.replace(parsedUrl.protocol, "").slice(2);
-      let suggestedUserId = parsedUrl.pathname.match(getUserFromUrl)[1];
-
-      const handleMessage = (msg) => {
-        if (msg.reference === 'getCurrentPickedUrl') {
-          return getAllFilterDbNamesAndTheirTags(true)
-            .then(dbNamesAndTheirTagNames => ({
-              "currentPickedUrl": currentPickedUrl, "dbNamesAndTheirTagNames": dbNamesAndTheirTagNames,
-              "suggestedPlatformUrl": suggestedPlatformUrl, "suggestedUserId": suggestedUserId
-            }));
-        } else if (msg.reference === 'submitNewUser') {
-          browser.runtime.onMessage.removeListener(handleMessage);
-          handleSubmitNewUserToDb(msg.data);
-        }
-      };
-
-      browser.runtime.onMessage.addListener(handleMessage);
-      browser.browserAction.openPopup();
-    } catch (error) {
-      console.log(`Picker: Error parsing url '${currentPickedUrl}'`);
-      return;
-    }
+    browser.sidebarAction.open();
+    browser.runtime.sendMessage({ "reference": "forceReloadSidebar" });
   }
 });
 
@@ -76,7 +49,7 @@ browser.storage.local.get(`${EXT_NAME}_config`)
       obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
       browser.storage.local.set(obj);
       /* Download DB */
-      fetch("https://raw.githubusercontent.com/Que0Le/chupmu/main/__chupmu/test_db/voz_test_db.json")
+      fetch("https://raw.githubusercontent.com/Que0Le/MicGa_data/main/voz_test_db.json")
         .then((response) => response.json())
         .then((data) => {
           // Write db to indexeddb
@@ -170,3 +143,31 @@ function connected(p) {
 }
 
 browser.runtime.onConnect.addListener(connected);
+
+
+
+browser.runtime.onMessage.addListener((msg, sender) => {
+  if (msg.reference === 'getCurrentPickedUrl') {
+    try {
+      let parsedUrl = new URL(currentPickedUrl);
+      if (!SUPPORTED_PROTOCOL.includes(parsedUrl.protocol.slice(0, -1))) {
+        console.log(`Picker: Only supported '${SUPPORTED_PROTOCOL}' protocols. Url is '${currentPickedUrl}'`);
+        return;
+      }
+      // TODO: improve guessing
+      let suggestedPlatformUrl = parsedUrl.origin.replace(parsedUrl.protocol, "").slice(2);
+      let suggestedUserId = parsedUrl.pathname.match(getUserFromUrl)[1];
+      return getAllFilterDbNamesAndTheirTags(true)
+        .then(dbNamesAndTheirTagNames => ({
+          "currentPickedUrl": currentPickedUrl, "dbNamesAndTheirTagNames": dbNamesAndTheirTagNames,
+          "suggestedPlatformUrl": suggestedPlatformUrl, "suggestedUserId": suggestedUserId
+        }));
+    } catch (error) {
+      console.log(`Picker: Error parsing url '${currentPickedUrl}'`);
+      return Promise.resolve({ error: `Failed parsing url: '${currentPickedUrl}'` });
+    }
+  } else if (msg.reference === 'submitNewUser') {
+    browser.runtime.onMessage.removeListener(handleMessage);
+    handleSubmitNewUserToDb(msg.data);
+  }
+});
