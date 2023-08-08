@@ -1,23 +1,27 @@
 
-.db-container {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px;
-    margin: 10px;
-    font-size: 16px;
-    border: 5px solid orange;
+
+.input-area {
+  background-color: #f0f0f4;
+  padding: 10px;
+  margin: 10px;
+  font-size: 16px;
+  border: 5px solid orange;
 }
 
-html, body {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    box-sizing: border-box;
-  }
-  
-  body {
-    height: 90%;
-    padding: 5px;
-    font: caption;
-    background-color: #F4F7F8;
-  }
+.container-1 {
+  background-color: #b5e7a0;
+  padding: 10px;
+  margin: 10px;
+  font-size: 16px;
+  border: 5px solid #48723b ;
+  border-radius: 10px;
+}
+
+.db-container {
+  background-color: #e6e2d3;
+  padding: 10px;
+  margin: 10px;
+  font-size: 16px;
+  border: 5px solid #8c8674;
+  border-radius: 10px;
+}

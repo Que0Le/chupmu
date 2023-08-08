@@ -7,26 +7,26 @@ function splitTrimFilterEmpty(string, delimiterChar) {
   return string.split(delimiterChar).map(substring => substring.trim()).filter(item => item !== '')
 }
 
-const defaultInputArea = `<div>
+const DEFAULT_INPUT_AREA = `<div class="container-1">
   <p><label>Raw URL:</label></p>
-  <textarea cols=30 rows=3 id="raw-url"></textarea>
+  <textarea rows=3 id="raw-url"></textarea>
 </div>
-<div>
+<div class="container-1">
   <p><label>Platform URL (multiple urls separated with comma):</label></p>
-  <textarea cols=30 rows=1 id="platform-url"></textarea>
+  <textarea rows=1 id="platform-url"></textarea>
 </div>
-<div>
+<div class="container-1">
   <p><label>User ID:</label></p>
   <input type="text" id="user-id"></input>
 </div>
-<div>
+<div class="container-1">
   <div>
     <p><label>Note:</label></p>
-    <textarea cols=30 rows=5 id="note"></textarea>
+    <textarea rows=5 id="note"></textarea>
   </div>
-
-  <div id="db-area">
-  </div>
+</div>
+<div id="db-area">
+  <p><label>Database section:</label></p>
 </div>
 
 <div>
@@ -69,7 +69,7 @@ function generateContainerForNewDb() {
 }
 
 function addDomOnStartUp(msg) {
-  document.getElementById("input-area").innerHTML = defaultInputArea;
+  document.getElementById("input-area").innerHTML = DEFAULT_INPUT_AREA;
   document.getElementById("raw-url").value = msg.currentPickedUrl;
   document.getElementById("platform-url").value = msg.suggestedPlatformUrl;
   document.getElementById("user-id").value = msg.suggestedUserId;
@@ -176,14 +176,17 @@ function startUp() {
         document.getElementById("submit").addEventListener("click", handleSubmit);
       }, error => console.log(error));
   } else if (window.location.protocol === "file:") {
+    document.getElementById("sidebar-status").textContent = "Running as stand alone html file.";
     runAsStandAloneHtml();
   }
 }
 
 startUp();
 
-browser.runtime.onMessage.addListener((msg, sender) => {
-  if (msg.reference === 'forceReloadSidebar') {
-    startUp();
-  }
-});
+if (window.location.protocol === "moz-extension:") {
+  browser.runtime.onMessage.addListener((msg, sender) => {
+    if (msg.reference === 'forceReloadSidebar') {
+      startUp();
+    }
+  });
+}
