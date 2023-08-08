@@ -134,6 +134,36 @@ function runAsStandAloneHtml() {
     })
   }
 
+  // TODO: Testing exporting image
+  var element = document.getElementById('input-area');
+  var canvas = document.createElement('canvas');
+  canvas.width = element.offsetWidth;
+  canvas.height = element.offsetHeight;
+  html2canvas(element, {scale: 0.5}).then(function (canvas) {
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(canvas, 0, 0);
+    var dataURL = canvas.toDataURL();
+    console.log(dataURL.length);
+
+    const img = document.createElement('img');
+    img.src = dataURL;
+    document.body.appendChild(img);
+
+    // document.getElementById('downloadimage').addEventListener("click", function (e) {
+    //   var dataURLImage = canvas.toDataURL("image/jpeg", 1.0);
+    //   downloadImage(dataURLImage, 'my-canvas.jpeg');
+    // });
+  });
+  
+  // Save | Download image
+  // function downloadImage(data, filename = 'untitled.jpeg') {
+  //     var a = document.createElement('a');
+  //     a.href = data;
+  //     a.download = filename;
+  //     document.body.appendChild(a);
+  //     a.click();
+  // }
+
   document.getElementById("submit").addEventListener("click", handleSubmit);
 }
 
@@ -175,7 +205,7 @@ function startUp() {
   
         document.getElementById("submit").addEventListener("click", handleSubmit);
       }, error => console.log(error));
-  } else if (window.location.protocol === "file:") {
+  } else /* if (window.location.protocol === "file:")  */{
     document.getElementById("sidebar-status").textContent = "Running as stand alone html file.";
     runAsStandAloneHtml();
   }

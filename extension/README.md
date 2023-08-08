@@ -18,7 +18,19 @@ Labeling can be activated using hotkey `Ctrl+Shift+U` on Windows, or press on th
 - Labeling is called `Cosmetic filters` in uBlock Origin: https://github.com/gorhill/uBlock/wiki/Does-uBlock-Origin-block-ads-or-just-hide-them%3F#cosmetic-filters
 - `manifest.json` of uBlock: https://github.com/gorhill/uBlock/blob/master/platform/firefox/manifest.json.<br> 
 Popup: https://github.com/gorhill/uBlock/blob/master/src/popup-fenix.html.<br>Contentscript: https://github.com/gorhill/uBlock/blob/master/src/js/contentscript.js
-
+- Directly opening the `.html` file during developing sidebar or popup is easier than testing with the whole plugin. Go to `cd extension/sidebar` and `python -m http.server 9000`. Visit http://localhost:9000/panel.html.
+- Bundle `npm` package:
+    ```bash
+    npm install browserify 
+    ./node_modules/.bin/browserify ./extension/sidebar/main.js -o extension/sidebar/bundle.js
+    ```
+    Main file looks like this:
+    ```js
+    var domtoimage = require('dom-to-image-more');
+    global.window.domtoimage = domtoimage;
+    ```
+    The bundle can be imported with `<script src="bundle.js"></script>`.
+- Currently using [html2canvas](https://www.npmjs.com/package/html2canvas) to make screenshot. [dom-to-image-more](https://www.npmjs.com/package/dom-to-image-more) didn't work somehow (`SecurityError: CSSStyleSheet.cssRules getter: Not allowed to access cross-origin stylesheet`), and can't work on Safari anyway.
 
 # Resources to evaluate
 - Extension example from MDN: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Examples
