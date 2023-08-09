@@ -1,7 +1,7 @@
 const newDbContainerCode = "__newDb";
 const newDbNameInputId = "new-db-name-input";
 const newTagInputId = "new-tag-input";
-
+let sidebarPort;
 
 function splitTrimFilterEmpty(string, delimiterChar) {
   return string.split(delimiterChar).map(substring => substring.trim()).filter(item => item !== '')
@@ -167,44 +167,48 @@ function runAsStandAloneHtml() {
   document.getElementById("submit").addEventListener("click", handleSubmit);
 }
 
+function handleTEMP1(data) {
+  document.getElementById("sidebar-status").textContent = "Picking:";
+  addDomOnStartUp(data);
+  
+  function handleSubmit() {
+    let platformUrls = splitTrimFilterEmpty(document.getElementById("platform-url").value, ",");
+    let userId = document.getElementById("user-id").value;
+    let note = document.getElementById("note").value;
+    let dbNamesAndTheirTagNames = getDbTagData();
+    portChannelSidebar.postMessage({
+      "reference": "submitNewUser",
+      "data": {
+        "platformUrls": platformUrls,
+        "userId": userId,
+        "note": note,
+        "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
+      }
+    });
+  }
+  document.getElementById("submit").addEventListener("click", handleSubmit);
+}
+
 function startUp() {
   /* Run as stand alone html for testing and developing purposes */
   if (window.location.protocol === "moz-extension:") {
-    // TODO: click on extension icon should also be supported
-    browser.runtime.sendMessage({ "reference": 'getCurrentPickedUrl' })
-      .then(msg => {
-        if (msg.error) {
-          console.log(`Error: B->SB getCurrentPickedUrl:`, msg);
-          document.getElementById("sidebar-status").textContent = msg.error;
+    /* Get communication up */
+    portChannelContent = browser.runtime.connect({ name: "port-sidebar" });
+
+    portChannelContent.postMessage({ "reference": 'getCurrentPickedUrl' });
+
+    portChannelContent.onMessage.addListener((message, sender) => {
+      if (message.reference == "responseGetCurrentPickedUrl") {
+        if (message.error) {
+          console.log(`Error: B->SB getCurrentPickedUrl:`, message);
+          document.getElementById("sidebar-status").textContent = message.error;
           return;
         }
-        document.getElementById("sidebar-status").textContent = "Picking:";
-        addDomOnStartUp(msg);
-        console.log(msg)
-        function handleSubmit() {
-          let platformUrls = splitTrimFilterEmpty(document.getElementById("platform-url").value, ",");
-          let userId = document.getElementById("user-id").value;
-          let note = document.getElementById("note").value;
-          let dbNamesAndTheirTagNames = getDbTagData();
-          browser.runtime.sendMessage({
-            "reference": "submitNewUser",
-            "data": {
-              "platformUrls": platformUrls,
-              "userId": userId,
-              "note": note,
-              "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
-            }
-          })
-          // console.log({
-          //   "platformUrls": platformUrls,
-          //   "userId": userId,
-           //   "note": note,
-          //   "dbAndTags": dbAndTags
-          // })
-        }
-  
-        document.getElementById("submit").addEventListener("click", handleSubmit);
-      }, error => console.log(error));
+        handleTEMP1(message.data);
+      } else if (message.reference == "forceReloadSidebar") {
+        startUp();
+      }
+    })
   } else /* if (window.location.protocol === "file:")  */{
     document.getElementById("sidebar-status").textContent = "Running as stand alone html file.";
     runAsStandAloneHtml();
@@ -212,11 +216,3 @@ function startUp() {
 }
 
 startUp();
-
-if (window.location.protocol === "moz-extension:") {
-  browser.runtime.onMessage.addListener((msg, sender) => {
-    if (msg.reference === 'forceReloadSidebar') {
-      startUp();
-    }
-  });
-}

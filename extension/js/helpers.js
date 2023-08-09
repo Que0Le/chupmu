@@ -52,7 +52,7 @@ function toggleLabelify(tab) {
       browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_REMOVE });
       // browser.tabs.insertCSS({ code: TOOLTIP_CSS });
       // browser.tabs.insertCSS({ code: VOZ_CSS });
-      portFromCS.postMessage(
+      portChannelContent.postMessage(
         {
           info: "chupmu_extension", reference: "toggleLabelify",
           source: "chupmu_background_script", target: "chupmu_content_script",
@@ -64,7 +64,7 @@ function toggleLabelify(tab) {
       browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
       // browser.tabs.removeCSS({ code: TOOLTIP_CSS });
       // browser.tabs.removeCSS({ code: VOZ_CSS });
-      portFromCS.postMessage(
+      portChannelContent.postMessage(
         {
           info: "chupmu_extension", reference: "toggleLabelify",
           source: "chupmu_background_script", target: "chupmu_content_script",

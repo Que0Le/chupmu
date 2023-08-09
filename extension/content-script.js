@@ -92,7 +92,7 @@ function handleRemoveLabel() {
 }
 
 
-let myPort = browser.runtime.connect({ name: "port-from-cs" });
+let myPort = browser.runtime.connect({ name: "port-cs" });
 myPort.postMessage({ greeting: "hello from content script" });
 
 myPort.onMessage.addListener((msg) => {

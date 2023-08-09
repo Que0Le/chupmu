@@ -1,5 +1,11 @@
 "use strict";
 
+// TODO: support multiple content script
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_scripts#connection-based_messaging
+let portChannelContent;
+let portChannelSidebar;
+
+
 /* Create context menu for picker */
 browser.contextMenus.create({
   id: "chupmu_pick_this_user",
@@ -18,7 +24,8 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "chupmu_pick_this_user") {
     currentPickedUrl = info.linkUrl;
     browser.sidebarAction.open();
-    browser.runtime.sendMessage({ "reference": "forceReloadSidebar" });
+    // browser.runtime.sendMessage({ "reference": "forceReloadSidebar" });
+    portChannelSidebar.postMessage({ "reference": "forceReloadSidebar" });
   }
 });
 
@@ -105,69 +112,72 @@ browser.commands.onCommand.addListener((command) => {
 /* The same if the pageaction icon is clicked */
 browser.pageAction.onClicked.addListener(toggleLabelify);
 
-
-// TODO: support multiple content script
-// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_scripts#connection-based_messaging
-let portFromCS;
-
 // TODO: inject css using tab id: sender.sender.tab.id
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/insertCSS
 function connected(p) {
-  portFromCS = p;
-  portFromCS.onMessage.addListener((msg, sender) => {
-    if (msg.info != "chupmu_extension" ||
-      msg.source != "chupmu_content_script" ||
-      msg.target != "chupmu_background_script") {
-      return;
-    }
-
-    if (msg.reference == "requestRecords") {
-      console.log("Request C->B: requestRecords", msg.message);
-      handleRequestRecord(msg.message)
-        .then(results => {
-          results.forEach(r => {
-            browser.tabs.insertCSS({ code: r.meta.dbCss });
-          });
-          portFromCS.postMessage({
-            info: "chupmu_extension", reference: "responseRecords",
-            source: "chupmu_background_script", target: "chupmu_content_script",
-            message: results
-          });
+  if (p && p.name === "port-cs") {
+    portChannelContent = p;
+    portChannelContent.onMessage.addListener((msg, sender) => {
+      if (msg.info != "chupmu_extension" ||
+        msg.source != "chupmu_content_script" ||
+        msg.target != "chupmu_background_script") {
+        return;
+      }
+  
+      if (msg.reference == "requestRecords") {
+        console.log("Request C->B: requestRecords", msg.message);
+        handleRequestRecord(msg.message)
+          .then(results => {
+            results.forEach(r => {
+              browser.tabs.insertCSS({ code: r.meta.dbCss });
+            });
+            portChannelContent.postMessage({
+              info: "chupmu_extension", reference: "responseRecords",
+              source: "chupmu_background_script", target: "chupmu_content_script",
+              message: results
+            });
+          }
+          );
+      } else if (msg.reference == "removeCurrentCss") {
+        console.log("Request C->B: removeCurrentCss", msg.message);
+        msg.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
+      }
+    });
+  } else if (p && p.name === "port-sidebar") {
+    portChannelSidebar = p;
+    portChannelSidebar.onMessage.addListener((msg, sender) => {
+      if (msg.reference === 'getCurrentPickedUrl') {
+        try {
+          let parsedUrl = new URL(currentPickedUrl);
+          if (!SUPPORTED_PROTOCOL.includes(parsedUrl.protocol.slice(0, -1))) {
+            console.log(`Picker: Only supported '${SUPPORTED_PROTOCOL}' protocols. Url is '${currentPickedUrl}'`);
+            return;
+          }
+          // TODO: improve guessing
+          let suggestedPlatformUrl = parsedUrl.origin.replace(parsedUrl.protocol, "").slice(2);
+          let suggestedUserId = parsedUrl.pathname.match(getUserFromUrl)[1];
+          getAllFilterDbNamesAndTheirTags(true)
+            .then(dbNamesAndTheirTagNames => {
+              portChannelSidebar.postMessage(
+                {
+                  "reference": "responseGetCurrentPickedUrl",
+                  "data": {
+                    "currentPickedUrl": currentPickedUrl, "dbNamesAndTheirTagNames": dbNamesAndTheirTagNames,
+                    "suggestedPlatformUrl": suggestedPlatformUrl, "suggestedUserId": suggestedUserId
+                  }
+                }
+              )
+            });
+        } catch (error) {
+          console.log(`Picker: Error parsing url '${currentPickedUrl}'`);
+          return Promise.resolve({ error: `Failed parsing url: '${currentPickedUrl}'` });
         }
-        );
-    } else if (msg.reference == "removeCurrentCss") {
-      console.log("Request C->B: removeCurrentCss", msg.message);
-      msg.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
-    }
-  });
+      } else if (msg.reference === 'submitNewUser') {
+        browser.runtime.onMessage.removeListener(handleMessage);
+        handleSubmitNewUserToDb(msg.data);
+      }
+    })
+  }
 }
 
 browser.runtime.onConnect.addListener(connected);
-
-
-
-browser.runtime.onMessage.addListener((msg, sender) => {
-  if (msg.reference === 'getCurrentPickedUrl') {
-    try {
-      let parsedUrl = new URL(currentPickedUrl);
-      if (!SUPPORTED_PROTOCOL.includes(parsedUrl.protocol.slice(0, -1))) {
-        console.log(`Picker: Only supported '${SUPPORTED_PROTOCOL}' protocols. Url is '${currentPickedUrl}'`);
-        return;
-      }
-      // TODO: improve guessing
-      let suggestedPlatformUrl = parsedUrl.origin.replace(parsedUrl.protocol, "").slice(2);
-      let suggestedUserId = parsedUrl.pathname.match(getUserFromUrl)[1];
-      return getAllFilterDbNamesAndTheirTags(true)
-        .then(dbNamesAndTheirTagNames => ({
-          "currentPickedUrl": currentPickedUrl, "dbNamesAndTheirTagNames": dbNamesAndTheirTagNames,
-          "suggestedPlatformUrl": suggestedPlatformUrl, "suggestedUserId": suggestedUserId
-        }));
-    } catch (error) {
-      console.log(`Picker: Error parsing url '${currentPickedUrl}'`);
-      return Promise.resolve({ error: `Failed parsing url: '${currentPickedUrl}'` });
-    }
-  } else if (msg.reference === 'submitNewUser') {
-    browser.runtime.onMessage.removeListener(handleMessage);
-    handleSubmitNewUserToDb(msg.data);
-  }
-});
