@@ -15,6 +15,66 @@ function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
   return str;
 }
 
+let pickerActive = false;
+
+function handlePickerActivation() {
+  pickerActive = !pickerActive;
+  if (pickerActive) {
+    // Add event listener to highlight elements on mouseover
+    document.addEventListener('mouseover', handleElementMouseOver);
+    // Add event listener to capture element click
+    document.addEventListener('click', handleElementClick);
+  } else {
+    // Remove event listeners
+    document.removeEventListener('mouseover', handleElementMouseOver);
+    document.removeEventListener('click', handleElementClick);
+    // Remove any highlighting
+    removeHighlight();
+  }
+}
+
+function handleElementMouseOver(event) {
+  if (pickerActive) {
+    // Highlight the element being hovered over
+    removeHighlight();
+    event.target.style.outline = '2px solid red';
+  }
+}
+
+function handleElementClick(event) {
+  if (pickerActive) {
+    // Capture the selected element's information
+    const tagName = event.target.tagName.toLowerCase();
+    const attributes = Array.from(event.target.attributes).map(attr => ({
+      name: attr.name,
+      value: attr.value
+    }));
+    
+    // Send the captured information to the background script
+    // browser.runtime.sendMessage({
+    //   action: 'elementSelected',
+    //   tagName,
+    //   attributes
+    // });
+    
+    // Deactivate picker mode
+    handlePickerActivation();
+  }
+}
+
+function removeHighlight() {
+  const highlightedElement = document.querySelector('[style="outline: 2px solid red;"]');
+  if (highlightedElement) {
+    highlightedElement.style.outline = '';
+  }
+}
+
+// Listen for messages from the popup
+// browser.runtime.onMessage.addListener(message => {
+//   if (message.action === 'activatePicker') {
+//     handlePickerActivation();
+//   }
+// });
 
 /**
  * 
@@ -96,19 +156,19 @@ let myPort = browser.runtime.connect({ name: "port-cs" });
 myPort.postMessage({ greeting: "hello from content script" });
 
 myPort.onMessage.addListener((message) => {
-  if (message.info != "chupmu_extension" ||
-    message.source != "chupmu_background_script" ||
-    message.target != "chupmu_content_script") {
+  if (message.info !== "chupmu_extension" ||
+    message.source !== "chupmu_background_script" ||
+    message.target !== "chupmu_content_script") {
     return;
   }
 
-  if (message.reference == "toggleLabelify") {
+  if (message.reference === "toggleLabelify") {
     console.log("Request B->C: toggleLabelify ...");
     // myPort.postMessage({ response: `Chupmu Content script: Working on command '${message.message}'` });
-    if (message.message == "label") {
+    if (message.message === "label") {
       console.log("command: label")
       askBackgroundForRecords(getAllUserIdsOnPageVoz());
-    } else if (message.message == "removeLabel") {
+    } else if (message.message === "removeLabel") {
       console.log("command: removeLabel")
       handleRemoveLabel();
       // Send the current CSS code back to background to be removed
@@ -118,10 +178,12 @@ myPort.onMessage.addListener((message) => {
         message: { "currentCss": currentCss }
       });
     }
-  } else if (message.reference == "responseRecords") {
+  } else if (message.reference === "responseRecords") {
     /* Data is a array of db's meta, and records */
     console.log(`Get responseRecords records data from background: `, message.message);
     applyLabel(message.message);
+  } else if (message.reference === "togglePicker") {
+    handlePickerActivation();
   }
 
 });

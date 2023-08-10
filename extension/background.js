@@ -173,8 +173,14 @@ function connected(p) {
           return Promise.resolve({ error: `Failed parsing url: '${currentPickedUrl}'` });
         }
       } else if (message.reference === 'submitNewUser') {
-        browser.runtime.onMessage.removeListener(handleMessage);
+        // browser.runtime.onMessage.removeListener(handleMessage);
         handleSubmitNewUserToDb(message.data);
+      } else if (message.reference === "tooglePicker" && message.source === "chupmu_sidebar_script") {
+        console.log(`SB->B: `, message.reference);
+        portChannelContent.postMessage({
+          info: "chupmu_extension", reference: "togglePicker",
+          source: "chupmu_background_script", target: "chupmu_content_script",
+        })
       }
     })
   }

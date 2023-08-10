@@ -1,7 +1,7 @@
 const newDbContainerCode = "__newDb";
 const newDbNameInputId = "new-db-name-input";
 const newTagInputId = "new-tag-input";
-let sidebarPort;
+let portSidebar;
 
 function splitTrimFilterEmpty(string, delimiterChar) {
   return string.split(delimiterChar).map(substring => substring.trim()).filter(item => item !== '')
@@ -31,6 +31,15 @@ const DEFAULT_INPUT_AREA = `<div class="container-1">
 
 <div>
   <button id="submit">Submit</button>
+</div>
+<div>
+  <button id="toggle-picker-button">Toogle Picker</button>
+</div>
+<div>
+  <button id="include-picked-button">Include picked items</button>
+</div>
+<div>
+  <button id="clear-picked-button">Clear picked items</button>
 </div>`;
 
 
@@ -109,6 +118,10 @@ function getDbTagData() {
   return dbAndTags;
 }
 
+let pickerActive = false;
+let pickedElements = [];
+let currentPickingElement;
+let encounterHovers = 0;
 function runAsStandAloneHtml() {
   const msg = {
     "currentPickedUrl": "https://voz.vn/u/baby-diehard.71866/",
@@ -133,6 +146,91 @@ function runAsStandAloneHtml() {
       "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
     })
   }
+
+  document.getElementById("submit").addEventListener("click", handleSubmit);
+
+
+  function togglePicker() {
+    pickerActive = !pickerActive;
+    if (pickerActive) {
+      // Add event listener to highlight elements on mouseover
+      document.addEventListener('mouseover', handleElementMouseOver);
+      // Add event listener to capture element click
+      document.addEventListener('click', handleElementClick);
+    } else {
+      // Remove event listeners
+      document.removeEventListener('mouseover', handleElementMouseOver);
+      document.removeEventListener('click', handleElementClick);
+      // Remove any highlighting
+      removeHighlight();
+    }
+  }
+
+  function handleElementMouseOver(event) {
+    if (!pickerActive) {
+      return;
+    }
+
+    if (currentPickingElement !== event.target) {
+      if (currentPickingElement && !pickedElements.includes(currentPickingElement)) {
+        currentPickingElement.style.outline = '';
+      }
+      currentPickingElement = event.target;
+      if (!pickedElements.includes(currentPickingElement)) {
+        currentPickingElement.style.outline = '2px solid red';
+      }
+    }
+    encounterHovers += 1;
+  }
+
+
+  function handleElementClick(event) {
+    if (pickerActive) {
+      if (pickedElements.includes(event.target)) {
+        // Remove from list
+        event.target.style.outline = '';
+        pickedElements.splice(pickedElements.indexOf(event.target), 1);
+      } else {
+        // Mark the element green
+        event.target.style.outline = '2px solid green';
+        pickedElements.push(event.target);
+      }
+    }
+  }
+
+  function removeHighlight() {
+    let i = 0;
+    let highlightedElement = document.querySelector('[style="outline: 2px solid red;"]');
+    while (i < encounterHovers * 2 && highlightedElement) {
+      highlightedElement.style.outline = '';
+      i++;
+      highlightedElement = document.querySelector('[style="outline: 2px solid red;"]');
+    }
+  }
+
+  document.getElementById("toggle-picker-button").addEventListener("click", togglePicker);
+
+  function handleIncludePickedItems() {
+    let imageContainer = document.getElementById("test2");
+    imageContainer.innerHTML = "";
+
+    let canvas = document.createElement('canvas');
+    pickedElements.forEach(element => {
+      canvas.width = element.offsetWidth;
+      canvas.height = element.offsetHeight;
+      html2canvas(element, { scale: 0.5 }).then(function (canvas) {
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(canvas, 0, 0);
+        let dataURL = canvas.toDataURL();
+        console.log(dataURL.length);
+
+        const img = document.createElement('img');
+        img.src = dataURL;
+        imageContainer.appendChild(img);
+      });
+    })
+  }
+  document.getElementById("include-picked-button").addEventListener("click", handleIncludePickedItems);
 
   // TODO: Testing exporting image
   // var element = document.getElementById('input-area');
@@ -164,7 +262,6 @@ function runAsStandAloneHtml() {
   //     a.click();
   // }
 
-  document.getElementById("submit").addEventListener("click", handleSubmit);
 }
 
 function handleTEMP1(data) {
@@ -176,7 +273,7 @@ function handleTEMP1(data) {
     let userId = document.getElementById("user-id").value;
     let note = document.getElementById("note").value;
     let dbNamesAndTheirTagNames = getDbTagData();
-    portChannelSidebar.postMessage({
+    portSidebar.postMessage({
       "reference": "submitNewUser",
       "data": {
         "platformUrls": platformUrls,
@@ -186,18 +283,31 @@ function handleTEMP1(data) {
       }
     });
   }
+
+  function handleTooglePicker() {
+    portSidebar.postMessage({
+      info: "chupmu_extension", reference: "tooglePicker",
+      source: "chupmu_sidebar_script", target: "chupmu_background_script",
+      message: ""
+    });
+    // TODO: change button UI
+  }
+
   document.getElementById("submit").addEventListener("click", handleSubmit);
+  document.getElementById("toggle-picker-button").addEventListener("click", handleTooglePicker);
+
 }
 
 function startUp() {
   /* Run as stand alone html for testing and developing purposes */
   if (window.location.protocol === "moz-extension:") {
     /* Get communication up */
-    portChannelContent = browser.runtime.connect({ name: "port-sidebar" });
+    portSidebar = browser.runtime.connect({ name: "port-sidebar" });
 
-    portChannelContent.postMessage({ "reference": 'getCurrentPickedUrl' });
+    portSidebar.postMessage({ "reference": 'getCurrentPickedUrl' });
 
-    portChannelContent.onMessage.addListener((message, sender) => {
+    portSidebar.onMessage.addListener((message, sender) => {
+      console.log(`SB portSidebar message: `, message);
       if (message.reference == "responseGetCurrentPickedUrl") {
         if (message.error) {
           console.log(`Error: B->SB getCurrentPickedUrl:`, message);

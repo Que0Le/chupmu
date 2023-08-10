@@ -15,10 +15,11 @@
   "sidebar_action": {
     "default_icon": "icons/page-32.png",
     "default_title" : "ChupMuSidebar",
-    "default_panel": "sidebar/panel.html"
+    "default_panel": "sidebar/panel.html",
+    "open_at_install": false
   },
 
-  "permissions": ["activeTab", "tabs", "contextMenus", "storage", "sidebar"],
+  "permissions": ["activeTab", "tabs", "contextMenus", "storage"],
   "browser_specific_settings": {
     "gecko": {
       "id": "testing@testing.org",
