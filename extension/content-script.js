@@ -16,8 +16,11 @@ function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
 }
 
 let pickerActive = false;
+let pickedElements = [];
+let currentPickingElement;
+let encounterHovers = 0;
 
-function handlePickerActivation() {
+function togglePicker() {
   pickerActive = !pickerActive;
   if (pickerActive) {
     // Add event listener to highlight elements on mouseover
@@ -34,47 +37,47 @@ function handlePickerActivation() {
 }
 
 function handleElementMouseOver(event) {
-  if (pickerActive) {
-    // Highlight the element being hovered over
-    removeHighlight();
-    event.target.style.outline = '2px solid red';
+  if (!pickerActive) {
+    return;
   }
+
+  if (currentPickingElement !== event.target) {
+    if (currentPickingElement && !pickedElements.includes(currentPickingElement)) {
+      currentPickingElement.style.outline = '';
+    }
+    currentPickingElement = event.target;
+    if (!pickedElements.includes(currentPickingElement)) {
+      currentPickingElement.style.outline = '2px solid red';
+    }
+  }
+  encounterHovers += 1;
 }
+
 
 function handleElementClick(event) {
   if (pickerActive) {
-    // Capture the selected element's information
-    const tagName = event.target.tagName.toLowerCase();
-    const attributes = Array.from(event.target.attributes).map(attr => ({
-      name: attr.name,
-      value: attr.value
-    }));
-    
-    // Send the captured information to the background script
-    // browser.runtime.sendMessage({
-    //   action: 'elementSelected',
-    //   tagName,
-    //   attributes
-    // });
-    
-    // Deactivate picker mode
-    handlePickerActivation();
+    if (pickedElements.includes(event.target)) {
+      // Remove from list
+      event.target.style.outline = '';
+      pickedElements.splice(pickedElements.indexOf(event.target), 1);
+    } else {
+      // Mark the element green
+      event.target.style.outline = '2px solid green';
+      pickedElements.push(event.target);
+    }
   }
 }
 
 function removeHighlight() {
-  const highlightedElement = document.querySelector('[style="outline: 2px solid red;"]');
-  if (highlightedElement) {
+  let i = 0;
+  let highlightedElement = document.querySelector('[style="outline: 2px solid red;"]');
+  while (i < encounterHovers * 2 && highlightedElement) {
     highlightedElement.style.outline = '';
+    i++;
+    highlightedElement = document.querySelector('[style="outline: 2px solid red;"]');
   }
 }
 
-// Listen for messages from the popup
-// browser.runtime.onMessage.addListener(message => {
-//   if (message.action === 'activatePicker') {
-//     handlePickerActivation();
-//   }
-// });
 
 /**
  * 
@@ -183,7 +186,47 @@ myPort.onMessage.addListener((message) => {
     console.log(`Get responseRecords records data from background: `, message.message);
     applyLabel(message.message);
   } else if (message.reference === "togglePicker") {
-    handlePickerActivation();
+    console.log("B->C: togglePicker");
+    togglePicker();
+  } else if (message.reference === "requestPickedItems") {
+    let imgSources = [];
+    pickedElements.forEach(element => {
+      //// TODO: CONVERT DOM TO CANVAS FROM HERE!!!
+      imgSources.push(element.innerHTML)
+    })
+
+    // const scriptElement = document.createElement("script");
+    // scriptElement.src = browser.runtime.getURL("sidebar/html2canvas.min.js");
+    // (document.head || document.body).appendChild(scriptElement);
+    // scriptElement.onload = function () {
+    //   setTimeout(function() {
+    //     console.log("Code executed after 1 second");
+    //     // Now that the library is loaded, you can use it
+    //     // Make sure to put your html2canvas-related code here
+    //   }, 5000);
+      
+    // };
+
+    /* Testing from here */
+    // let canvas = document.createElement('canvas');
+    // pickedElements.forEach(element => {
+    //   canvas.width = element.offsetWidth;
+    //   canvas.height = element.offsetHeight;
+    //   html2canvas(element, { scale: 0.5, useCORS: true })
+    //     .then(function (canvas) {
+    //       let ctx = canvas.getContext('2d');
+    //       ctx.drawImage(canvas, 0, 0);
+    //       let dataURL = canvas.toDataURL();
+    //       imgSources.push(dataURL);
+    //     }
+    //   );
+    // });
+    myPort.postMessage({
+      info: "chupmu_extension", reference: "responsePickedItems",
+      source: "chupmu_content_script", target: "chupmu_background_script",
+      message: { "imgSources": imgSources }
+    })
+
   }
 
 });

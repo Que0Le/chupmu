@@ -31,7 +31,7 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 
 
 /*
-When first loaded, initialize the page action for all tabs.
+When first loaded, initialize the page action (icon on the url bar) for all tabs.
 */
 let gettingAllTabs = browser.tabs.query({});
 gettingAllTabs.then((tabs) => {
@@ -141,11 +141,21 @@ function connected(p) {
       } else if (message.reference == "removeCurrentCss") {
         console.log("Request C->B: removeCurrentCss", message.message);
         message.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
+      } else if (message.reference == "responsePickedItems") {
+        portChannelSidebar.postMessage({
+          info: "chupmu_extension", reference: "responsePickedItems",
+          source: "chupmu_background_script", target: "chupmu_sidebar_script",
+          message: message.message
+        })
       }
     });
   } else if (p && p.name === "port-sidebar") {
     portChannelSidebar = p;
     portChannelSidebar.onMessage.addListener((message, sender) => {
+      if (message.source !== "chupmu_sidebar_script") {
+        console.log("Warning B: portChannelSidebar received messsage from unknown source: ", message);
+        return
+      }
       if (message.reference === 'getCurrentPickedUrl') {
         try {
           let parsedUrl = new URL(currentPickedUrl);
@@ -175,10 +185,28 @@ function connected(p) {
       } else if (message.reference === 'submitNewUser') {
         // browser.runtime.onMessage.removeListener(handleMessage);
         handleSubmitNewUserToDb(message.data);
-      } else if (message.reference === "tooglePicker" && message.source === "chupmu_sidebar_script") {
+      } else if (message.reference === "togglePicker") {
         console.log(`SB->B: `, message.reference);
         portChannelContent.postMessage({
           info: "chupmu_extension", reference: "togglePicker",
+          source: "chupmu_background_script", target: "chupmu_content_script",
+        })
+      } else if (message.reference === "requestPickedItems") {
+        console.log(`SB->B: `, message.reference);
+        // browser.browserAction.onClicked.addListener(function (tab) {
+        //   // for the current tab, inject the "inject.js" file & execute it
+        //   browser.tabs.executeScript(tab.id, {
+        //     file: 'sidebar/html2canvas.min.js'
+        //   });
+        // });
+        browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT })
+        .then(tabs => {
+          browser.tabs.executeScript(tabs[0].id, {
+            file: 'sidebar/html2canvas.min.js'
+          });
+        });
+        portChannelContent.postMessage({
+          info: "chupmu_extension", reference: "requestPickedItems",
           source: "chupmu_background_script", target: "chupmu_content_script",
         })
       }

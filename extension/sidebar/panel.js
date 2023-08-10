@@ -218,16 +218,18 @@ function runAsStandAloneHtml() {
     pickedElements.forEach(element => {
       canvas.width = element.offsetWidth;
       canvas.height = element.offsetHeight;
-      html2canvas(element, { scale: 0.5 }).then(function (canvas) {
-        let ctx = canvas.getContext('2d');
-        ctx.drawImage(canvas, 0, 0);
-        let dataURL = canvas.toDataURL();
-        console.log(dataURL.length);
+      html2canvas(element, { scale: 0.5 })
+        .then(function (canvas) {
+          let ctx = canvas.getContext('2d');
+          ctx.drawImage(canvas, 0, 0);
+          let dataURL = canvas.toDataURL();
+          console.log(dataURL.length);
 
-        const img = document.createElement('img');
-        img.src = dataURL;
-        imageContainer.appendChild(img);
-      });
+          const img = document.createElement('img');
+          img.src = dataURL;
+          imageContainer.appendChild(img);
+        }
+      );
     })
   }
   document.getElementById("include-picked-button").addEventListener("click", handleIncludePickedItems);
@@ -284,17 +286,26 @@ function handleTEMP1(data) {
     });
   }
 
-  function handleTooglePicker() {
+  function handleTogglePicker() {
     portSidebar.postMessage({
-      info: "chupmu_extension", reference: "tooglePicker",
+      info: "chupmu_extension", reference: "togglePicker",
       source: "chupmu_sidebar_script", target: "chupmu_background_script",
       message: ""
     });
     // TODO: change button UI
   }
 
+  function handleIncludePickedItems() {
+    portSidebar.postMessage({
+      info: "chupmu_extension", reference: "requestPickedItems",
+      source: "chupmu_sidebar_script", target: "chupmu_background_script",
+      message: ""
+    });
+  }
+
   document.getElementById("submit").addEventListener("click", handleSubmit);
-  document.getElementById("toggle-picker-button").addEventListener("click", handleTooglePicker);
+  document.getElementById("toggle-picker-button").addEventListener("click", handleTogglePicker);
+  document.getElementById("include-picked-button").addEventListener("click", handleIncludePickedItems);
 
 }
 
@@ -304,10 +315,13 @@ function startUp() {
     /* Get communication up */
     portSidebar = browser.runtime.connect({ name: "port-sidebar" });
 
-    portSidebar.postMessage({ "reference": 'getCurrentPickedUrl' });
+    portSidebar.postMessage({ 
+      info: "chupmu_extension", reference: 'getCurrentPickedUrl',
+      source: "chupmu_sidebar_script", target: "chupmu_background_script",
+    });
 
     portSidebar.onMessage.addListener((message, sender) => {
-      console.log(`SB portSidebar message: `, message);
+      // console.log(`SB portSidebar message: `, message);
       if (message.reference == "responseGetCurrentPickedUrl") {
         if (message.error) {
           console.log(`Error: B->SB getCurrentPickedUrl:`, message);
@@ -317,6 +331,8 @@ function startUp() {
         handleTEMP1(message.data);
       } else if (message.reference == "forceReloadSidebar") {
         startUp();
+      } else if (message.reference == "responsePickedItems") {
+        console.log(message);
       }
     })
   } else /* if (window.location.protocol === "file:")  */ {
