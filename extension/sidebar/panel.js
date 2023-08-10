@@ -40,7 +40,7 @@ function generateInnerHtmlDbContainer(dbName, tagNames) {
       <label>DB name:</label>
       <label><input type="checkbox" value="${dbName}" isdbname>${dbName}</label>
     </div>
-    <div class="tag-entry">`; 
+    <div class="tag-entry">`;
   if (tagNames && tagNames.length > 0) {
     innerHtml += `<p><label>Tag names:</label></p>`
   }
@@ -135,26 +135,26 @@ function runAsStandAloneHtml() {
   }
 
   // TODO: Testing exporting image
-  var element = document.getElementById('input-area');
-  var canvas = document.createElement('canvas');
-  canvas.width = element.offsetWidth;
-  canvas.height = element.offsetHeight;
-  html2canvas(element, {scale: 0.5}).then(function (canvas) {
-    var ctx = canvas.getContext('2d');
-    ctx.drawImage(canvas, 0, 0);
-    var dataURL = canvas.toDataURL();
-    console.log(dataURL.length);
+  // var element = document.getElementById('input-area');
+  // var canvas = document.createElement('canvas');
+  // canvas.width = element.offsetWidth;
+  // canvas.height = element.offsetHeight;
+  // html2canvas(element, { scale: 0.5 }).then(function (canvas) {
+  //   var ctx = canvas.getContext('2d');
+  //   ctx.drawImage(canvas, 0, 0);
+  //   var dataURL = canvas.toDataURL();
+  //   console.log(dataURL.length);
 
-    const img = document.createElement('img');
-    img.src = dataURL;
-    document.body.appendChild(img);
+  //   const img = document.createElement('img');
+  //   img.src = dataURL;
+  //   document.body.appendChild(img);
 
-    // document.getElementById('downloadimage').addEventListener("click", function (e) {
-    //   var dataURLImage = canvas.toDataURL("image/jpeg", 1.0);
-    //   downloadImage(dataURLImage, 'my-canvas.jpeg');
-    // });
-  });
-  
+  //   // document.getElementById('downloadimage').addEventListener("click", function (e) {
+  //   //   var dataURLImage = canvas.toDataURL("image/jpeg", 1.0);
+  //   //   downloadImage(dataURLImage, 'my-canvas.jpeg');
+  //   // });
+  // });
+
   // Save | Download image
   // function downloadImage(data, filename = 'untitled.jpeg') {
   //     var a = document.createElement('a');
@@ -170,7 +170,7 @@ function runAsStandAloneHtml() {
 function handleTEMP1(data) {
   document.getElementById("sidebar-status").textContent = "Picking:";
   addDomOnStartUp(data);
-  
+
   function handleSubmit() {
     let platformUrls = splitTrimFilterEmpty(document.getElementById("platform-url").value, ",");
     let userId = document.getElementById("user-id").value;
@@ -209,7 +209,7 @@ function startUp() {
         startUp();
       }
     })
-  } else /* if (window.location.protocol === "file:")  */{
+  } else /* if (window.location.protocol === "file:")  */ {
     document.getElementById("sidebar-status").textContent = "Running as stand alone html file.";
     runAsStandAloneHtml();
   }

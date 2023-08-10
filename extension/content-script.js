@@ -95,20 +95,20 @@ function handleRemoveLabel() {
 let myPort = browser.runtime.connect({ name: "port-cs" });
 myPort.postMessage({ greeting: "hello from content script" });
 
-myPort.onMessage.addListener((msg) => {
-  if (msg.info != "chupmu_extension" ||
-    msg.source != "chupmu_background_script" ||
-    msg.target != "chupmu_content_script") {
+myPort.onMessage.addListener((message) => {
+  if (message.info != "chupmu_extension" ||
+    message.source != "chupmu_background_script" ||
+    message.target != "chupmu_content_script") {
     return;
   }
 
-  if (msg.reference == "toggleLabelify") {
+  if (message.reference == "toggleLabelify") {
     console.log("Request B->C: toggleLabelify ...");
-    // myPort.postMessage({ response: `Chupmu Content script: Working on command '${msg.message}'` });
-    if (msg.message == "label") {
+    // myPort.postMessage({ response: `Chupmu Content script: Working on command '${message.message}'` });
+    if (message.message == "label") {
       console.log("command: label")
       askBackgroundForRecords(getAllUserIdsOnPageVoz());
-    } else if (msg.message == "removeLabel") {
+    } else if (message.message == "removeLabel") {
       console.log("command: removeLabel")
       handleRemoveLabel();
       // Send the current CSS code back to background to be removed
@@ -118,11 +118,10 @@ myPort.onMessage.addListener((msg) => {
         message: { "currentCss": currentCss }
       });
     }
-  } else if (msg.reference == "responseRecords") {
+  } else if (message.reference == "responseRecords") {
     /* Data is a array of db's meta, and records */
-    console.log(`Get responseRecords records data from background:`);
-    console.log(msg.message)
-    applyLabel(msg.message);
+    console.log(`Get responseRecords records data from background: `, message.message);
+    applyLabel(message.message);
   }
 
 });

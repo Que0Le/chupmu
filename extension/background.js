@@ -117,16 +117,16 @@ browser.pageAction.onClicked.addListener(toggleLabelify);
 function connected(p) {
   if (p && p.name === "port-cs") {
     portChannelContent = p;
-    portChannelContent.onMessage.addListener((msg, sender) => {
-      if (msg.info != "chupmu_extension" ||
-        msg.source != "chupmu_content_script" ||
-        msg.target != "chupmu_background_script") {
+    portChannelContent.onMessage.addListener((message, sender) => {
+      if (message.info != "chupmu_extension" ||
+        message.source != "chupmu_content_script" ||
+        message.target != "chupmu_background_script") {
         return;
       }
-  
-      if (msg.reference == "requestRecords") {
-        console.log("Request C->B: requestRecords", msg.message);
-        handleRequestRecord(msg.message)
+
+      if (message.reference == "requestRecords") {
+        console.log("Request C->B: requestRecords", message.message);
+        handleRequestRecord(message.message)
           .then(results => {
             results.forEach(r => {
               browser.tabs.insertCSS({ code: r.meta.dbCss });
@@ -138,15 +138,15 @@ function connected(p) {
             });
           }
           );
-      } else if (msg.reference == "removeCurrentCss") {
-        console.log("Request C->B: removeCurrentCss", msg.message);
-        msg.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
+      } else if (message.reference == "removeCurrentCss") {
+        console.log("Request C->B: removeCurrentCss", message.message);
+        message.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
       }
     });
   } else if (p && p.name === "port-sidebar") {
     portChannelSidebar = p;
-    portChannelSidebar.onMessage.addListener((msg, sender) => {
-      if (msg.reference === 'getCurrentPickedUrl') {
+    portChannelSidebar.onMessage.addListener((message, sender) => {
+      if (message.reference === 'getCurrentPickedUrl') {
         try {
           let parsedUrl = new URL(currentPickedUrl);
           if (!SUPPORTED_PROTOCOL.includes(parsedUrl.protocol.slice(0, -1))) {
@@ -172,9 +172,9 @@ function connected(p) {
           console.log(`Picker: Error parsing url '${currentPickedUrl}'`);
           return Promise.resolve({ error: `Failed parsing url: '${currentPickedUrl}'` });
         }
-      } else if (msg.reference === 'submitNewUser') {
+      } else if (message.reference === 'submitNewUser') {
         browser.runtime.onMessage.removeListener(handleMessage);
-        handleSubmitNewUserToDb(msg.data);
+        handleSubmitNewUserToDb(message.data);
       }
     })
   }
