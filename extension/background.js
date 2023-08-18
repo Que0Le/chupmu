@@ -148,7 +148,7 @@ function connected(p) {
         let result = [];
         
         function captureAndPush(rect) {
-          const imageDetails = { format: "png", quality: 75, rect: rect, scale: 0.5 };
+          const imageDetails = { format: "png", quality: 100, rect: rect, scale: 1.0 };
           return browser.tabs.captureVisibleTab(imageDetails)
             .then((dataUrl) => {
               result.push(dataUrl);

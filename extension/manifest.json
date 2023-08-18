@@ -38,7 +38,7 @@
   "content_scripts": [
     {
       "matches": ["https://*/*", "http://*/*"],
-      "js": ["sidebar/html2canvas.min.js", "content-script.js"]
+      "js": ["content-script.js"]
     }
   ],
   "options_ui": {
