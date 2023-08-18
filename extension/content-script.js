@@ -156,7 +156,7 @@ function handleRemoveLabel() {
 
 
 let myPort = browser.runtime.connect({ name: "port-cs" });
-myPort.postMessage({ greeting: "hello from content script" });
+// myPort.postMessage({ greeting: "hello from content script" });
 
 myPort.onMessage.addListener((message) => {
   if (message.info !== "chupmu_extension" ||
@@ -191,36 +191,16 @@ myPort.onMessage.addListener((message) => {
   } else if (message.reference === "requestPickedItems") {
     let imgSources = [];
     pickedElements.forEach(element => {
-      //// TODO: CONVERT DOM TO CANVAS FROM HERE!!!
-      imgSources.push(element.innerHTML)
+      // Get position of the selected elements and send to Background to make screenshot
+      let domRect = element.getBoundingClientRect();
+      // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/extensionTypes/ImageDetails
+      let rect = {
+        x: domRect.x + document.documentElement.scrollLeft, 
+        y: domRect.y + document.documentElement.scrollTop, 
+        width: domRect.width, height: domRect.height
+      };
+      imgSources.push(rect);
     })
-
-    // const scriptElement = document.createElement("script");
-    // scriptElement.src = browser.runtime.getURL("sidebar/html2canvas.min.js");
-    // (document.head || document.body).appendChild(scriptElement);
-    // scriptElement.onload = function () {
-    //   setTimeout(function() {
-    //     console.log("Code executed after 1 second");
-    //     // Now that the library is loaded, you can use it
-    //     // Make sure to put your html2canvas-related code here
-    //   }, 5000);
-      
-    // };
-
-    /* Testing from here */
-    // let canvas = document.createElement('canvas');
-    // pickedElements.forEach(element => {
-    //   canvas.width = element.offsetWidth;
-    //   canvas.height = element.offsetHeight;
-    //   html2canvas(element, { scale: 0.5, useCORS: true })
-    //     .then(function (canvas) {
-    //       let ctx = canvas.getContext('2d');
-    //       ctx.drawImage(canvas, 0, 0);
-    //       let dataURL = canvas.toDataURL();
-    //       imgSources.push(dataURL);
-    //     }
-    //   );
-    // });
     myPort.postMessage({
       info: "chupmu_extension", reference: "responsePickedItems",
       source: "chupmu_content_script", target: "chupmu_background_script",

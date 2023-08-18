@@ -19,7 +19,7 @@
     "open_at_install": false
   },
 
-  "permissions": ["activeTab", "tabs", "contextMenus", "storage"],
+  "permissions": ["<all_urls>", "activeTab", "tabs", "contextMenus", "storage"],
   "browser_specific_settings": {
     "gecko": {
       "id": "testing@testing.org",

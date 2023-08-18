@@ -321,6 +321,12 @@ function startUp() {
     });
 
     portSidebar.onMessage.addListener((message, sender) => {
+      if (message.info != "chupmu_extension" ||
+      message.source != "chupmu_background_script" ||
+      message.target != "chupmu_sidebar_script") {
+      console.log("SB: unknown message: ", message);
+      return;
+    }
       // console.log(`SB portSidebar message: `, message);
       if (message.reference == "responseGetCurrentPickedUrl") {
         if (message.error) {
@@ -333,6 +339,11 @@ function startUp() {
         startUp();
       } else if (message.reference == "responsePickedItems") {
         console.log(message);
+        message.message.pickedItemPng.forEach(dataUrl => {
+          const img = document.createElement('img');
+          img.src = dataUrl;
+          document.body.appendChild(img);
+        })
       }
     })
   } else /* if (window.location.protocol === "file:")  */ {

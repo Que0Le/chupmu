@@ -24,8 +24,10 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "chupmu_pick_this_user") {
     currentPickedUrl = info.linkUrl;
     browser.sidebarAction.open();
-    // browser.runtime.sendMessage({ "reference": "forceReloadSidebar" });
-    portChannelSidebar.postMessage({ "reference": "forceReloadSidebar" });
+    portChannelSidebar.postMessage({ 
+      info: "chupmu_extension", reference: "forceReloadSidebar",
+      source: "chupmu_background_script", target: "chupmu_sidebar_script"
+    });
   }
 });
 
@@ -121,6 +123,7 @@ function connected(p) {
       if (message.info != "chupmu_extension" ||
         message.source != "chupmu_content_script" ||
         message.target != "chupmu_background_script") {
+        console.log("B: unknown message: ", message);
         return;
       }
 
@@ -142,11 +145,28 @@ function connected(p) {
         console.log("Request C->B: removeCurrentCss", message.message);
         message.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
       } else if (message.reference == "responsePickedItems") {
-        portChannelSidebar.postMessage({
-          info: "chupmu_extension", reference: "responsePickedItems",
-          source: "chupmu_background_script", target: "chupmu_sidebar_script",
-          message: message.message
-        })
+        let result = [];
+        
+        function captureAndPush(rect) {
+          const imageDetails = { format: "png", quality: 75, rect: rect, scale: 0.5 };
+          return browser.tabs.captureVisibleTab(imageDetails)
+            .then((dataUrl) => {
+              result.push(dataUrl);
+              console.log(dataUrl);
+            });
+        }
+        Promise.all(message.message.imgSources.map(captureAndPush))
+          .then(() => {
+            // Once all captures are complete, send the result to the sidebar
+            portChannelSidebar.postMessage({
+              info: "chupmu_extension", reference: "responsePickedItems",
+              source: "chupmu_background_script", target: "chupmu_sidebar_script",
+              message: {"pickedItemPng": result},
+            });
+          })
+          .catch((error) => {
+            console.error("Error capturing DOM screenshots:", error);
+          });
       }
     });
   } else if (p && p.name === "port-sidebar") {
@@ -170,7 +190,8 @@ function connected(p) {
             .then(dbNamesAndTheirTagNames => {
               portChannelSidebar.postMessage(
                 {
-                  "reference": "responseGetCurrentPickedUrl",
+                  info: "chupmu_extension", reference: "responseGetCurrentPickedUrl",
+                  source: "chupmu_background_script", target: "chupmu_sidebar_script",
                   "data": {
                     "currentPickedUrl": currentPickedUrl, "dbNamesAndTheirTagNames": dbNamesAndTheirTagNames,
                     "suggestedPlatformUrl": suggestedPlatformUrl, "suggestedUserId": suggestedUserId
@@ -193,12 +214,6 @@ function connected(p) {
         })
       } else if (message.reference === "requestPickedItems") {
         console.log(`SB->B: `, message.reference);
-        // browser.browserAction.onClicked.addListener(function (tab) {
-        //   // for the current tab, inject the "inject.js" file & execute it
-        //   browser.tabs.executeScript(tab.id, {
-        //     file: 'sidebar/html2canvas.min.js'
-        //   });
-        // });
         browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT })
         .then(tabs => {
           browser.tabs.executeScript(tabs[0].id, {
