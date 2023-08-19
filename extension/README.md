@@ -30,7 +30,7 @@ Popup: https://github.com/gorhill/uBlock/blob/master/src/popup-fenix.html.<br>Co
     global.window.domtoimage = domtoimage;
     ```
     The bundle can be imported with `<script src="bundle.js"></script>`.
-- Currently using [html2canvas](https://www.npmjs.com/package/html2canvas) to make screenshot. [dom-to-image-more](https://www.npmjs.com/package/dom-to-image-more) didn't work somehow (`SecurityError: CSSStyleSheet.cssRules getter: Not allowed to access cross-origin stylesheet`), and can't work on Safari anyway.
+- ~~Currently using [html2canvas](https://www.npmjs.com/package/html2canvas) to make screenshot. [dom-to-image-more](https://www.npmjs.com/package/dom-to-image-more) didn't work somehow (`SecurityError: CSSStyleSheet.cssRules getter: Not allowed to access cross-origin stylesheet`), and can't work on Safari anyway~~
 
 # Resources to evaluate
 - Extension example from MDN: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Examples

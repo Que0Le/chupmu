@@ -163,8 +163,7 @@ function connected(p) {
         console.log("Request C->B: removeCurrentCss", message.message);
         message.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
       } else if (message.reference === "responsePickedItems") {
-        console.log(message.message.imgRects);
-      
+
         function captureAndPush(rect, url) {
           const imageDetails = { format: "png", quality: 100, rect: rect, scale: 1.0 };
           
@@ -193,7 +192,8 @@ function connected(p) {
               .catch(error => {
                 console.error("Error capturing DOM screenshots:", error);
               });
-          });
+          })
+          .catch(error => console.log("Error querying active tab: ", error));
       }
     });
   } else if (p && p.name === "port-sidebar") {
@@ -233,12 +233,6 @@ function connected(p) {
         sendMsgToContent("togglePicker", {});
       } else if (message.reference === "requestPickedItems") {
         console.log(`SB->B: `, message.reference);
-        browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT })
-        .then(tabs => {
-          browser.tabs.executeScript(tabs[0].id, {
-            file: 'sidebar/html2canvas.min.js'
-          });
-        });
         sendMsgToContent("requestPickedItems", {})
       }
     })

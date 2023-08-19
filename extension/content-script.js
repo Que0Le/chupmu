@@ -12,7 +12,6 @@ let portContent = browser.runtime.connect({ name: "port-cs" });
  * @param {Object} message 
  */
 function sendMsgToBackground(reference, message) {
-  console.log(portContent)
   portContent.postMessage({
     info: "chupmu_extension", reference: reference,
     source: "chupmu_content_script", target: "chupmu_background_script",
@@ -180,7 +179,7 @@ portContent.onMessage.addListener((message) => {
     message.target !== "chupmu_content_script") {
     return;
   }
-
+  console.log("msg: ", message)
   if (message.reference === "toggleLabelify") {
     console.log("Request B->C: toggleLabelify ...");
     // portContent.postMessage({ response: `Chupmu Content script: Working on command '${message.message}'` });
@@ -217,9 +216,8 @@ portContent.onMessage.addListener((message) => {
         width: domRect.width, height: domRect.height
       };
       imgRects.push(rect);
-    })
+    });
     sendMsgToBackground("responsePickedItems", { "imgRects": imgRects });
-
   }
 
 });
