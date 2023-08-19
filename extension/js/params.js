@@ -4,6 +4,10 @@ const SUPPORTED_PROTOCOL = ["http", "https"];
 const getUserFromUrl = /\/([^/]+)\/?$/;
 // https://www.w3schools.com/css/css_tooltip.asp
 
+const MSG_EXT_NAME = "chupmu_extension";
+const MSG_TARGET_BACKGROUND = "chupmu_background_script";
+const MSG_TARGET_CONTENT = "chupmu_content_script";
+const MSG_TARGET_SIDEBAR = "chupmu_sidebar_script";
 
 const EXT_NAME = "chupmu"
 const DB_NAME = 'chupmuDb';

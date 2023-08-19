@@ -3,6 +3,22 @@ const chupmu_css_class_prefix = "chupmu_css_";
 const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
 
 let currentCss = [];
+let portContent = browser.runtime.connect({ name: "port-cs" });
+
+
+/**
+ * 
+ * @param {String} reference 
+ * @param {Object} message 
+ */
+function sendMsgToBackground(reference, message) {
+  console.log(portContent)
+  portContent.postMessage({
+    info: "chupmu_extension", reference: reference,
+    source: "chupmu_content_script", target: "chupmu_background_script",
+    message: message
+  });
+}
 
 function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
   let str = `
@@ -154,11 +170,11 @@ function handleRemoveLabel() {
   }
 }
 
+function askBackgroundForRecords(ids) {
+  sendMsgToBackground("requestRecords", { "currentUrl": document.location.href, "ids": ids });
+}
 
-let myPort = browser.runtime.connect({ name: "port-cs" });
-// myPort.postMessage({ greeting: "hello from content script" });
-
-myPort.onMessage.addListener((message) => {
+portContent.onMessage.addListener((message) => {
   if (message.info !== "chupmu_extension" ||
     message.source !== "chupmu_background_script" ||
     message.target !== "chupmu_content_script") {
@@ -167,7 +183,7 @@ myPort.onMessage.addListener((message) => {
 
   if (message.reference === "toggleLabelify") {
     console.log("Request B->C: toggleLabelify ...");
-    // myPort.postMessage({ response: `Chupmu Content script: Working on command '${message.message}'` });
+    // portContent.postMessage({ response: `Chupmu Content script: Working on command '${message.message}'` });
     if (message.message === "label") {
       console.log("command: label")
       askBackgroundForRecords(getAllUserIdsOnPageVoz());
@@ -175,11 +191,12 @@ myPort.onMessage.addListener((message) => {
       console.log("command: removeLabel")
       handleRemoveLabel();
       // Send the current CSS code back to background to be removed
-      myPort.postMessage({
+      portContent.postMessage({
         info: "chupmu_extension", reference: "removeCurrentCss",
         source: "chupmu_content_script", target: "chupmu_background_script",
         message: { "currentCss": currentCss }
       });
+      // sendMsgToBackground("removeCurrentCss", { "currentCss": currentCss });
     }
   } else if (message.reference === "responseRecords") {
     /* Data is a array of db's meta, and records */
@@ -201,20 +218,9 @@ myPort.onMessage.addListener((message) => {
       };
       imgSources.push(rect);
     })
-    myPort.postMessage({
-      info: "chupmu_extension", reference: "responsePickedItems",
-      source: "chupmu_content_script", target: "chupmu_background_script",
-      message: { "imgSources": imgSources }
-    })
+    sendMsgToBackground("responsePickedItems", { "imgSources": imgSources });
 
   }
 
 });
 
-function askBackgroundForRecords(ids) {
-  myPort.postMessage({
-    info: "chupmu_extension", reference: "requestRecords",
-    source: "chupmu_content_script", target: "chupmu_background_script",
-    message: { "currentUrl": document.location.href, "ids": ids }
-  });
-}

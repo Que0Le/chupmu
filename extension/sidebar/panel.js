@@ -334,7 +334,7 @@ function startUp() {
           document.getElementById("sidebar-status").textContent = message.error;
           return;
         }
-        handleTEMP1(message.data);
+        handleTEMP1(message.message);
       } else if (message.reference == "forceReloadSidebar") {
         startUp();
       } else if (message.reference == "responsePickedItems") {

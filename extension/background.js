@@ -5,6 +5,31 @@
 let portChannelContent;
 let portChannelSidebar;
 
+/**
+ * 
+ * @param {String} reference 
+ * @param {Object} message 
+ */
+function sendMsgToContent(reference, message) {
+  portChannelContent.postMessage({
+    info: MSG_EXT_NAME, reference: reference,
+    source: MSG_TARGET_BACKGROUND, target: MSG_TARGET_CONTENT,
+    message: message
+  });
+}
+
+/**
+ * 
+ * @param {String} reference 
+ * @param {Object} message 
+ */
+function sendMsgToSidebar(reference, message) {
+  portChannelSidebar.postMessage({
+    info: MSG_EXT_NAME, reference: reference,
+    source: MSG_TARGET_BACKGROUND, target: MSG_TARGET_SIDEBAR,
+    message: message
+  });
+}
 
 /* Create context menu for picker */
 browser.contextMenus.create({
@@ -24,10 +49,7 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "chupmu_pick_this_user") {
     currentPickedUrl = info.linkUrl;
     browser.sidebarAction.open();
-    portChannelSidebar.postMessage({ 
-      info: "chupmu_extension", reference: "forceReloadSidebar",
-      source: "chupmu_background_script", target: "chupmu_sidebar_script"
-    });
+    sendMsgToSidebar("forceReloadSidebar", {});
   }
 });
 
@@ -134,11 +156,7 @@ function connected(p) {
             results.forEach(r => {
               browser.tabs.insertCSS({ code: r.meta.dbCss });
             });
-            portChannelContent.postMessage({
-              info: "chupmu_extension", reference: "responseRecords",
-              source: "chupmu_background_script", target: "chupmu_content_script",
-              message: results
-            });
+            sendMsgToContent("responseRecords", results);
           }
           );
       } else if (message.reference == "removeCurrentCss") {
@@ -158,11 +176,7 @@ function connected(p) {
         Promise.all(message.message.imgSources.map(captureAndPush))
           .then(() => {
             // Once all captures are complete, send the result to the sidebar
-            portChannelSidebar.postMessage({
-              info: "chupmu_extension", reference: "responsePickedItems",
-              source: "chupmu_background_script", target: "chupmu_sidebar_script",
-              message: {"pickedItemPng": result},
-            });
+            sendMsgToSidebar("responsePickedItems", { "pickedItemPng": result });
           })
           .catch((error) => {
             console.error("Error capturing DOM screenshots:", error);
@@ -188,30 +202,22 @@ function connected(p) {
           let suggestedUserId = parsedUrl.pathname.match(getUserFromUrl)[1];
           getAllFilterDbNamesAndTheirTags(true)
             .then(dbNamesAndTheirTagNames => {
-              portChannelSidebar.postMessage(
+              sendMsgToSidebar("responseGetCurrentPickedUrl",
                 {
-                  info: "chupmu_extension", reference: "responseGetCurrentPickedUrl",
-                  source: "chupmu_background_script", target: "chupmu_sidebar_script",
-                  "data": {
-                    "currentPickedUrl": currentPickedUrl, "dbNamesAndTheirTagNames": dbNamesAndTheirTagNames,
-                    "suggestedPlatformUrl": suggestedPlatformUrl, "suggestedUserId": suggestedUserId
-                  }
+                  "currentPickedUrl": currentPickedUrl, "dbNamesAndTheirTagNames": dbNamesAndTheirTagNames,
+                  "suggestedPlatformUrl": suggestedPlatformUrl, "suggestedUserId": suggestedUserId
                 }
-              )
+              );
             });
         } catch (error) {
           console.log(`Picker: Error parsing url '${currentPickedUrl}'`);
           return Promise.resolve({ error: `Failed parsing url: '${currentPickedUrl}'` });
         }
       } else if (message.reference === 'submitNewUser') {
-        // browser.runtime.onMessage.removeListener(handleMessage);
         handleSubmitNewUserToDb(message.data);
       } else if (message.reference === "togglePicker") {
         console.log(`SB->B: `, message.reference);
-        portChannelContent.postMessage({
-          info: "chupmu_extension", reference: "togglePicker",
-          source: "chupmu_background_script", target: "chupmu_content_script",
-        })
+        sendMsgToContent("togglePicker", {});
       } else if (message.reference === "requestPickedItems") {
         console.log(`SB->B: `, message.reference);
         browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT })
@@ -220,10 +226,7 @@ function connected(p) {
             file: 'sidebar/html2canvas.min.js'
           });
         });
-        portChannelContent.postMessage({
-          info: "chupmu_extension", reference: "requestPickedItems",
-          source: "chupmu_background_script", target: "chupmu_content_script",
-        })
+        sendMsgToContent("requestPickedItems", {})
       }
     })
   }
