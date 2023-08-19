@@ -162,24 +162,37 @@ function connected(p) {
       } else if (message.reference == "removeCurrentCss") {
         console.log("Request C->B: removeCurrentCss", message.message);
         message.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
-      } else if (message.reference == "responsePickedItems") {
-        let result = [];
-        
-        function captureAndPush(rect) {
+      } else if (message.reference === "responsePickedItems") {
+        console.log(message.message.imgRects);
+      
+        function captureAndPush(rect, url) {
           const imageDetails = { format: "png", quality: 100, rect: rect, scale: 1.0 };
+          
           return browser.tabs.captureVisibleTab(imageDetails)
-            .then((dataUrl) => {
-              result.push(dataUrl);
-              console.log(dataUrl);
+            .then(dataUrl => ({
+              dataUrl: dataUrl,
+              unixTime: Date.now(),
+              captureUrl: url
+            }))
+            .catch(error => {
+              console.error("Error capturing visible tab:", error);
+              return null;
             });
         }
-        Promise.all(message.message.imgSources.map(captureAndPush))
-          .then(() => {
-            // Once all captures are complete, send the result to the sidebar
-            sendMsgToSidebar("responsePickedItems", { "pickedItemPng": result });
-          })
-          .catch((error) => {
-            console.error("Error capturing DOM screenshots:", error);
+      
+        browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT })
+          .then(tabs => {
+            const url = tabs[0].url;
+            const capturePromises = message.message.imgRects.map(rect => captureAndPush(rect, url));
+            
+            Promise.all(capturePromises)
+              .then(results => {
+                const validResults = results.filter(result => result !== null);
+                sendMsgToSidebar("responsePickedItems", { "pickedItemPng": validResults });
+              })
+              .catch(error => {
+                console.error("Error capturing DOM screenshots:", error);
+              });
           });
       }
     });

@@ -206,7 +206,7 @@ portContent.onMessage.addListener((message) => {
     console.log("B->C: togglePicker");
     togglePicker();
   } else if (message.reference === "requestPickedItems") {
-    let imgSources = [];
+    let imgRects = [];
     pickedElements.forEach(element => {
       // Get position of the selected elements and send to Background to make screenshot
       let domRect = element.getBoundingClientRect();
@@ -216,9 +216,9 @@ portContent.onMessage.addListener((message) => {
         y: domRect.y + document.documentElement.scrollTop, 
         width: domRect.width, height: domRect.height
       };
-      imgSources.push(rect);
+      imgRects.push(rect);
     })
-    sendMsgToBackground("responsePickedItems", { "imgSources": imgSources });
+    sendMsgToBackground("responsePickedItems", { "imgRects": imgRects });
 
   }
 

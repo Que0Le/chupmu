@@ -43,6 +43,15 @@ const DEFAULT_INPUT_AREA = `<div class="container-1">
 </div>`;
 
 
+function generateHtmlScreenshotContainer(meta, dataUrl) {
+  let innerHtml = `<div class="screenshot-container">
+    <p class="screenshot-meta">${meta}</p>
+    <img src="${dataUrl}">
+  </div>`;
+  return innerHtml;
+}
+
+
 function generateInnerHtmlDbContainer(dbName, tagNames) {
   let innerHtml = `<div class="db-container">
     <div class="db-entry">
@@ -211,59 +220,9 @@ function runAsStandAloneHtml() {
   document.getElementById("toggle-picker-button").addEventListener("click", togglePicker);
 
   function handleIncludePickedItems() {
-    let imageContainer = document.getElementById("test2");
-    imageContainer.innerHTML = "";
-
-    let canvas = document.createElement('canvas');
-    pickedElements.forEach(element => {
-      canvas.width = element.offsetWidth;
-      canvas.height = element.offsetHeight;
-      html2canvas(element, { scale: 0.5 })
-        .then(function (canvas) {
-          let ctx = canvas.getContext('2d');
-          ctx.drawImage(canvas, 0, 0);
-          let dataURL = canvas.toDataURL();
-          console.log(dataURL.length);
-
-          const img = document.createElement('img');
-          img.src = dataURL;
-          imageContainer.appendChild(img);
-        }
-      );
-    })
+    // Doesn't support screenshot with standalone HTML!
   }
   document.getElementById("include-picked-button").addEventListener("click", handleIncludePickedItems);
-
-  // TODO: Testing exporting image
-  // var element = document.getElementById('input-area');
-  // var canvas = document.createElement('canvas');
-  // canvas.width = element.offsetWidth;
-  // canvas.height = element.offsetHeight;
-  // html2canvas(element, { scale: 0.5 }).then(function (canvas) {
-  //   var ctx = canvas.getContext('2d');
-  //   ctx.drawImage(canvas, 0, 0);
-  //   var dataURL = canvas.toDataURL();
-  //   console.log(dataURL.length);
-
-  //   const img = document.createElement('img');
-  //   img.src = dataURL;
-  //   document.body.appendChild(img);
-
-  //   // document.getElementById('downloadimage').addEventListener("click", function (e) {
-  //   //   var dataURLImage = canvas.toDataURL("image/jpeg", 1.0);
-  //   //   downloadImage(dataURLImage, 'my-canvas.jpeg');
-  //   // });
-  // });
-
-  // Save | Download image
-  // function downloadImage(data, filename = 'untitled.jpeg') {
-  //     var a = document.createElement('a');
-  //     a.href = data;
-  //     a.download = filename;
-  //     document.body.appendChild(a);
-  //     a.click();
-  // }
-
 }
 
 function handleTEMP1(data) {
@@ -327,7 +286,6 @@ function startUp() {
       console.log("SB: unknown message: ", message);
       return;
     }
-      // console.log(`SB portSidebar message: `, message);
       if (message.reference == "responseGetCurrentPickedUrl") {
         if (message.error) {
           console.log(`Error: B->SB getCurrentPickedUrl:`, message);
@@ -338,11 +296,9 @@ function startUp() {
       } else if (message.reference == "forceReloadSidebar") {
         startUp();
       } else if (message.reference == "responsePickedItems") {
-        console.log(message);
-        message.message.pickedItemPng.forEach(dataUrl => {
-          const img = document.createElement('img');
-          img.src = dataUrl;
-          document.body.appendChild(img);
+        let screenshotArea = document.getElementById("screenshot-area");
+        message.message.pickedItemPng.forEach(data => {
+          screenshotArea.innerHTML += generateHtmlScreenshotContainer(data.captureUrl + " " + data.unixTime, data.dataUrl);
         })
       }
     })
