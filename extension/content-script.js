@@ -33,7 +33,9 @@ function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
 let pickerActive = false;
 let pickedElements = [];
 let currentPickingElement;
-let encounterHovers = 0;
+// this variable is a attempt to reduce risk of endless loop
+// when remove highlight effect on howevered and picked items
+let encounterHovers = 0;  
 
 function togglePicker() {
   pickerActive = !pickerActive;
@@ -47,7 +49,7 @@ function togglePicker() {
     document.removeEventListener('mouseover', handleElementMouseOver);
     document.removeEventListener('click', handleElementClick);
     // Remove any highlighting
-    removeHighlight();
+    removeHoverHighlight();
   }
 }
 
@@ -62,7 +64,7 @@ function handleElementMouseOver(event) {
     }
     currentPickingElement = event.target;
     if (!pickedElements.includes(currentPickingElement)) {
-      currentPickingElement.style.outline = '2px solid red';
+      currentPickingElement.style.outline = 'red solid 2px';
     }
   }
   encounterHovers += 1;
@@ -77,20 +79,36 @@ function handleElementClick(event) {
       pickedElements.splice(pickedElements.indexOf(event.target), 1);
     } else {
       // Mark the element green
-      event.target.style.outline = '2px solid green';
+      event.target.style.outline = 'green solid 2px';
       pickedElements.push(event.target);
     }
   }
 }
 
-function removeHighlight() {
+function removeHoverHighlight() {
+  let max_try = 100;
   let i = 0;
-  let highlightedElement = document.querySelector('[style="outline: 2px solid red;"]');
-  while (i < encounterHovers * 2 && highlightedElement) {
+  let highlightedElement = document.querySelector('[style="outline: red solid 2px;"]');
+  while (i < max_try && highlightedElement) {
+    console.log("C: removing outlined item ...");
     highlightedElement.style.outline = '';
     i++;
-    highlightedElement = document.querySelector('[style="outline: 2px solid red;"]');
+    highlightedElement = document.querySelector('[style="outline: red solid 2px;"]');
   }
+}
+
+function removePickedItem() {
+  let max_try = 100;
+  let i = 0;
+  let highlightedElement = document.querySelector('[style="outline: green solid 2px;"]');
+  while (i < max_try * 2 && highlightedElement) {
+    console.log("C: removing selected item ...");
+    highlightedElement.style.outline = '';
+    i++;
+    highlightedElement = document.querySelector('[style="outline: green solid 2px;"]');
+  }
+  pickedElements = [];
+currentPickingElement = null;
 }
 
 
@@ -182,7 +200,6 @@ portContent.onMessage.addListener((message) => {
 
   if (message.reference === "toggleLabelify") {
     console.log("Request B->C: toggleLabelify ...");
-    // portContent.postMessage({ response: `Chupmu Content script: Working on command '${message.message}'` });
     if (message.message === "label") {
       console.log("command: label")
       askBackgroundForRecords(getAllUserIdsOnPageVoz());
@@ -190,12 +207,7 @@ portContent.onMessage.addListener((message) => {
       console.log("command: removeLabel")
       handleRemoveLabel();
       // Send the current CSS code back to background to be removed
-      portContent.postMessage({
-        info: "chupmu_extension", reference: "removeCurrentCss",
-        source: "chupmu_content_script", target: "chupmu_background_script",
-        message: { "currentCss": currentCss }
-      });
-      // sendMsgToBackground("removeCurrentCss", { "currentCss": currentCss });
+      sendMsgToBackground("removeCurrentCss", { "currentCss": currentCss });
     }
   } else if (message.reference === "responseRecords") {
     /* Data is a array of db's meta, and records */
@@ -208,6 +220,7 @@ portContent.onMessage.addListener((message) => {
     let imgRects = [];
     pickedElements.forEach(element => {
       // Get position of the selected elements and send to Background to make screenshot
+      // TODO: remove duplicated
       let domRect = element.getBoundingClientRect();
       // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/extensionTypes/ImageDetails
       let rect = {
@@ -218,7 +231,9 @@ portContent.onMessage.addListener((message) => {
       imgRects.push(rect);
     });
     sendMsgToBackground("responsePickedItems", { "imgRects": imgRects });
+  } else if (message.reference === "clearPickedItems") {
+    console.log("B->C: clearPickedItems");
+    removePickedItem();
   }
-
 });
 

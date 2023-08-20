@@ -257,39 +257,20 @@ function handleTEMP1(data) {
         "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
       }
     );
-    // portSidebar.postMessage({
-    //   "reference": "submitNewUser",
-    //   "message": {
-    //     "platformUrls": platformUrls,
-    //     "userId": userId,
-    //     "note": note,
-    //     "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
-    //   }
-    // });
   }
 
   function handleTogglePicker() {
     sendMsgToBackground("togglePicker", {});
-    // portSidebar.postMessage({
-    //   info: "chupmu_extension", reference: "togglePicker",
-    //   source: "chupmu_sidebar_script", target: "chupmu_background_script",
-    //   message: ""
-    // });
     // TODO: change button UI
   }
 
   function handleIncludePickedItems() {
     sendMsgToBackground("requestPickedItems", {});
-    // portSidebar.postMessage({
-    //   info: "chupmu_extension", reference: "requestPickedItems",
-    //   source: "chupmu_sidebar_script", target: "chupmu_background_script",
-    //   message: ""
-    // });
   }
 
   function handleClearPickedItems() {
     document.getElementById("screenshot-area").innerHTML = "";
-    pickedElements = [];
+    sendMsgToBackground("clearPickedItems", {});
   }
 
   document.getElementById("submit").addEventListener("click", handleSubmit);
@@ -305,10 +286,6 @@ function startUp() {
     /* Get communication up */
     portSidebar = browser.runtime.connect({ name: "port-sidebar" });
     sendMsgToBackground("getCurrentPickedUrl", {});
-    // portSidebar.postMessage({ 
-    //   info: "chupmu_extension", reference: 'getCurrentPickedUrl',
-    //   source: "chupmu_sidebar_script", target: "chupmu_background_script",
-    // });
 
     portSidebar.onMessage.addListener((message, sender) => {
       if (message.info != "chupmu_extension" ||

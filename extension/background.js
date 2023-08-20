@@ -233,9 +233,12 @@ function connected(p) {
         sendMsgToContent("togglePicker", {});
       } else if (message.reference === "requestPickedItems") {
         console.log(`SB->B: `, message.reference);
-        sendMsgToContent("requestPickedItems", {})
-      }
-    })
+        sendMsgToContent("requestPickedItems", {});
+      } else if (message.reference === "clearPickedItems") {
+        console.log(`SB->B: `, message.reference);
+        sendMsgToContent("clearPickedItems", {});
+      }    
+    });
   }
 }
 
