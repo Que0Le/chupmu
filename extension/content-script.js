@@ -179,7 +179,7 @@ portContent.onMessage.addListener((message) => {
     message.target !== "chupmu_content_script") {
     return;
   }
-  console.log("msg: ", message)
+
   if (message.reference === "toggleLabelify") {
     console.log("Request B->C: toggleLabelify ...");
     // portContent.postMessage({ response: `Chupmu Content script: Working on command '${message.message}'` });

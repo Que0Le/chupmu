@@ -227,7 +227,7 @@ function connected(p) {
           return Promise.resolve({ error: `Failed parsing url: '${currentPickedUrl}'` });
         }
       } else if (message.reference === 'submitNewUser') {
-        handleSubmitNewUserToDb(message.data);
+        handleSubmitNewUserToDb(message.message);
       } else if (message.reference === "togglePicker") {
         console.log(`SB->B: `, message.reference);
         sendMsgToContent("togglePicker", {});

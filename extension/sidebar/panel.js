@@ -3,6 +3,19 @@ const newDbNameInputId = "new-db-name-input";
 const newTagInputId = "new-tag-input";
 let portSidebar;
 
+/**
+ * 
+ * @param {String} reference 
+ * @param {Object} message 
+ */
+function sendMsgToBackground(reference, message) {
+  portSidebar.postMessage({
+    info: "chupmu_extension", reference: reference,
+    source: "chupmu_sidebar_script", target: "chupmu_background_script",
+    message: message
+  });
+}
+
 function splitTrimFilterEmpty(string, delimiterChar) {
   return string.split(delimiterChar).map(substring => substring.trim()).filter(item => item !== '')
 }
@@ -43,10 +56,11 @@ const DEFAULT_INPUT_AREA = `<div class="container-1">
 </div>`;
 
 
-function generateHtmlScreenshotContainer(meta, dataUrl) {
+function generateHtmlScreenshotContainer(url, timestamp, dataUrl) {
   let innerHtml = `<div class="screenshot-container">
-    <p class="screenshot-meta">${meta}</p>
-    <img src="${dataUrl}">
+  <div class="screenshot-url">${url}</div>
+  <div class="screenshot-url">${timestamp}</div>
+  <img src="${dataUrl}">
   </div>`;
   return innerHtml;
 }
@@ -127,11 +141,11 @@ function getDbTagData() {
   return dbAndTags;
 }
 
-let pickerActive = false;
-let pickedElements = [];
-let currentPickingElement;
-let encounterHovers = 0;
 function runAsStandAloneHtml() {
+  let pickerActive = false;
+  let pickedElements = [];
+  let currentPickingElement;
+  let encounterHovers = 0;
   const msg = {
     "currentPickedUrl": "https://voz.vn/u/baby-diehard.71866/",
     "suggestedPlatformUrl": "voz.vn",
@@ -234,37 +248,54 @@ function handleTEMP1(data) {
     let userId = document.getElementById("user-id").value;
     let note = document.getElementById("note").value;
     let dbNamesAndTheirTagNames = getDbTagData();
-    portSidebar.postMessage({
-      "reference": "submitNewUser",
-      "data": {
+    sendMsgToBackground(
+      "submitNewUser", 
+      {
         "platformUrls": platformUrls,
         "userId": userId,
         "note": note,
         "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
       }
-    });
+    );
+    // portSidebar.postMessage({
+    //   "reference": "submitNewUser",
+    //   "message": {
+    //     "platformUrls": platformUrls,
+    //     "userId": userId,
+    //     "note": note,
+    //     "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
+    //   }
+    // });
   }
 
   function handleTogglePicker() {
-    portSidebar.postMessage({
-      info: "chupmu_extension", reference: "togglePicker",
-      source: "chupmu_sidebar_script", target: "chupmu_background_script",
-      message: ""
-    });
+    sendMsgToBackground("togglePicker", {});
+    // portSidebar.postMessage({
+    //   info: "chupmu_extension", reference: "togglePicker",
+    //   source: "chupmu_sidebar_script", target: "chupmu_background_script",
+    //   message: ""
+    // });
     // TODO: change button UI
   }
 
   function handleIncludePickedItems() {
-    portSidebar.postMessage({
-      info: "chupmu_extension", reference: "requestPickedItems",
-      source: "chupmu_sidebar_script", target: "chupmu_background_script",
-      message: ""
-    });
+    sendMsgToBackground("requestPickedItems", {});
+    // portSidebar.postMessage({
+    //   info: "chupmu_extension", reference: "requestPickedItems",
+    //   source: "chupmu_sidebar_script", target: "chupmu_background_script",
+    //   message: ""
+    // });
+  }
+
+  function handleClearPickedItems() {
+    document.getElementById("screenshot-area").innerHTML = "";
+    pickedElements = [];
   }
 
   document.getElementById("submit").addEventListener("click", handleSubmit);
   document.getElementById("toggle-picker-button").addEventListener("click", handleTogglePicker);
   document.getElementById("include-picked-button").addEventListener("click", handleIncludePickedItems);
+  document.getElementById("clear-picked-button").addEventListener("click", handleClearPickedItems);
 
 }
 
@@ -273,11 +304,11 @@ function startUp() {
   if (window.location.protocol === "moz-extension:") {
     /* Get communication up */
     portSidebar = browser.runtime.connect({ name: "port-sidebar" });
-
-    portSidebar.postMessage({ 
-      info: "chupmu_extension", reference: 'getCurrentPickedUrl',
-      source: "chupmu_sidebar_script", target: "chupmu_background_script",
-    });
+    sendMsgToBackground("getCurrentPickedUrl", {});
+    // portSidebar.postMessage({ 
+    //   info: "chupmu_extension", reference: 'getCurrentPickedUrl',
+    //   source: "chupmu_sidebar_script", target: "chupmu_background_script",
+    // });
 
     portSidebar.onMessage.addListener((message, sender) => {
       if (message.info != "chupmu_extension" ||
@@ -298,7 +329,10 @@ function startUp() {
       } else if (message.reference == "responsePickedItems") {
         let screenshotArea = document.getElementById("screenshot-area");
         message.message.pickedItemPng.forEach(data => {
-          screenshotArea.innerHTML += generateHtmlScreenshotContainer(data.captureUrl + " " + data.unixTime, data.dataUrl);
+          let timestamp = new Date(data.unixTime).toUTCString();
+          screenshotArea.innerHTML += generateHtmlScreenshotContainer(
+            data.captureUrl, timestamp, data.dataUrl
+          );
         })
       }
     })
