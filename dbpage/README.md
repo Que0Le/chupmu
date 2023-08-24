@@ -1,0 +1,1 @@
+The base of backend code is taken from https://github.com/Youngestdev/fastapi-mongo.
