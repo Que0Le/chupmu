@@ -33,7 +33,7 @@ class UpdateReportDataModel(BaseModel):
     reporter: Optional[str]
     reported_user: Optional[str]
     url: Optional[str]
-    data_url_array: Optional[list[str]]
+    data_url_array: Optional[list[DataUrlPayload]]
 
     class Collection:
         name = "report_data"

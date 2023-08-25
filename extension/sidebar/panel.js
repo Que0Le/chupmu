@@ -321,9 +321,9 @@ function startUp() {
       if (message.info != "chupmu_extension" ||
       message.source != "chupmu_background_script" ||
       message.target != "chupmu_sidebar_script") {
-      console.log("SB: unknown message: ", message);
-      return;
-    }
+        console.log("SB: unknown message: ", message);
+        return;
+      }
       if (message.reference == "responseGetCurrentPickedUrl") {
         if (message.error) {
           console.log(`Error: B->SB getCurrentPickedUrl:`, message);
@@ -349,7 +349,7 @@ function startUp() {
           });
           currentPickedUnixTime = data.unixTime;
           currentPickedUrl = data.captureUrl;
-        })
+        });
       }
     })
   } else /* if (window.location.protocol === "file:")  */ {

@@ -5,6 +5,7 @@ from config.config import initiate_database
 from routes.admin import router as AdminRouter
 from routes.student import router as StudentRouter
 from routes.report_data import router as ReportDataRouter
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
@@ -32,4 +33,10 @@ app.include_router(
     ReportDataRouter,
     tags=["ReportData"],
     prefix="/report-data",
+)
+
+app.mount(
+    "/basic-frontend", 
+    StaticFiles(directory="../basic-frontend"), 
+    name="static"
 )
