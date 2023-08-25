@@ -2,6 +2,17 @@ const newDbContainerCode = "__newDb";
 const newDbNameInputId = "new-db-name-input";
 const newTagInputId = "new-tag-input";
 let portSidebar;
+let currentPickedData = [];
+let currentPickedUnixTime = 0;
+let currentPickedUrl = "";
+let currentPickedUser = "";
+
+function resetPickedData() {
+  currentPickedData = [];
+  currentPickedUnixTime = 0;
+  currentPickedUrl = "";
+  currentPickedUser = "";
+}
 
 /**
  * 
@@ -109,7 +120,9 @@ function addDomOnStartUp(msg) {
   for (const [key, value] of Object.entries(msg.dbNamesAndTheirTagNames)) {
     dbArea.innerHTML += generateInnerHtmlDbContainer(key, value)
   }
-  dbArea.innerHTML += generateContainerForNewDb("__newDb")
+  dbArea.innerHTML += generateContainerForNewDb("__newDb");
+
+  currentPickedUser = msg.suggestedUserId;
 }
 
 
@@ -248,15 +261,31 @@ function handleTEMP1(data) {
     let userId = document.getElementById("user-id").value;
     let note = document.getElementById("note").value;
     let dbNamesAndTheirTagNames = getDbTagData();
-    sendMsgToBackground(
-      "submitNewUser", 
-      {
-        "platformUrls": platformUrls,
-        "userId": userId,
-        "note": note,
-        "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
-      }
-    );
+    // sendMsgToBackground(
+    //   "submitNewUser", 
+    //   {
+    //     "platformUrls": platformUrls,
+    //     "userId": userId,
+    //     "note": note,
+    //     "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
+    //   }
+    // );
+    fetch('http://localhost:8080/report-data/', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        "reporter": "chupmu_default_reporter",
+        "reported_user": currentPickedUser,
+        "unixTime": currentPickedUnixTime,
+        "url": currentPickedUrl,
+        "data_url_array": currentPickedData
+      })
+    })
+      .then(response => response.json())
+      .then(response => console.log(response));
   }
 
   function handleTogglePicker() {
@@ -270,6 +299,7 @@ function handleTEMP1(data) {
 
   function handleClearPickedItems() {
     document.getElementById("screenshot-area").innerHTML = "";
+    resetPickedData();
     sendMsgToBackground("clearPickedItems", {});
   }
 
@@ -307,9 +337,18 @@ function startUp() {
         let screenshotArea = document.getElementById("screenshot-area");
         message.message.pickedItemPng.forEach(data => {
           let timestamp = new Date(data.unixTime).toUTCString();
+          // TODO: check if added success, then add raw data to currentPickedData
+          // TODO: support editing dataUrl (screenshot data) before submission
           screenshotArea.innerHTML += generateHtmlScreenshotContainer(
             data.captureUrl, timestamp, data.dataUrl
           );
+          // TODO: more sophisticated note taking here
+          currentPickedData.push({
+            dataUrl: data.dataUrl,
+            description: "dataUrl place holder!"
+          });
+          currentPickedUnixTime = data.unixTime;
+          currentPickedUrl = data.captureUrl;
         })
       }
     })
