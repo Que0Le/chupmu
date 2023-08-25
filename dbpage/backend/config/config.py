@@ -24,6 +24,9 @@ class Settings(BaseSettings):
 async def initiate_database():
     client = AsyncIOMotorClient(Settings().DATABASE_URL)
     await init_beanie(
+        # Default: this will create a "table" with same name as the db name
         # database=client.get_default_database(), document_models=models.__all__
-        database=client.db_name, document_models=models.__all__
+        
+        # chupmu_db is the name of the new db "table"
+        database=client.chupmu_db, document_models=models.__all__
     )
