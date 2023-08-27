@@ -279,6 +279,7 @@ function handleTEMP1(data) {
       body: JSON.stringify({
         "reporter": "chupmu_default_reporter",
         "reported_user": currentPickedUser,
+        "filter_dbs": ["default_fdb1", "default_fdb2"],
         "unixTime": currentPickedUnixTime,
         "url": currentPickedUrl,
         "data_url_array": currentPickedData

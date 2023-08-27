@@ -3,13 +3,43 @@ from typing import Optional, Any
 from beanie import Document
 from pydantic import BaseModel
 
+
+# class FDbMetaData(BaseModel):
+#     dbName: str
+#     description: str
+#     dbSource: str
+#     onlineRecordUrlPrefix: str
+    
 class DataUrlPayload(BaseModel):
     dataUrl: str
     description: str
 
+
+class ReportDataMeta(Document):
+    reporter: str
+    reported_user: str
+    filter_dbs: list[str]
+    url: str
+    unixTime: int
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "reporter": "r1",
+                "reported_user": "u1",
+                "filter_dbs": ["default_fdb1", "default_fdb2"],
+                "url": "url1",
+                "unixTime": 12345643232,
+            }
+        }
+
+    class Settings:
+        name = "report_data"
+
 class ReportData(Document):
     reporter: str
     reported_user: str
+    filter_dbs: list[str]
     url: str
     unixTime: int
     data_url_array: list[DataUrlPayload]
@@ -19,6 +49,7 @@ class ReportData(Document):
             "example": {
                 "reporter": "r1",
                 "reported_user": "u1",
+                "filter_dbs": ["default_fdb1", "default_fdb2"],
                 "url": "url1",
                 "unixTime": 12345643232,
                 "data_url_array": ["data_url_1", "data_url_2"],
@@ -32,6 +63,7 @@ class ReportData(Document):
 class UpdateReportDataModel(BaseModel):
     reporter: Optional[str]
     reported_user: Optional[str]
+    filter_dbs: Optional[list[str]]
     url: Optional[str]
     data_url_array: Optional[list[DataUrlPayload]]
 

@@ -4,11 +4,12 @@ from beanie import PydanticObjectId
 
 from models.admin import Admin
 from models.student import Student
-from models.report_data import ReportData
+from models.report_data import ReportData, ReportDataMeta
 
 admin_collection = Admin
 student_collection = Student
 report_data_collection = ReportData
+report_meta_collection = ReportDataMeta
 
 
 async def add_admin(new_admin: Admin) -> Admin:
@@ -20,29 +21,17 @@ async def retrieve_students() -> List[Student]:
     students = await student_collection.all().to_list()
     return students
 
-async def retrieve_report_data() -> List[ReportData]:
-    report_data_list = await report_data_collection.all().to_list()
-    return report_data_list
 
 async def add_student(new_student: Student) -> Student:
     student = await new_student.create()
     return student
 
-async def add_report_data(new_report_data: ReportData) -> ReportData:
-    report_data = await new_report_data.create()
-    return report_data
 
 async def retrieve_student(id: PydanticObjectId) -> Student:
     student = await student_collection.get(id)
     if student:
         return student
     
-async def retrieve_report_data_by_id(id: PydanticObjectId) -> ReportData:
-    report_data = await report_data_collection.get(id)
-    if report_data:
-        return report_data
-
-
 async def delete_student(id: PydanticObjectId) -> bool:
     student = await student_collection.get(id)
     if student:
@@ -63,3 +52,23 @@ async def update_student_data(id: PydanticObjectId, data: dict) -> Union[bool, S
         await student.update(update_query)
         return student
     return False
+
+
+async def add_report_data(new_report_data: ReportData) -> ReportData:
+    report_data = await new_report_data.create()
+    return report_data
+
+async def retrieve_report_data_by_id(id: PydanticObjectId) -> ReportData:
+    report_data = await report_data_collection.get(id)
+    if report_data:
+        return report_data
+
+async def retrieve_report_data() -> List[ReportData]:
+    report_data_list = await report_data_collection.all().to_list()
+    return report_data_list
+
+async def retrieve_report_meta() -> List[ReportDataMeta]:
+    report_meta_list = await report_meta_collection.all().to_list()
+    return report_meta_list
+
+# async def retrieve_all_fdbs_meta_data() ->List[]

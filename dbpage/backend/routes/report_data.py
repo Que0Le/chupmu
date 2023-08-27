@@ -6,6 +6,17 @@ from models.report_data import *
 router = APIRouter()
 
 
+# @router.get("/", response_description="Report Meta retrieved", response_model=Response)
+# async def get_report_meta_list():
+#     report_meta_list = await retrieve_report_meta()
+#     return {
+#         "status_code": 200,
+#         "response_type": "success",
+#         "description": "Report Data retrieved successfully",
+#         "data": report_meta_list,
+#     }
+
+
 @router.get("/", response_description="Report Data retrieved", response_model=Response)
 async def get_report_data_list():
     report_data_list = await retrieve_report_data()
