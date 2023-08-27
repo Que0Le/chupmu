@@ -1,5 +1,6 @@
 
 const getReportMetaUrl = "http://localhost:8080/report-meta/";
+const getReportDataUrl = "http://localhost:8080/report-data/";
 
 function convertUnixTimestamp(unixTimestamp) {
   const date = new Date(unixTimestamp); // Convert to milliseconds
@@ -16,7 +17,7 @@ function convertUnixTimestamp(unixTimestamp) {
 }
 
 function generateMetaContainerHtml(reportId, title, meta, mainText) {
-  let innerHtml = `<div class="bg-white rounded-lg shadow p-4 mb-4" reportid="${reportId}">
+  let innerHtml = `<div class="bg-white rounded-lg shadow p-4 mb-4 meta-container" reportid="${reportId}">
     <h2 class="text-lg font-semibold mb-2">${title}</h2>
     <p>${meta}</p>
     <p>${mainText}</p>
@@ -24,15 +25,82 @@ function generateMetaContainerHtml(reportId, title, meta, mainText) {
   return innerHtml;
 }
 
+function generateReportViewerHtml(reportData) {
+  let imagesHtml = "";
+  reportData.data_url_array.forEach(dataUrl => {
+    // imagesHtml += `<div>
+    //   <img src="${dataUrl.dataUrl}" alt="${dataUrl.description}" class="max-w-xl h-auto rounded-md">
+    //   <p class="">
+    //     ${dataUrl.description}
+    //   </p>
+    // </div>`;
 
-// Make the GET request using fetch
+    imagesHtml += `<div>
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+      <figure class="max-w-lg">
+        <img class="h-auto max-w-full rounded-lg" src="${dataUrl.dataUrl}" alt="${dataUrl.description}">
+        <figcaption class="mt-2 text-sm text-center text-gray-500 dark:text-gray-400">${dataUrl.description}</figcaption>
+      </figure>
+    </div>
+  </div>
+    `
+  });
+
+  let innerHtml = `<div class="bg-white rounded-lg shadow-lg p-6">
+    <h2 class="text-xl font-semibold mb-4">Report Details</h2>
+    <div class="mb-2">
+      <span class="font-semibold">Reporter:</span> r1
+    </div>
+    <div class="mb-2">
+      <span class="font-semibold">Reported User:</span> ${reportData.reporter}
+    </div>
+    <div class="mb-2">
+      <span class="font-semibold">Filter Databases:</span> ${reportData.filter_dbs.join(", ").slice(0, -2)}
+    </div>
+    <div class="mb-2">
+      <span class="font-semibold">URL:</span> <a href="${reportData.url}" class="text-blue-500">${reportData.url}</a>
+    </div>
+    <div class="mb-2">
+      <span class="font-semibold">Taken at:</span> ${convertUnixTimestamp(reportData.unixTime)}
+    </div>
+    <div class="mb-2">
+      <span class="font-semibold">Screenshots:</span>
+      <div>
+        ${imagesHtml}
+      </div>
+    </div>
+  </div>`;
+
+  return innerHtml;
+}
+
+
+function handleMetaContainerClick(event) {
+  let reportid  = this.getAttribute("reportid");
+  if (!reportid) {return}
+  fetch(getReportDataUrl + reportid)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`Error getting report id=${reportid} from server. Status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log(data);
+    let viewScroll = document.getElementById("y-scroll-right");
+    let viewContainer = generateReportViewerHtml(data.data);
+    viewScroll.innerHTML = viewContainer ? viewContainer : "Error viewing data!";
+  })
+  .catch(error => {
+    console.error('Fetch error:', error);
+  });
+}
+
 fetch(getReportMetaUrl)
   .then(response => {
-    // Check if the request was successful (status code in the range of 200-299)
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
-    // Parse the response JSON and return it as a promise
     return response.json();
   })
   .then(data => {
@@ -45,8 +113,11 @@ fetch(getReportMetaUrl)
       let metaContainer = generateMetaContainerHtml(reportMeta._id, reportMeta.reported_user, meta, reportMeta.url);
       metaScroll.innerHTML += metaContainer;
     });
+    const clickableElements = document.querySelectorAll('.meta-container');
+    clickableElements.forEach(element => {
+      element.addEventListener('click', handleMetaContainerClick);
+    });
   })
   .catch(error => {
-    // Handle errors
     console.error('Fetch error:', error);
   });

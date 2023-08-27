@@ -52,7 +52,10 @@ class ReportData(Document):
                 "filter_dbs": ["default_fdb1", "default_fdb2"],
                 "url": "url1",
                 "unixTime": 12345643232,
-                "data_url_array": ["data_url_1", "data_url_2"],
+                "data_url_array": [
+                    {"description": "desc1", "dataUrl": "data_url_1"}, 
+                    {"description": "desc2", "dataUrl": "data_url_2"}
+                ],
             }
         }
 
