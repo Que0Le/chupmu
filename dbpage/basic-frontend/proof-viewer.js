@@ -28,21 +28,14 @@ function generateMetaContainerHtml(reportId, title, meta, mainText) {
 function generateReportViewerHtml(reportData) {
   let imagesHtml = "";
   reportData.data_url_array.forEach(dataUrl => {
-    // imagesHtml += `<div>
-    //   <img src="${dataUrl.dataUrl}" alt="${dataUrl.description}" class="max-w-xl h-auto rounded-md">
-    //   <p class="">
-    //     ${dataUrl.description}
-    //   </p>
-    // </div>`;
-
     imagesHtml += `<div>
-    <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
-      <figure class="max-w-lg">
-        <img class="h-auto max-w-full rounded-lg" src="${dataUrl.dataUrl}" alt="${dataUrl.description}">
-        <figcaption class="mt-2 text-sm text-center text-gray-500 dark:text-gray-400">${dataUrl.description}</figcaption>
-      </figure>
+      <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+        <figure class="max-w-lg">
+          <img class="h-auto max-w-full rounded-lg" src="${dataUrl.dataUrl}" alt="${dataUrl.description}">
+          <figcaption class="mt-2 text-sm text-center text-gray-500 dark:text-gray-400">${dataUrl.description}</figcaption>
+        </figure>
+      </div>
     </div>
-  </div>
     `
   });
 
