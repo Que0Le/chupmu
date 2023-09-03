@@ -4,14 +4,14 @@ const newTagInputId = "new-tag-input";
 let portSidebar;
 let currentPickedData = [];
 let currentPickedUnixTime = 0;
-let currentPickedUrl = "";
-let currentPickedUser = "";
+// let currentPickedUrl = "";
+// let currentPickedUser = "";
 
 function resetPickedData() {
   currentPickedData = [];
   currentPickedUnixTime = 0;
-  currentPickedUrl = "";
-  currentPickedUser = "";
+  // currentPickedUrl = "";
+  // currentPickedUser = "";
 }
 
 /**
@@ -122,7 +122,7 @@ function addDomOnStartUp(msg) {
   }
   dbArea.innerHTML += generateContainerForNewDb("__newDb");
 
-  currentPickedUser = msg.suggestedUserId;
+  // currentPickedUser = msg.suggestedUserId;
 }
 
 
@@ -270,23 +270,24 @@ function handleTEMP1(data) {
     //     "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
     //   }
     // );
-    fetch('http://localhost:8080/report-data/', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        "reporter": "chupmu_default_reporter",
-        "reported_user": currentPickedUser,
-        "filter_dbs": ["default_fdb1", "default_fdb2"],
-        "unixTime": currentPickedUnixTime,
-        "url": currentPickedUrl,
-        "data_url_array": currentPickedData
-      })
-    })
-      .then(response => response.json())
-      .then(response => console.log(response));
+    console.log({dbNamesAndTheirTagNames: dbNamesAndTheirTagNames})
+    // fetch('http://localhost:8080/report-data/', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Accept': 'application/json',
+    //     'Content-Type': 'application/json'
+    //   },
+    //   body: JSON.stringify({
+    //     "reporter": "chupmu_default_reporter",
+    //     "reported_user": userId,
+    //     "filter_dbs": dbNamesAndTheirTagNames,
+    //     "unixTime": currentPickedUnixTime,
+    //     "url": platformUrls,
+    //     "data_url_array": currentPickedData
+    //   })
+    // })
+    //   .then(response => response.json())
+    //   .then(response => console.log(response));
   }
 
   function handleTogglePicker() {
@@ -336,20 +337,25 @@ function startUp() {
         startUp();
       } else if (message.reference == "responsePickedItems") {
         let screenshotArea = document.getElementById("screenshot-area");
+        currentPickedUnixTime = message.message.unixTime;
+        let timestamp = new Date(currentPickedUnixTime).toUTCString();
         message.message.pickedItemPng.forEach(data => {
-          let timestamp = new Date(data.unixTime).toUTCString();
-          // TODO: check if added success, then add raw data to currentPickedData
-          // TODO: support editing dataUrl (screenshot data) before submission
-          screenshotArea.innerHTML += generateHtmlScreenshotContainer(
-            data.captureUrl, timestamp, data.dataUrl
-          );
-          // TODO: more sophisticated note taking here
-          currentPickedData.push({
-            dataUrl: data.dataUrl,
-            description: "dataUrl place holder!"
+          // Check eixsting items
+          const isIdentical = currentPickedData.some((item) => {
+            return item.dataUrl === data.dataUrl;
           });
-          currentPickedUnixTime = data.unixTime;
-          currentPickedUrl = data.captureUrl;
+          if (!isIdentical) {
+            // TODO: more sophisticated note taking here
+            currentPickedData.push({
+              dataUrl: data.dataUrl,
+              description: "dataUrl place holder!"
+            });
+            // TODO: check if added success, then add raw data to currentPickedData
+            // TODO: support editing dataUrl (screenshot data) before submission
+            screenshotArea.innerHTML += generateHtmlScreenshotContainer(
+              data.captureUrl, timestamp, data.dataUrl
+            );
+          }
         });
       }
     })

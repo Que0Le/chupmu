@@ -170,7 +170,6 @@ function connected(p) {
           return browser.tabs.captureVisibleTab(imageDetails)
             .then(dataUrl => ({
               dataUrl: dataUrl,
-              unixTime: Date.now(),
               captureUrl: url
             }))
             .catch(error => {
@@ -187,7 +186,9 @@ function connected(p) {
             Promise.all(capturePromises)
               .then(results => {
                 const validResults = results.filter(result => result !== null);
-                sendMsgToSidebar("responsePickedItems", { "pickedItemPng": validResults });
+                sendMsgToSidebar("responsePickedItems", { 
+                  "pickedItemPng": validResults, unixTime: Date.now() 
+                });
               })
               .catch(error => {
                 console.error("Error capturing DOM screenshots:", error);
