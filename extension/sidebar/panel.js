@@ -14,6 +14,8 @@ function resetPickedData() {
   // currentPickedUser = "";
 }
 
+let currentScreenshotDataId = 0; 
+
 /**
  * 
  * @param {String} reference 
@@ -67,11 +69,13 @@ const DEFAULT_INPUT_AREA = `<div class="container-1">
 </div>`;
 
 
-function generateHtmlScreenshotContainer(url, timestamp, dataUrl) {
-  let innerHtml = `<div class="screenshot-container">
-  <div class="screenshot-url">${url}</div>
-  <div class="screenshot-url">${timestamp}</div>
-  <img src="${dataUrl}">
+function generateHtmlScreenshotContainer(url, timestamp, dataUrl, screenshotId) {
+  let innerHtml = `
+  <div class="screenshot-container">
+    <div class="screenshot-url">${url}</div>
+    <div class="screenshot-timestamp">${timestamp}</div>
+    <img src="${dataUrl}">
+    <input placeholder="Description" screenshot-id="${screenshotId}">
   </div>`;
   return innerHtml;
 }
@@ -257,10 +261,23 @@ function handleTEMP1(data) {
   addDomOnStartUp(data);
 
   function handleSubmit() {
+    /* Gather data */
     let platformUrls = splitTrimFilterEmpty(document.getElementById("platform-url").value, ",");
     let userId = document.getElementById("user-id").value;
     let note = document.getElementById("note").value;
     let dbNamesAndTheirTagNames = getDbTagData();
+    // Get shot's description
+    const noteInputs = document.querySelectorAll('input[screenshot-id]');
+    for (let i = 0; i < noteInputs.length; ++i) {
+      for (let j = 0; j < currentPickedData.length; j++) {
+        if (noteInputs[i].getAttribute('screenshot-id') === String(currentPickedData[j].screenshotId)) {
+          currentPickedData[j].description = noteInputs[i].value.trim();
+          break;
+        }
+      }
+    }
+
+    /* Store locally */
     // sendMsgToBackground(
     //   "submitNewUser", 
     //   {
@@ -270,24 +287,27 @@ function handleTEMP1(data) {
     //     "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
     //   }
     // );
+
     console.log({dbNamesAndTheirTagNames: dbNamesAndTheirTagNames})
-    // fetch('http://localhost:8080/report-data/', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Accept': 'application/json',
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify({
-    //     "reporter": "chupmu_default_reporter",
-    //     "reported_user": userId,
-    //     "filter_dbs": dbNamesAndTheirTagNames,
-    //     "unixTime": currentPickedUnixTime,
-    //     "url": platformUrls,
-    //     "data_url_array": currentPickedData
-    //   })
-    // })
-    //   .then(response => response.json())
-    //   .then(response => console.log(response));
+
+    /* Send proof to server */
+    fetch('http://localhost:8080/report-data/', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        "reporter": "chupmu_default_reporter",
+        "reported_user": userId,
+        "filter_dbs": dbNamesAndTheirTagNames,
+        "unixTime": currentPickedUnixTime,
+        "url": platformUrls,
+        "data_url_array": currentPickedData
+      })
+    })
+      .then(response => response.json())
+      .then(response => console.log(response));
   }
 
   function handleTogglePicker() {
@@ -347,14 +367,16 @@ function startUp() {
           if (!isIdentical) {
             // TODO: more sophisticated note taking here
             currentPickedData.push({
+              screenshotId: currentScreenshotDataId,
               dataUrl: data.dataUrl,
-              description: "dataUrl place holder!"
+              description: "",
             });
             // TODO: check if added success, then add raw data to currentPickedData
             // TODO: support editing dataUrl (screenshot data) before submission
             screenshotArea.innerHTML += generateHtmlScreenshotContainer(
-              data.captureUrl, timestamp, data.dataUrl
+              data.captureUrl, timestamp, data.dataUrl, currentScreenshotDataId
             );
+            currentScreenshotDataId += 1;
           }
         });
       }

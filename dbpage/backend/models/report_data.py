@@ -9,17 +9,22 @@ from pydantic import BaseModel
 #     description: str
 #     dbSource: str
 #     onlineRecordUrlPrefix: str
-    
+
+# TODO: update schema_extra for each class after update
+
 class DataUrlPayload(BaseModel):
     dataUrl: str
     description: str
 
+class DbAndTheirTagNames(BaseModel):
+    dbName: str
+    tagNames: list[str]
 
 class ReportDataMeta(Document):
     reporter: str
     reported_user: str
-    filter_dbs: list[str]
-    url: str
+    filter_dbs: list[DbAndTheirTagNames]
+    url: list[str]
     unixTime: int
 
     class Config:
@@ -39,8 +44,8 @@ class ReportDataMeta(Document):
 class ReportData(Document):
     reporter: str
     reported_user: str
-    filter_dbs: list[str]
-    url: str
+    filter_dbs: list[DbAndTheirTagNames]
+    url: list[str]
     unixTime: int
     data_url_array: list[DataUrlPayload]
 
@@ -66,8 +71,8 @@ class ReportData(Document):
 class UpdateReportDataModel(BaseModel):
     reporter: Optional[str]
     reported_user: Optional[str]
-    filter_dbs: Optional[list[str]]
-    url: Optional[str]
+    filter_dbs: Optional[list[DbAndTheirTagNames]]
+    url: Optional[list[str]]
     data_url_array: Optional[list[DataUrlPayload]]
 
     class Collection:
