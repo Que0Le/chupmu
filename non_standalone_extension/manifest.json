@@ -1,0 +1,52 @@
+{
+  "manifest_version": 2,
+  "description": "Testing",
+  "name": "testing",
+  "version": "0.1",
+  "homepage_url": "https://github.com/",
+
+  "browser_action": {
+    "default_icon": {
+      "32": "icons/page-32.png"
+    },
+    "default_title": "Chupmu popup",
+    "default_popup": "browseraction_popup/popup.html"
+  },
+  "sidebar_action": {
+    "default_icon": "icons/page-32.png",
+    "default_title" : "ChupMuSidebar",
+    "default_panel": "sidebar/panel.html",
+    "open_at_install": false
+  },
+
+  "permissions": ["<all_urls>", "activeTab", "tabs", "contextMenus", "storage"],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "testing@testing.org",
+      "strict_min_version": "60.0b5"
+    }
+  },
+  "commands": {
+    "toggle-chupmu": {
+      "suggested_key": { "default": "Ctrl+Shift+U" },
+      "description": "Send a 'toggle-chupmu' event to the extension"
+    }
+  },
+  "background": {
+    "scripts": ["js/params.js", "js/db.js", "js/helpers.js", "background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": ["content-script.js"]
+    }
+  ],
+  "options_ui": {
+    "page": "options/options.html",
+    "browser_style": true
+  },
+  "page_action": {
+    "default_icon": "icons/off.svg",
+    "browser_style": true
+  }
+}
