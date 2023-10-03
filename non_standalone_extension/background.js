@@ -1,5 +1,66 @@
 "use strict";
 
+/* Set default Setting */
+// browser.storage.local.get(`${EXT_NAME}_config`)
+//   .then(data => {
+//     if (Object.keys(data).length == 0) {
+//       console.log("No config found. Set to default ...");
+//       let obj = {};
+//       obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
+//       browser.storage.local.set(obj);
+//     }
+//   })
+//   .then();
+async function initializeConfig() {
+  const data = await browser.storage.local.get(`${EXT_NAME}_config`);
+  if (Object.keys(data).length === 0) {
+    console.log("No config found. Set to default ...");
+    const obj = {};
+    obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
+    await browser.storage.local.set(obj);
+  }
+}
+
+/*
+Each time a tab is updated, reset the page action for that tab.
+*/
+// browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
+//   initializePageAction(tab);
+// });
+async function initializePageActionOnUpdated(tabId, changeInfo, tab) {
+  await initializePageAction(tab);
+}
+
+
+
+/*
+When first loaded, initialize the page action (icon on the url bar) for all tabs.
+*/
+// let gettingAllTabs = browser.tabs.query({});
+// gettingAllTabs.then((tabs) => {
+//   for (let tab of tabs) {
+//     initializePageAction(tab);
+//   }
+// });
+async function initializePageActionAllSupportedTabs() {
+  const tabs = await browser.tabs.query({});
+  for (let tab of tabs) {
+    let currentUrl = await isUrlSupported(tab.url);
+    if (currentUrl) {
+      initializePageAction(tab);
+    }
+  }
+}
+
+
+(async () => {
+  await initializeConfig();
+  await initializePageActionAllSupportedTabs();
+  await browser.tabs.onUpdated.addListener(initializePageActionOnUpdated);
+})();
+
+
+
 // TODO: support multiple content script
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/
 // WebExtensions/Content_scripts#connection-based_messaging
@@ -57,60 +118,6 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 
-/*
-When first loaded, initialize the page action (icon on the url bar) for all tabs.
-*/
-// let gettingAllTabs = browser.tabs.query({});
-// gettingAllTabs.then((tabs) => {
-//   for (let tab of tabs) {
-//     initializePageAction(tab);
-//   }
-// });
-async function initializeAllSupportedTabs() {
-  const tabs = await browser.tabs.query({});
-  for (let tab of tabs) {
-    let currentUrl = await isCurrentTabUrlSupported(tab.url);
-    if (currentUrl) {
-      initializePageAction(tab);
-    }
-  }
-}
-initializeAllSupportedTabs();
-
-/*
-Each time a tab is updated, reset the page action for that tab.
-*/
-// browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
-//   initializePageAction(tab);
-// });
-async function initializePageActionOnUpdated(tabId, changeInfo, tab) {
-  await initializePageAction(tab);
-}
-browser.tabs.onUpdated.addListener(initializePageActionOnUpdated);
-
-/* Set default Setting */
-// browser.storage.local.get(`${EXT_NAME}_config`)
-//   .then(data => {
-//     if (Object.keys(data).length == 0) {
-//       console.log("No config found. Set to default ...");
-//       let obj = {};
-//       obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
-//       browser.storage.local.set(obj);
-//     }
-//   })
-//   .then();
-async function initializeConfig() {
-  const data = await browser.storage.local.get(`${EXT_NAME}_config`);
-  if (Object.keys(data).length === 0) {
-    console.log("No config found. Set to default ...");
-    const obj = {};
-    obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
-    await browser.storage.local.set(obj);
-  }
-}
-initializeConfig();
-
-
 /**
  * Fired when a registered command is activated using a keyboard shortcut.
  *
@@ -140,7 +147,7 @@ initializeConfig();
 // });
 
 browser.commands.onCommand.addListener(async (command) => {
-  let currentUrl = await isCurrentTabUrlSupported();
+  let currentUrl = await isUrlSupported(await getCurrentTabUrl());
   if (!currentUrl) return;
 
   const [tab] = await browser.tabs.query({
@@ -157,7 +164,7 @@ browser.commands.onCommand.addListener(async (command) => {
   };
 
   const executing = browser.tabs.executeScript(
-    tab.id, { file: "./sites/stackoverflow_question/content-script.js" }
+    tab.id, { file: "./sites/stackoverflow_question/cs-so-quest.js" }
   );
   executing.then(onExecuted, onError);
 });

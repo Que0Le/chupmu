@@ -20,15 +20,17 @@ async function getLocalStorageConfig() {
  * return current url if supproted, else empty string
  * @returns 
  */
-async function isCurrentTabUrlSupported(currentTabUrl = "" ) {
-  if (!currentTabUrl) {
-    let currentTabUrl = await getCurrentTabUrl();
-  }
-  if (isHttpOrHttps.test(currentTabUrl)) {
+async function isUrlSupported(url) {
+  // if (!currentTabUrl) {
+  //   let currentTabUrl = await getCurrentTabUrl();
+  // }
+  // currentTabUrl === "" ? await getCurrentTabUrl() : currentTabUrl;
+  // console.log(currentTabUrl)
+  if (isHttpOrHttps.test(url)) {
     let config = await getLocalStorageConfig();
     for (let i = 0; i < config.supportedSites.length; i++) {
-      if (currentTabUrl.includes(config.supportedSites[i].url)) {
-        return currentTabUrl;
+      if (url.includes(config.supportedSites[i].url)) {
+        return url;
       }
     }
   }

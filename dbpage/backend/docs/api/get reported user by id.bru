@@ -1,0 +1,29 @@
+meta {
+  name: get reported user by id
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8080/reported-user/651c61b655c7edb7e9ef45be
+  body: json
+}
+
+body:json {
+  {
+    "userid": "user1",
+    "tags": [
+      {
+        "tagid": "1",
+        "description": "des1",
+        "tagname": "tag1"
+      },
+      {
+        "tagid": "2",
+        "description": "des2",
+        "tagname": "tag2"
+      }
+    ],
+    "note": "note for user"
+  }
+}

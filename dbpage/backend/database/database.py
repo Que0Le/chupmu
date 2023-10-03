@@ -5,11 +5,13 @@ from beanie import PydanticObjectId
 from models.admin import Admin
 from models.student import Student
 from models.report_data import ReportData, ReportDataMeta
+from models.reported_user import ReportedUser
 
 admin_collection = Admin
 student_collection = Student
 report_data_collection = ReportData
 report_meta_collection = ReportDataMeta
+reported_user_collection = ReportedUser
 
 
 async def add_admin(new_admin: Admin) -> Admin:
@@ -71,4 +73,20 @@ async def retrieve_report_meta() -> List[ReportDataMeta]:
     report_meta_list = await report_meta_collection.all().to_list()
     return report_meta_list
 
+async def add_reported_user(new_reported_user: ReportedUser) -> ReportedUser:
+    reported_user = await new_reported_user.create()
+    return reported_user
+
+async def retrieve_reported_user_by_id(id: PydanticObjectId) -> ReportedUser:
+    reported_user = await reported_user_collection.get(id)
+    if reported_user:
+        return reported_user
+
+async def retrieve_reported_user_by_uid(uid: PydanticObjectId) -> ReportedUser:
+    reported_user = await reported_user_collection.find(
+        {"userid": uid}
+    ).first_or_none()
+    if reported_user:
+        return reported_user
+    
 # async def retrieve_all_fdbs_meta_data() ->List[]

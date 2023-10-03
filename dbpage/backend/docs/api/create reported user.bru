@@ -1,0 +1,22 @@
+meta {
+  name: create reported user
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/reported-user/
+  body: json
+}
+
+body:json {
+  {
+    "userid": "user7",
+    "tags": ["tag1", "tag2", "tag3"],
+    "note": "note for use4",
+    "platformUrl": "stackoverflow.com/questions",
+    "relatedPlatforms": [
+      "stackexchange.com"
+    ]
+  }
+}

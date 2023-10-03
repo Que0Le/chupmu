@@ -6,6 +6,7 @@ from routes.admin import router as AdminRouter
 from routes.student import router as StudentRouter
 from routes.report_data import router as ReportDataRouter
 from routes.report_meta import router as ReportMetaRouter
+from routes.reported_user import router as ReportedUserRouter
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
@@ -40,5 +41,9 @@ app.include_router(
     tags=["ReportMeta"],
     prefix="/report-meta",
 )
-
+app.include_router(
+    ReportedUserRouter,
+    tags=["ReportedUser"],
+    prefix="/reported-user",
+)
 app.mount('/', StaticFiles(directory="../basic-frontend", html=True), name="static")
