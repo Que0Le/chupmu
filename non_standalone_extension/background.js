@@ -1,7 +1,8 @@
 "use strict";
 
 // TODO: support multiple content script
-// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_scripts#connection-based_messaging
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/
+// WebExtensions/Content_scripts#connection-based_messaging
 let portChannelContent;
 let portChannelSidebar;
 
@@ -37,7 +38,9 @@ browser.contextMenus.create({
   title: "Chupmu: Pick this user ...",
   contexts: ["link"],
 },
-  // See https://extensionworkshop.com/documentation/develop/manifest-v3-migration-guide/#event-pages-and-backward-compatibility
+  // See 
+  // https://extensionworkshop.com/documentation/develop/
+  // manifest-v3-migration-guide/#event-pages-and-backward-compatibility
   // for information on the purpose of this error capture.
   () => void browser.runtime.lastError,
 );
@@ -57,66 +60,55 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 /*
 When first loaded, initialize the page action (icon on the url bar) for all tabs.
 */
-let gettingAllTabs = browser.tabs.query({});
-gettingAllTabs.then((tabs) => {
+// let gettingAllTabs = browser.tabs.query({});
+// gettingAllTabs.then((tabs) => {
+//   for (let tab of tabs) {
+//     initializePageAction(tab);
+//   }
+// });
+async function initializeAllSupportedTabs() {
+  const tabs = await browser.tabs.query({});
   for (let tab of tabs) {
-    initializePageAction(tab);
+    let currentUrl = await isCurrentTabUrlSupported(tab.url);
+    if (currentUrl) {
+      initializePageAction(tab);
+    }
   }
-});
+}
+initializeAllSupportedTabs();
 
 /*
 Each time a tab is updated, reset the page action for that tab.
 */
-browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
-  initializePageAction(tab);
-});
+// browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
+//   initializePageAction(tab);
+// });
+async function initializePageActionOnUpdated(tabId, changeInfo, tab) {
+  await initializePageAction(tab);
+}
+browser.tabs.onUpdated.addListener(initializePageActionOnUpdated);
 
 /* Set default Setting */
-browser.storage.local.get(`${EXT_NAME}_config`)
-  .then(data => {
-    if (Object.keys(data).length == 0) {
-      console.log("No config found. Set to default ...");
-      let obj = {};
-      obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
-      browser.storage.local.set(obj);
-      /* Download DB */
-      fetch("https://raw.githubusercontent.com/Que0Le/MicGa_data/main/voz_test_db.json")
-        .then((response) => response.json())
-        .then((data) => {
-          // Write db to indexeddb
-          openDb()
-            .then(db => {
-              const transaction = db.transaction(data.meta.dbName, 'readwrite');
-              const objectStore = transaction.objectStore(data.meta.dbName);
-              Object.entries(data["db"]).forEach(([key, value]) => {
-                const request = objectStore.add(value);
-                request.onerror = function (event) {
-                  // TODO: better error handler
-                  console.error('Error adding data', event.target.error);
-                };
-                request.onsuccess = function (event) {
-                  console.log('Data added successfully');
-                };
-              });
-              transaction.oncomplete = function () {
-                console.log('Transaction completed');
-                db.close();
-              };
-            })
-            .catch(error => {
-              console.error('Error opening database:', error);
-            });
-        });
-    }
-  })
-  .then(() => {
-    // Generate matching URL set
-    browser.storage.local.get(`${EXT_NAME}_config`).then(data => {
-      let config = data[`${EXT_NAME}_config`];
-      reloadSupportedUrl(config);
-    });
-  })
-
+// browser.storage.local.get(`${EXT_NAME}_config`)
+//   .then(data => {
+//     if (Object.keys(data).length == 0) {
+//       console.log("No config found. Set to default ...");
+//       let obj = {};
+//       obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
+//       browser.storage.local.set(obj);
+//     }
+//   })
+//   .then();
+async function initializeConfig() {
+  const data = await browser.storage.local.get(`${EXT_NAME}_config`);
+  if (Object.keys(data).length === 0) {
+    console.log("No config found. Set to default ...");
+    const obj = {};
+    obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
+    await browser.storage.local.set(obj);
+  }
+}
+initializeConfig();
 
 
 /**
@@ -125,12 +117,49 @@ browser.storage.local.get(`${EXT_NAME}_config`)
  * In this sample extension, there is only one registered command: "Ctrl+Shift+U".
  * On Mac, this command will automatically be converted to "Command+Shift+U".
  */
-browser.commands.onCommand.addListener((command) => {
-  browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT })
-    .then(tabs => browser.tabs.get(tabs[0].id))
-    .then(tab => {
-      toggleLabelify(tab);
-    });
+// browser.commands.onCommand.addListener((command) => {
+//   browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT })
+//     .then(tabs => {
+//       let tab = tabs[0]
+//       function onExecuted(result) {
+//         console.log(`We executed in tab 2`, result);
+//       }
+      
+//       function onError(error) {
+//         console.log(`Error: ${error}`);
+//       }
+      
+//       const executing = browser.tabs.executeScript(
+//         tab.id, 
+//         {
+//         file: "./sites/stackoverflow_question/content-script.js",
+//         }
+//       );
+//       executing.then(onExecuted, onError);
+//     });
+// });
+
+browser.commands.onCommand.addListener(async (command) => {
+  let currentUrl = await isCurrentTabUrlSupported();
+  if (!currentUrl) return;
+
+  const [tab] = await browser.tabs.query({
+    active: true, windowId: browser.windows.WINDOW_ID_CURRENT
+  });
+
+  const onError = (error) => console.log(
+    `Error injecting script in tab ${tab.id}: ${error}
+    `);
+
+  const onExecuted = (result) => {
+    console.log(`Injected script in tab ${tab.id}: ${currentUrl}`);
+    toggleLabelify(tab);
+  };
+
+  const executing = browser.tabs.executeScript(
+    tab.id, { file: "./sites/stackoverflow_question/content-script.js" }
+  );
+  executing.then(onExecuted, onError);
 });
 
 /* The same if the pageaction icon is clicked */

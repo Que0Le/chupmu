@@ -10,11 +10,25 @@ const MSG_TARGET_CONTENT = "chupmu_content_script";
 const MSG_TARGET_SIDEBAR = "chupmu_sidebar_script";
 
 const EXT_NAME = "chupmu"
-const DB_NAME = 'chupmuDb';
-const DB_VERSION = 1;
-const DB_STORE_NAME = 'voz_test_db-12345';
+// const DB_NAME = 'chupmuDb';
+// const DB_VERSION = 1;
+// const DB_STORE_NAME = 'voz_test_db-12345';
 
 const DEFAULT_SETTINGS = {
+  dbSources: [
+    {
+      "dbOnlineQueryUrl": "voz_test_db-12345",
+    }
+  ],
+  supportedSites: [
+    {
+      url: "stackoverflow.com/questions/",
+      contentScript: "./sites/stackoverflow_question/content-script.js" 
+    }
+  ]
+}
+
+const OLD_DEFAULT_SETTINGS = {
   "dbSources": [
     {
       "dbName": "voz_test_db-12345",

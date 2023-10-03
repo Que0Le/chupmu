@@ -1,4 +1,40 @@
 
+async function getCurrentTabUrl() {
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+  return tabs[0].url;
+}
+
+async function getLocalStorageConfig() {
+  const storageKey = `${EXT_NAME}_config`;
+
+  try {
+    const data = await browser.storage.local.get(storageKey);
+    const config = data[storageKey];
+    return config;
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * return current url if supproted, else empty string
+ * @returns 
+ */
+async function isCurrentTabUrlSupported(currentTabUrl = "" ) {
+  if (!currentTabUrl) {
+    let currentTabUrl = await getCurrentTabUrl();
+  }
+  if (isHttpOrHttps.test(currentTabUrl)) {
+    let config = await getLocalStorageConfig();
+    for (let i = 0; i < config.supportedSites.length; i++) {
+      if (currentTabUrl.includes(config.supportedSites[i].url)) {
+        return currentTabUrl;
+      }
+    }
+  }
+  return "";
+}
+
 function splitTrimFilterEmpty(string, delimiterChar) {
   return string.split.map(substring => substring.trim()).filter(item => item !== '')
 }
@@ -35,23 +71,19 @@ function sendMsgToTab(tab, reference, msg) {
 }
 
 /*  Init  page action */
-const TITLE_APPLY = "Apply CSS";
-const TITLE_REMOVE = "Remove CSS";
+const TITLE_APPLY = "Apply Labelify";
+const TITLE_REMOVE = "Remove Labelify";
 const APPLICABLE_PROTOCOLS = ["http:", "https:"];
+
 /*
 Toggle CSS: based on the current title, insert or remove the CSS.
 Update the page action's title and icon to reflect its state.
 */
 function toggleLabelify(tab) {
-  // TODO: hightlightCss from local storage for all DB 
-  const hightlightCss = "";
   function toggle(title) {
     if (title === TITLE_APPLY) {
-      // sendMsgToTab(tab, "toggleLabelify", "label");
       browser.pageAction.setIcon({ tabId: tab.id, path: "icons/on.svg" });
       browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_REMOVE });
-      // browser.tabs.insertCSS({ code: TOOLTIP_CSS });
-      // browser.tabs.insertCSS({ code: VOZ_CSS });
       portChannelContent.postMessage(
         {
           info: "chupmu_extension", reference: "toggleLabelify",
@@ -59,11 +91,8 @@ function toggleLabelify(tab) {
           message: "label"
         });
     } else {
-      // sendMsgToTab(tab, "toggleLabelify", "remove_label");
       browser.pageAction.setIcon({ tabId: tab.id, path: "icons/off.svg" });
       browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
-      // browser.tabs.removeCSS({ code: TOOLTIP_CSS });
-      // browser.tabs.removeCSS({ code: VOZ_CSS });
       portChannelContent.postMessage(
         {
           info: "chupmu_extension", reference: "toggleLabelify",
@@ -84,11 +113,18 @@ function toggleLabelify(tab) {
 Initialize the page action: set icon and title, then show.
 Only operates on tabs whose URL's protocol is applicable.
 */
-function initializePageAction(tab) {
-  if (urlRegex.test(tab.url)) {
-    browser.pageAction.setIcon({ tabId: tab.id, path: "icons/off.svg" });
-    browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
-    browser.pageAction.show(tab.id);
+// function initializePageAction(tab) {
+//   if (isHttpOrHttps.test(tab.url)) {
+//     browser.pageAction.setIcon({ tabId: tab.id, path: "icons/off.svg" });
+//     browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
+//     browser.pageAction.show(tab.id);
+//   }
+// }
+async function initializePageAction(tab) {
+  if (isHttpOrHttps.test(tab.url)) {
+    await browser.pageAction.setIcon({ tabId: tab.id, path: "icons/off.svg" });
+    await browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
+    await browser.pageAction.show(tab.id);
   }
 }
 
