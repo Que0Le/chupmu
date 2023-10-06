@@ -1,0 +1,58 @@
+meta {
+  name: create many reported users
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/reported-user/
+  body: json
+}
+
+body:json {
+  [
+    {
+      "userid": "365102",
+      "tags": ["nice-answer", "wise", "humble"],
+      "note": "365102/mateen-ulhaq",
+      "platformUrl": "stackoverflow.com",
+      "relatedPlatforms": ["stackexchange.com"]
+    },
+    {
+      "userid": "1389110",
+      "tags": ["nice-answer", "hectic", "Stubborn"],
+      "note": "1389110/pyderman",
+      "platformUrl": "stackoverflow.com",
+      "relatedPlatforms": ["stackexchange.com"]
+    },
+    {
+      "userid": "150647",
+      "tags": ["humble", "wise"],
+      "note": "150647/diegueus9",
+      "platformUrl": "stackoverflow.com",
+      "relatedPlatforms": ["stackexchange.com"]
+    },
+    {
+      "userid": "617185",
+      "tags": ["creative", "compassionate", "Aggressive"],
+      "note": "617185/kmonsoor",
+      "platformUrl": "stackoverflow.com",
+      "relatedPlatforms": ["stackexchange.com"]
+    },
+    {
+      "userid": "8176547",
+      "tags": ["polite", "bossy", "volatile"],
+      "note": "8176547/jdh",
+      "platformUrl": "stackoverflow.com",
+      "relatedPlatforms": ["stackexchange.com"]
+    },
+    {
+      "userid": "797495",
+      "tags": ["Humorous", "Easy-going", "Amusing"],
+      "note": "797495/pedro-lobito",
+      "platformUrl": "stackoverflow.com",
+      "relatedPlatforms": ["stackexchange.com"]
+    }
+  ]
+  
+}

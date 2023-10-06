@@ -1,16 +1,17 @@
 meta {
-  name: get reported user by uid
+  name: get many reported user by uid and platform url
   type: http
-  seq: 3
+  seq: 7
 }
 
 get {
-  url: http://localhost:8080/reported-user/?uid=user7
+  url: http://localhost:8080/reported-user/?uid=user7&platform_url=stackoverflow.com
   body: json
 }
 
 query {
   uid: user7
+  platform_url: stackoverflow.com
 }
 
 body:json {

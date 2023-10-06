@@ -4,6 +4,10 @@ from beanie import Document, Indexed
 from pydantic import BaseModel
 
 
+class ReportedUserQuery(Document):
+    userid: str
+    platformUrl: str
+
 class ReportedUser(Document):
     userid: Indexed(str, unique=True)
     tags: list[str]

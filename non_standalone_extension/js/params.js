@@ -17,7 +17,7 @@ const EXT_NAME = "chupmu"
 const DEFAULT_SETTINGS = {
   dbSources: [
     {
-      "dbOnlineQueryUrl": "voz_test_db-12345",
+      dbOnlineQueryUrl: "http://localhost:8080/",
     }
   ],
   supportedSites: [

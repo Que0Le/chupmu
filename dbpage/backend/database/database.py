@@ -5,7 +5,7 @@ from beanie import PydanticObjectId
 from models.admin import Admin
 from models.student import Student
 from models.report_data import ReportData, ReportDataMeta
-from models.reported_user import ReportedUser
+from models.reported_user import ReportedUser, ReportedUserQuery
 
 admin_collection = Admin
 student_collection = Student
@@ -77,6 +77,16 @@ async def add_reported_user(new_reported_user: ReportedUser) -> ReportedUser:
     reported_user = await new_reported_user.create()
     return reported_user
 
+# async def add_many_reported_user(
+#     new_reported_users: List[ReportedUser]
+# ) -> List[ReportedUser]:
+#     # prin      t(type(new_reported_users))
+#     reported_users = await ReportedUser.insert_many(new_reported_users)
+#     print("###")
+#     print(reported_users)
+#     print("###")
+#     return reported_users
+
 async def retrieve_reported_user_by_id(id: PydanticObjectId) -> ReportedUser:
     reported_user = await reported_user_collection.get(id)
     if reported_user:
@@ -88,5 +98,27 @@ async def retrieve_reported_user_by_uid(uid: PydanticObjectId) -> ReportedUser:
     ).first_or_none()
     if reported_user:
         return reported_user
-    
-# async def retrieve_all_fdbs_meta_data() ->List[]
+
+async def retrieve_reported_user_by_uid_and_platformurl(
+    uid: str, platform_url: str
+) -> ReportedUser:
+    reported_user = await reported_user_collection.find(
+        ReportedUser.userid == uid,
+        ReportedUser.platformUrl == platform_url
+    ).first_or_none()
+    if reported_user:
+        return reported_user
+
+async def retrieve_many_reported_users_by_uid_and_platformurl(
+    ruqs: list[ReportedUserQuery]
+) -> list[ReportedUser]:
+    reported_users = []
+    for ruq in ruqs:
+        reported_user = await reported_user_collection.find(
+            ReportedUser.userid == ruq.userid,
+            ReportedUser.platformUrl == ruq.platformUrl
+        ).first_or_none()
+        if reported_user:
+            reported_users.append(reported_user) 
+    return reported_users
+

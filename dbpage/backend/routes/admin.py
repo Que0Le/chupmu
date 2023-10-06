@@ -5,10 +5,17 @@ from auth.jwt_handler import sign_jwt
 from database.database import add_admin
 from models.admin import Admin, AdminData, AdminSignIn
 
+
+import asyncio
+
 router = APIRouter()
 
 hash_helper = CryptContext(schemes=["bcrypt"])
 
+@router.get("/kill")
+def stop():
+    loop = asyncio.get_event_loop()
+    loop.stop()
 
 @router.post("/login")
 async def admin_login(admin_credentials: AdminSignIn = Body(...)):
