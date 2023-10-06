@@ -18,15 +18,8 @@
     "default_panel": "sidebar/panel.html",
     "open_at_install": false
   },
-
   "permissions": ["<all_urls>", "activeTab", "tabs", "contextMenus", "storage"],
   "content_security_policy": "script-src 'self'; object-src 'self'",
-  // "browser_specific_settings": {
-  //   "gecko": {
-  //     "id": "testing@testing.org",
-  //     "strict_min_version": "60.0b5"
-  //   }
-  // },
   "commands": {
     "toggle-chupmu": {
       "suggested_key": { "default": "Ctrl+Shift+U" },
@@ -34,14 +27,11 @@
     }
   },
   "background": {
-    "scripts": ["js/params.js", "js/db.js", "js/helpers.js", "background.js"]
+    "scripts": [
+      "js/data_plane.js", "js/params.js", 
+      "js/db.js", "js/helpers.js", "background.js"
+    ]
   },
-  // "content_scripts": [
-  //   {
-  //     "matches": ["https://*/*", "http://*/*"],
-  //     "js": ["content-script.js"]
-  //   }
-  // ],
   "options_ui": {
     "page": "options/options.html",
     "browser_style": true

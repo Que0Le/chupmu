@@ -1,5 +1,7 @@
 "use strict";
 
+let dbOnlineQueryUrl = "";
+
 /* Set default Setting */
 // browser.storage.local.get(`${EXT_NAME}_config`)
 //   .then(data => {
@@ -57,6 +59,10 @@ async function initializePageActionAllSupportedTabs() {
   await initializeConfig();
   await initializePageActionAllSupportedTabs();
   await browser.tabs.onUpdated.addListener(initializePageActionOnUpdated);
+
+  let data = await browser.storage.local.get(`${EXT_NAME}_config`);
+  dbOnlineQueryUrl = data.chupmu_config.dbSources[0].dbOnlineQueryUrl;
+  console.log(`dbOnlineQueryUrl: ${dbOnlineQueryUrl}`);
 })();
 
 
@@ -118,37 +124,10 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 
-/**
- * Fired when a registered command is activated using a keyboard shortcut.
- *
- * In this sample extension, there is only one registered command: "Ctrl+Shift+U".
- * On Mac, this command will automatically be converted to "Command+Shift+U".
- */
-// browser.commands.onCommand.addListener((command) => {
-//   browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT })
-//     .then(tabs => {
-//       let tab = tabs[0]
-//       function onExecuted(result) {
-//         console.log(`We executed in tab 2`, result);
-//       }
-      
-//       function onError(error) {
-//         console.log(`Error: ${error}`);
-//       }
-      
-//       const executing = browser.tabs.executeScript(
-//         tab.id, 
-//         {
-//         file: "./sites/stackoverflow_question/content-script.js",
-//         }
-//       );
-//       executing.then(onExecuted, onError);
-//     });
-// });
-
-browser.commands.onCommand.addListener(async (command) => {
-  let currentUrl = await isUrlSupported(await getCurrentTabUrl());
-  if (!currentUrl) return;
+async function handleLabelifySignal() {
+  const [currentUrl, supportedUrl, contentScriptPath] = await
+    isUrlSupported(await getCurrentTabUrl());
+  if (!supportedUrl) return;
 
   const [tab] = await browser.tabs.query({
     active: true, windowId: browser.windows.WINDOW_ID_CURRENT
@@ -164,13 +143,20 @@ browser.commands.onCommand.addListener(async (command) => {
   };
 
   const executing = browser.tabs.executeScript(
-    tab.id, { file: "./sites/stackoverflow_question/cs-so-quest.js" }
+    tab.id, { file: contentScriptPath }
   );
   executing.then(onExecuted, onError);
-});
+}
 
+/**
+ * Fired when a registered command is activated using a keyboard shortcut.
+ *
+ * In this sample extension, there is only one registered command: "Ctrl+Shift+U".
+ * On Mac, this command will automatically be converted to "Command+Shift+U".
+ */
+browser.commands.onCommand.addListener(handleLabelifySignal);
 /* The same if the pageaction icon is clicked */
-browser.pageAction.onClicked.addListener(toggleLabelify);
+browser.pageAction.onClicked.addListener(handleLabelifySignal);
 
 // TODO: inject css using tab id: sender.sender.tab.id
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/insertCSS
@@ -187,17 +173,13 @@ function connected(p) {
 
       if (message.reference == "requestRecords") {
         console.log("Request C->B: requestRecords", message.message);
-        handleRequestRecord(message.message)
-          .then(results => {
-            results.forEach(r => {
-              browser.tabs.insertCSS({ code: r.meta.dbCss });
-            });
-            sendMsgToContent("responseRecords", results);
-          }
-          );
-      } else if (message.reference == "removeCurrentCss") {
-        console.log("Request C->B: removeCurrentCss", message.message);
-        message.message.currentCss.forEach(cc => browser.tabs.removeCSS({ code: cc }));
+        get_reported_users_from_remote(
+          dbOnlineQueryUrl, API_GET_RUSERS,
+          message.message.userids, "stackoverflow.com"
+        ).then(reportedUsers => {
+          console.log(reportedUsers)
+          sendMsgToContent("responseRecords", reportedUsers);
+        })
       } else if (message.reference === "responsePickedItems") {
 
         function captureAndPush(rect, url) {

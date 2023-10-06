@@ -100,8 +100,8 @@ async def add_many_reported_users_to_db(new_reported_users: List[ReportedUser]):
 #         status_code=404, detail=f"User with uid '{uid}' not found"
 #     )
 
-@router.get(
-    "/", response_description="Reported User retrieved by uid and platform url",
+@router.post(
+    "/get-many", response_description="Reported User retrieved by uid and platform url",
     response_model=Response
 )
 async def get_many_reported_users_by_uid_and_platformurl(ruqs: List[ReportedUserQuery]):
@@ -112,16 +112,11 @@ async def get_many_reported_users_by_uid_and_platformurl(ruqs: List[ReportedUser
         "response_type": "success",
         "description": "Many Reported User retrieved successfully",
         "data": reported_users,
-    }
-    # raise HTTPException(
-    #     status_code=500,
-    #     detail=f"Something is wrong"
-    # )
-
+    } 
 
 
 @router.get(
-    "/{id}", response_description="Reported User retrieved by id",
+    "/id/{id}", response_description="Reported User retrieved by id",
     response_model=Response
 )
 async def get_reported_user_by_id(id: PydanticObjectId):

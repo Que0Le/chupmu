@@ -1,6 +1,6 @@
-const urlRegex = /^https:\/\/voz\.vn\/t\//;
-
 console.log("Startup stackoverflow script ...");
+
+const regexProfileLink = /\/users\/(\d+)\//;
 
 const chupmu_class_prefix = "chupmu_";
 const chupmu_css_class_prefix = "chupmu_css_";
@@ -120,79 +120,116 @@ currentPickingElement = null;
  * 
  * @returns {String[]}
  */
-function getAllUserIdsOnPageVoz() {
-  let all_acticles = document.getElementsByClassName("message message--post js-post");
-  let userIds = [];
-  for (let i = 0; i < all_acticles.length; i++) {
-    article = all_acticles[i];
-    let a_username = article.getElementsByClassName("username")[0];
-    let userid = a_username.getAttribute("href").split(".").pop().replace("/", "");
-    if (userid) {
-      userIds.push(userid);
+// const regexProfileLink = /\/users\/(\d+)\//;
+
+async function getAllUserIdsOnPageSO() {
+  let userids = [];
+
+  // Use async queries and loops
+  const allUserDetailsA = document.querySelectorAll('div.user-details a');
+  await Promise.all(Array.from(allUserDetailsA).map(async (uda) => {
+    if (uda.href) {
+      const match = uda.href.match(regexProfileLink);
+      if (match && match.length > 1) {
+        userids.push(match[1].toString());
+      }
     }
-  };
-  return userIds.filter((item, index) => userIds.indexOf(item) === index);
+  }));
+
+  const allCommentA = document.querySelectorAll('div.d-inline-flex.ai-center a');
+  await Promise.all(Array.from(allCommentA).map(async (uda) => {
+    if (uda.href) {
+      const match = uda.href.match(regexProfileLink);
+      if (match && match.length > 1) {
+        userids.push(match[1].toString());
+      }
+    }
+  }));
+  console.log(userids)
+  return userids;
 }
 
-function applyLabel(data) {
-  // BIG TODO: update this function to work with results from multiple filter databases
-  // Also, if an account is listed in multiple dbs with different tags, then how is the effect displayed?
-  data.forEach(d => {
-    currentCss.push(d.meta.dbCss);
-  });
-  data = data[0];
+async function removeElementById(id) {
+  const elementToRemove = document.getElementById(id);
+  if (elementToRemove) {
+    await new Promise((resolve) => {
+      elementToRemove.parentNode.removeChild(elementToRemove);
+      resolve();
+    });
+  }
+}
 
-  let tag_metas = data.meta.tags;
-  let records = data.records; // object: {1: { userid: 1, tags: (1) […], note: "" }}
-  let dbName = data.meta.dbName;
-  let tagnames = [];
-  let all_acticles = document.getElementsByClassName("message message--post js-post");
-  for (let i = 0; i < all_acticles.length; i++) {
-    article = all_acticles[i];
-    let a_username = article.getElementsByClassName("username")[0];
-    let userid = a_username.getAttribute("href").split(".").pop().replace("/", "");
-    if (!userid) continue;
-    let record = records[userid];
-    if (!record) continue;
+const classPrefix = "cm_";
+const cssString = `
+.cm_nice-answer {
+  background: green;
+}
+.cm_polite {
+  background: blue;
+}
+.cm_creative {
+  background: red;
+}`;
 
-    let message_cell_user = article.getElementsByClassName("message-cell message-cell--user")[0];
-    for (let j = 0; j < record.tagIds.length; j++) {
-      let tag_id = record.tagIds[j];
-      if (tag_metas[tag_id]) {
-        let tagname = tag_metas[tag_id].tagname;
-        message_cell_user.classList.add(`${chupmu_css_class_prefix}_${dbName}__${tagname}`);
-        tagnames.push(tagname);
+let styleElementId = "chupmu_css";
+
+async function applyLabel(data) {
+  // Cleanup
+  removeElementById(styleElementId);
+
+  // Add css
+  const styleElement = document.createElement("style");
+  styleElement.setAttribute("id", "styleElement");
+  // const cssRule = ".my-class { background: green; }";
+  styleElement.innerText = cssString;
+  document.head.appendChild(styleElement);
+
+  // Add css class to element
+  let udElements = document.getElementsByClassName("user-details");
+  for (let i = 0; i < udElements.length; i++) {
+    let ud = udElements[i];
+    let a = ud.getElementsByTagName("a")[0];
+    if (!a) continue;
+    // let ud = ui.getElementsByClassName("user-details")[0];
+    let profileLink = a.href
+    // let profileLink = uiElements[i].getElementsByClassName("user-details")[0].getElementsByTagName("a")[0].href;
+    // console.log(profileLink)
+    const match = profileLink.match(regexProfileLink);
+    if (match && match.length > 1) {
+      const userid = match[1].toString();
+      for (let j = 0; j < data.length; j++) {
+        let reportedUser = data[j];
+        console.log(userid, reportedUser.userid)
+        if (reportedUser.userid === userid) {
+          ud.classList.add(`${classPrefix}${reportedUser.tags[0]}`);
+          // console.log(userid, reportedUser.tags[0], ud);
+          break;
+        }
       }
-      break; // TODO: support only the first tag for now. Need more css ideas!
     }
-
-    message_cell_user.classList.add("tooltip");
-    let tootipId = `chupmu-tooltip-text-uid-${userid}`;
-    let tooltipHtml = createTooltipHtml(
-      tootipId, tagnames, record.note,
-      data.meta.onlineRecordUrlPrefix + userid
-    );
-    message_cell_user.innerHTML += tooltipHtml;
-    let tooltip = document.getElementById(tootipId);
-    if (!tooltip) console.log(`Failed adding tooltip id: ${tootipId}`);
-  };
+  }
 }
 
 function handleRemoveLabel() {
-  // Remove css
+  // Remove classes
   let divs = document.querySelectorAll(`div[class^="${chupmu_css_class_prefix}"]`);
   for (let i = 0; i < divs.length; i++) {
     divs[i].classList.remove(chupmu_css_class_prefix_Regex.exec(divs[i].className)[0]);
   }
+  // Remove css
+  removeElementById(styleElementId);
+
   // Tooltips
-  const elements = document.getElementsByClassName(chupmu_class_prefix);
-  while (elements.length > 0) {
-    elements[0].parentNode.removeChild(elements[0]);
-  }
+  // const elements = document.getElementsByClassName(chupmu_class_prefix);
+  // while (elements.length > 0) {
+  //   elements[0].parentNode.removeChild(elements[0]);
+  // }
 }
 
-function askBackgroundForRecords(ids) {
-  sendMsgToBackground("requestRecords", { "currentUrl": document.location.href, "ids": ids });
+function askBackgroundForRecords(userids) {
+  sendMsgToBackground("requestRecords", { 
+    "currentUrl": document.location.href, "userids": userids 
+  });
 }
 
 portContent.onMessage.addListener((message) => {
@@ -206,12 +243,15 @@ portContent.onMessage.addListener((message) => {
     console.log("Request B->C: toggleLabelify ...");
     if (message.message === "label") {
       console.log("command: label")
-      askBackgroundForRecords(getAllUserIdsOnPageVoz());
+      getAllUserIdsOnPageSO()
+      .then(userids => {
+        askBackgroundForRecords(userids);
+      })
     } else if (message.message === "removeLabel") {
       console.log("command: removeLabel")
       handleRemoveLabel();
       // Send the current CSS code back to background to be removed
-      sendMsgToBackground("removeCurrentCss", { "currentCss": currentCss });
+      // sendMsgToBackground("removeCurrentCss", { "currentCss": currentCss });
     }
   } else if (message.reference === "responseRecords") {
     /* Data is a array of db's meta, and records */

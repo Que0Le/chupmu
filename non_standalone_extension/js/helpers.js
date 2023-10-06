@@ -17,20 +17,16 @@ async function getLocalStorageConfig() {
 }
 
 /**
- * return current url if supproted, else empty string
+ * return current url, supported url and the associated path for content script
+ * in the config if the current url is supproted, else empty string
  * @returns 
  */
 async function isUrlSupported(url) {
-  // if (!currentTabUrl) {
-  //   let currentTabUrl = await getCurrentTabUrl();
-  // }
-  // currentTabUrl === "" ? await getCurrentTabUrl() : currentTabUrl;
-  // console.log(currentTabUrl)
   if (isHttpOrHttps.test(url)) {
     let config = await getLocalStorageConfig();
     for (let i = 0; i < config.supportedSites.length; i++) {
       if (url.includes(config.supportedSites[i].url)) {
-        return url;
+        return [url, config.supportedSites[i].url, config.supportedSites[i].contentScript];
       }
     }
   }
