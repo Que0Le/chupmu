@@ -35,6 +35,6 @@ async function get_reported_users_from_remote(baseUrl, apiPath, userids, platfor
   } catch (error) {
     // Handle the error here (you can log it if needed)
     console.error(error);
-    return ""; // Return an empty string on error
+    return []; // Return an empty array on error
   }
 }

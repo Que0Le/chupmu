@@ -128,13 +128,15 @@ browser.contextMenus.create({
 );
 
 let currentPickedUrl = "";
+let suggestedUserId = "";
+let suggestedPlatformUrl = "";
+let suggestedTags = [];
 
-
-browser.contextMenus.onClicked.addListener((info, tab) => {
+browser.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "chupmu_pick_this_user") {
     currentPickedUrl = info.linkUrl;
-    browser.sidebarAction.open();
-    sendMsgToSidebar("forceReloadSidebar", {});
+    await browser.sidebarAction.open();
+    await sendMsgToSidebar("forceReloadSidebar", {});
   }
 });
 
@@ -236,40 +238,61 @@ async function connected(p) {
         } catch (error) {
           console.error("Error querying active tab: ", error);
         }
+      } else if (message.reference === "responseExtractUserIdFromUrl") {
+        console.log(`Request C->B: ${message.reference}`, message.message);
+        suggestedUserId = message.message.userid;
+        // Get some user data
+        const reportedUsers = await get_reported_users_from_remote(
+          dbOnlineQueryUrl, API_GET_RUSERS,
+          [suggestedUserId], suggestedPlatformUrl
+        );
+        console.log(reportedUsers)
+        if (reportedUsers.length > 0) { // TODO: handle multiple results
+          suggestedTags = reportedUsers[0].tags
+        }
+        await sendMsgToSidebar("responseGetCurrentPickedUrl", {
+          currentPickedUrl: currentPickedUrl,
+          suggestedTags: suggestedTags,
+          suggestedPlatformUrl: suggestedPlatformUrl,
+          suggestedUserId: suggestedUserId,
+        });
+
       }
     });
   } else if (p && p.name === "port-sidebar") {
     portChannelSidebar = p;
+    console.log("Connected with sidebar");
     portChannelSidebar.onMessage.addListener(async (message, sender) => {
       if (message.source !== "chupmu_sidebar_script") {
         console.log("Warning B: portChannelSidebar received message from unknown source: ", message);
         return;
       }
       if (message.reference === "getCurrentPickedUrl") {
-        try {
-          let parsedUrl = new URL(currentPickedUrl);
-          if (!SUPPORTED_PROTOCOL.includes(parsedUrl.protocol.slice(0, -1))) {
-            console.log(`Picker: Only supported '${SUPPORTED_PROTOCOL}' protocols. Url is '${currentPickedUrl}'`);
-            return;
-          }
-          // TODO: improve guessing
-          let suggestedPlatformUrl = parsedUrl.origin.replace(parsedUrl.protocol, "").slice(2);
-          let suggestedUserId = parsedUrl.pathname.match(getUserFromUrl)[1];
-
-          try {
-            const dbNamesAndTheirTagNames = await getAllFilterDbNamesAndTheirTags(true);
-            await sendMsgToSidebar("responseGetCurrentPickedUrl", {
-              currentPickedUrl: currentPickedUrl,
-              dbNamesAndTheirTagNames: dbNamesAndTheirTagNames,
-              suggestedPlatformUrl: suggestedPlatformUrl,
-              suggestedUserId: suggestedUserId,
-            });
-          } catch (error) {
-            console.error("Error fetching DB names and tag names:", error);
-          }
-        } catch (error) {
-          console.log(`Picker: Error parsing URL '${currentPickedUrl}'`);
-          return Promise.resolve({ error: `Failed parsing URL: '${currentPickedUrl}'` });
+        console.log(`SB->B: `, message.reference);
+        if (currentPickedUrl === "") return;
+        // Check if we support this url
+        const [currentUrl, supportedUrl, contentScriptPath] = await
+          isUrlSupported(await getCurrentTabUrl());
+        if (supportedUrl) {
+          // Load CS script ...
+          suggestedPlatformUrl = supportedUrl;
+          const [tab] = await browser.tabs.query({
+            active: true, windowId: browser.windows.WINDOW_ID_CURRENT
+          });
+          await loadContentScriptIfHadnot(tab.id, currentUrl, contentScriptPath);
+          // ... and ask CS to extract the userid from URL.
+          // See "responseExtractUserIdFromUrl"
+          await sendMsgToContent("requestExtractUserIdFromUrl", {
+            "currentPickedUrl": currentPickedUrl
+          });
+        } else {
+          console.log("Not supported url. Sending raw data to sidebar");
+          await sendMsgToSidebar("responseGetCurrentPickedUrl", {
+            currentPickedUrl: currentPickedUrl,
+            suggestedTags: suggestedTags,
+            suggestedPlatformUrl: suggestedPlatformUrl,
+            suggestedUserId: suggestedUserId,
+          });
         }
       } else if (message.reference === "submitNewUser") {
         handleSubmitNewUserToDb(message.message);

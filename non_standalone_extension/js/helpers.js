@@ -81,32 +81,32 @@ const TITLE_APPLY = "Apply Labelify";
 const TITLE_REMOVE = "Remove Labelify";
 const APPLICABLE_PROTOCOLS = ["http:", "https:"];
 
-
-async function toggleLabelify(tab, currentUrl, contentScriptPath) {
+async function loadContentScriptIfHadnot(tabid, currentUrl, contentScriptPath) {
   const onError = async (error) => {
-    console.log(`Error injecting script in tab ${tab.id}: ${error}`);
+    console.log(`Error injecting script in tab ${tabid}: ${error}`);
   };
-
   const onExecuted = async (result) => {
-    console.log(`Injected script in tab ${tab.id}: ${currentUrl}`);
-    loadedContentScriptOnTabIds.push(tab.id);
+    console.log(`Injected script in tab ${tabid}: ${currentUrl}`);
+    loadedContentScriptOnTabIds.push(tabid);
   };
-
-  async function executeContentScript() {
+  if (!loadedContentScriptOnTabIds.includes(tabid)) {
     try {
-      await browser.tabs.executeScript(tab.id, { file: contentScriptPath });
+      await browser.tabs.executeScript(tabid, { file: contentScriptPath });
       await onExecuted();
     } catch (error) {
       await onError(error);
     }
   }
+}
 
+async function toggleLabelify(tab, currentUrl, contentScriptPath) {
   async function toggleLabel() {
     browser.pageAction.setIcon({ tabId: tab.id, path: "icons/on.svg" });
     browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_REMOVE });
-    if (!loadedContentScriptOnTabIds.includes(tab.id)) {
-      await executeContentScript();
-    }
+    await loadContentScriptIfHadnot(tab.id, currentUrl, contentScriptPath);
+    // if (!loadedContentScriptOnTabIds.includes(tab.id)) {
+    //   await loadContentScriptIfHadnot(tab.id, currentUrl, contentScriptPath);
+    // }
     portChannelContent.postMessage({
       info: "chupmu_extension",
       reference: "toggleLabelify",

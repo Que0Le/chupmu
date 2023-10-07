@@ -22,7 +22,7 @@ const DEFAULT_SETTINGS = {
   ],
   supportedSites: [
     {
-      url: "stackoverflow.com/questions/",
+      url: "stackoverflow.com",
       contentScript: "./sites/stackoverflow_question/cs-so-quest.js" 
     }
   ]

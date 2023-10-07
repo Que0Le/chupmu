@@ -2,11 +2,11 @@ console.log("Startup stackoverflow script ...");
 
 const regexProfileLink = /\/users\/(\d+)\//;
 
-const chupmu_class_prefix = "chupmu_";
-const chupmu_css_class_prefix = "chupmu_css_";
-const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
+// const chupmu_class_prefix = "chupmu_";
+// const chupmu_css_class_prefix = "chupmu_css_";
+// const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
 
-let currentCss = [];
+// let currentCss = [];
 let portContent = browser.runtime.connect({ name: "port-cs" });
 
 function removeDuplicates(array) {
@@ -42,15 +42,15 @@ async function sendMsgToBackground(reference, message) {
   });
 }
 
-function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
-  let str = `
-  <span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
-      <p>Tags: ${tagnames}</p>
-      <p>Note: ${note}</p>
-      <p>View full record: <a href="${recordUrl}">chup-mu.org</a></p>
-  </span>`;
-  return str;
-}
+// function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
+//   let str = `
+//   <span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
+//       <p>Tags: ${tagnames}</p>
+//       <p>Note: ${note}</p>
+//       <p>View full record: <a href="${recordUrl}">chup-mu.org</a></p>
+//   </span>`;
+//   return str;
+// }
 
 let pickerActive = false;
 let pickedElements = [];
@@ -269,8 +269,21 @@ const handleMessage = async (message) => {
     /* Data is an array of db's meta, and records */
     console.log(`Get responseRecords records data from background: `, message.message);
     applyLabel(message.message);
+  } else if (message.reference === "requestExtractUserIdFromUrl") {
+    console.log(`B->C: ${message.reference}`);
+    let userid = "";
+    const match = message.message.currentPickedUrl.match(regexProfileLink);
+      if (match && match.length > 1) {
+        userid = match[1].toString();
+    }
+    // try {
+    //   const response = await browser.runtime.sendMessage({ "userid": userid });
+    // } catch (error) {
+    //   console.log(`Error: ${error}`);
+    // }
+    sendMsgToBackground("responseExtractUserIdFromUrl", { "userid": userid });
   } else if (message.reference === "togglePicker") {
-    console.log("B->C: togglePicker");
+    console.log(`B->C: ${message.reference}`);
     togglePicker();
   } else if (message.reference === "requestPickedItems") {
     let imgRects = [];

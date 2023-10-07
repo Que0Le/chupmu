@@ -1,7 +1,7 @@
 meta {
-  name: get reported user by uid and platform url
+  name: get many reported users by uid and platform url
   type: http
-  seq: 4
+  seq: 5
 }
 
 post {
@@ -12,7 +12,11 @@ post {
 body:json {
   [
     {
-      "userid": "1389110",
+      "userid": "150647",
+      "platformUrl": "stackoverflow.com"
+    },
+    {
+      "userid": "797495",
       "platformUrl": "stackoverflow.com"
     }
   ]
