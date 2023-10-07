@@ -250,7 +250,9 @@ async function connected(p) {
         if (reportedUsers.length > 0) { // TODO: handle multiple results
           suggestedTags = reportedUsers[0].tags
         }
+        const tabs = await browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT });
         await sendMsgToSidebar("responseGetCurrentPickedUrl", {
+          urlRecorded: tabs[0].url,
           currentPickedUrl: currentPickedUrl,
           suggestedTags: suggestedTags,
           suggestedPlatformUrl: suggestedPlatformUrl,

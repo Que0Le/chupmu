@@ -38,6 +38,12 @@ function generateReportViewerHtml(reportData) {
     `
   });
 
+  let relatedPlatformsInnerHtml = "";
+  reportData.relatedPlatforms.forEach(url => {
+    relatedPlatformsInnerHtml += `<br><a href="${url}" class="text-blue-500">${url}</a>\n`;
+  })
+
+
   let innerHtml = `<div class="bg-white rounded-lg shadow-lg p-6">
     <h2 class="text-xl font-semibold mb-4">Report Details</h2>
     <div class="mb-2">
@@ -47,10 +53,18 @@ function generateReportViewerHtml(reportData) {
       <span class="font-semibold">Reported User:</span> ${reportData.reporter}
     </div>
     <div class="mb-2">
-      <span class="font-semibold">Filter Databases:</span> ${reportData.filter_dbs.join(", ").slice(0, -2)}
+      <span class="font-semibold">Tags:</span> ${reportData.tags.join(", ")}
     </div>
     <div class="mb-2">
-      <span class="font-semibold">URL:</span> <a href="${reportData.url}" class="text-blue-500">${reportData.url}</a>
+      <span class="font-semibold">Recorded Url:</span> ${reportData.urlRecorded}
+    </div>
+    <div class="mb-2">
+      <span class="font-semibold">Platform URL:</span> 
+      <a href="${reportData.platformUrl}" class="text-blue-500">${reportData.platformUrl}</a>
+    </div>
+    <div class="mb-2">
+      <span class="font-semibold">Related Platforms:</span> 
+      ${relatedPlatformsInnerHtml}
     </div>
     <div class="mb-2">
       <span class="font-semibold">Taken at:</span> ${convertUnixTimestamp(reportData.unixTime)}
@@ -70,7 +84,7 @@ function generateReportViewerHtml(reportData) {
 function handleMetaContainerClick(event) {
   let reportid  = this.getAttribute("reportid");
   if (!reportid) {return}
-  fetch(getReportDataUrl + reportid)
+  fetch(`${getReportDataUrl}${reportid}`)
   .then(response => {
     if (!response.ok) {
       throw new Error(`Error getting report id=${reportid} from server. Status: ${response.status}`);

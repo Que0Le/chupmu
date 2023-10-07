@@ -15,7 +15,7 @@ function resetPickedData() {
 }
 
 let currentScreenshotDataId = 0; 
-
+let currentPickedUrl = "";
 /**
  * 
  * @param {String} reference 
@@ -38,8 +38,12 @@ const DEFAULT_INPUT_AREA = `<div class="container-1">
   <textarea rows=3 id="raw-url"></textarea>
 </div>
 <div class="container-1">
-  <p><label>Platform URL (multiple urls separated with comma):</label></p>
+  <p><label>Platform URL:</label></p>
   <textarea rows=1 id="platform-url"></textarea>
+</div>
+<div class="container-1">
+  <p><label>Related Platform URLs (separated by comma):</label></p>
+  <textarea rows=1 id="related-platforms"></textarea>
 </div>
 <div class="container-1">
   <p><label>User ID:</label></p>
@@ -51,8 +55,11 @@ const DEFAULT_INPUT_AREA = `<div class="container-1">
     <textarea rows=5 id="note"></textarea>
   </div>
 </div>
-<div id="db-area">
-  <p><label>Database section:</label></p>
+<div class="container-1">
+  <div>
+    <p><label>Tags:</label></p>
+    <textarea rows=5 id="tags"></textarea>
+  </div>
 </div>
 
 <div>
@@ -81,50 +88,52 @@ function generateHtmlScreenshotContainer(url, timestamp, dataUrl, screenshotId) 
 }
 
 
-function generateInnerHtmlDbContainer(dbName, tagNames) {
-  let innerHtml = `<div class="db-container">
-    <div class="db-entry">
-      <label>DB name:</label>
-      <label><input type="checkbox" value="${dbName}" isdbname>${dbName}</label>
-    </div>
-    <div class="tag-entry">`;
-  if (tagNames && tagNames.length > 0) {
-    innerHtml += `<p><label>Tag names:</label></p>`
-  }
-  for (const tagName of tagNames) {
-    innerHtml += `<label><input type="checkbox" value="${tagName}" dbname="${dbName}">${tagName}</label>`
-  }
-  innerHtml += `</div>
-    <p><label>New tags (split with comma):</label></p>
-    <input type="text" dbname="${dbName}">
-  </div>`
-  return innerHtml;
-}
+// function generateInnerHtmlDbContainer(dbName, tagNames) {
+//   let innerHtml = `<div class="db-container">
+//     <div class="db-entry">
+//       <label>DB name:</label>
+//       <label><input type="checkbox" value="${dbName}" isdbname>${dbName}</label>
+//     </div>
+//     <div class="tag-entry">`;
+//   if (tagNames && tagNames.length > 0) {
+//     innerHtml += `<p><label>Tag names:</label></p>`
+//   }
+//   for (const tagName of tagNames) {
+//     innerHtml += `<label><input type="checkbox" value="${tagName}" dbname="${dbName}">${tagName}</label>`
+//   }
+//   innerHtml += `</div>
+//     <p><label>New tags (split with comma):</label></p>
+//     <input type="text" dbname="${dbName}">
+//   </div>`
+//   return innerHtml;
+// }
 
-function generateContainerForNewDb() {
-  let innerHtml = `<div class="db-container">
-    <div class="db-entry">
-    <p><label>New DB name:</label></p>
-    <input type="text" id="${newDbNameInputId}">
-    </div>
-    <div class="tag-entry">`;
-  innerHtml += `</div>
-    <p><label>New tags (split with comma):</label></p>
-    <input type="text" id="${newTagInputId}">
-  </div>`
-  return innerHtml;
-}
+// function generateContainerForNewDb() {
+//   let innerHtml = `<div class="db-container">
+//     <div class="db-entry">
+//     <p><label>New DB name:</label></p>
+//     <input type="text" id="${newDbNameInputId}">
+//     </div>
+//     <div class="tag-entry">`;
+//   innerHtml += `</div>
+//     <p><label>New tags (split with comma):</label></p>
+//     <input type="text" id="${newTagInputId}">
+//   </div>`
+//   return innerHtml;
+// }
+
 
 function addDomOnStartUp(msg) {
   document.getElementById("input-area").innerHTML = DEFAULT_INPUT_AREA;
   document.getElementById("raw-url").value = msg.currentPickedUrl;
   document.getElementById("platform-url").value = msg.suggestedPlatformUrl;
   document.getElementById("user-id").value = msg.suggestedUserId;
-  let dbArea = document.getElementById("db-area");
-  for (const [key, value] of Object.entries(msg.dbNamesAndTheirTagNames)) {
-    dbArea.innerHTML += generateInnerHtmlDbContainer(key, value)
-  }
-  dbArea.innerHTML += generateContainerForNewDb("__newDb");
+  document.getElementById("tags").value = msg.suggestedTags.join(', ');
+  // let dbArea = document.getElementById("db-area");
+  // for (const [key, value] of Object.entries(msg.dbNamesAndTheirTagNames)) {
+  //   dbArea.innerHTML += generateInnerHtmlDbContainer(key, value)
+  // }
+  // dbArea.innerHTML += generateContainerForNewDb("__newDb");
 
   // currentPickedUser = msg.suggestedUserId;
 }
@@ -257,15 +266,19 @@ function runAsStandAloneHtml() {
 }
 
 function handleTEMP1(data) {
+  // currentPickedUrl = data.currentPickedUrl;
   document.getElementById("sidebar-status").textContent = "Picking:";
   addDomOnStartUp(data);
 
   function handleSubmit() {
     /* Gather data */
-    let platformUrls = splitTrimFilterEmpty(document.getElementById("platform-url").value, ",");
     let userId = document.getElementById("user-id").value;
     let note = document.getElementById("note").value;
-    let dbNamesAndTheirTagNames = getDbTagData();
+    let tags = document.getElementById("tags").value;
+    tags = [...new Set(tags.split(',').map(item => item.trim()).filter(Boolean))];
+    let platformUrl = document.getElementById("platform-url").value.trim();
+    let relatedPlatforms = splitTrimFilterEmpty(document.getElementById("related-platforms").value, ",");
+    // let dbNamesAndTheirTagNames = getDbTagData();
     // Get shot's description
     const noteInputs = document.querySelectorAll('input[screenshot-id]');
     for (let i = 0; i < noteInputs.length; ++i) {
@@ -276,20 +289,7 @@ function handleTEMP1(data) {
         }
       }
     }
-
-    /* Store locally */
-    // sendMsgToBackground(
-    //   "submitNewUser", 
-    //   {
-    //     "platformUrls": platformUrls,
-    //     "userId": userId,
-    //     "note": note,
-    //     "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
-    //   }
-    // );
-
-    console.log({dbNamesAndTheirTagNames: dbNamesAndTheirTagNames})
-
+ 
     /* Send proof to server */
     fetch('http://localhost:8080/report-data/', {
       method: 'POST',
@@ -300,9 +300,12 @@ function handleTEMP1(data) {
       body: JSON.stringify({
         "reporter": "chupmu_default_reporter",
         "reported_user": userId,
-        "filter_dbs": dbNamesAndTheirTagNames,
+        "note": note,
+        "tags": tags,
         "unixTime": currentPickedUnixTime,
-        "url": platformUrls,
+        "urlRecorded": data.urlRecorded, 
+        "platformUrl": platformUrl,
+        "relatedPlatforms": relatedPlatforms,
         "data_url_array": currentPickedData
       })
     })
@@ -352,8 +355,8 @@ function startUp() {
           document.getElementById("sidebar-status").textContent = message.error;
           return;
         }
-        console.log(message.message)
-        // handleTEMP1(message.message);
+        // console.log(message.message)
+        handleTEMP1(message.message);
       } else if (message.reference == "forceReloadSidebar") {
         startUp();
       } else if (message.reference == "responsePickedItems") {
