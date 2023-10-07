@@ -160,6 +160,8 @@ async function removeElementById(id) {
 }
 
 const classPrefix = "cm_";
+const classPrefixRegex = /(cm_)\S*/;
+
 const cssString = `
 .cm_nice-answer {
   background: green;
@@ -190,19 +192,14 @@ async function applyLabel(data) {
     let ud = udElements[i];
     let a = ud.getElementsByTagName("a")[0];
     if (!a) continue;
-    // let ud = ui.getElementsByClassName("user-details")[0];
     let profileLink = a.href
-    // let profileLink = uiElements[i].getElementsByClassName("user-details")[0].getElementsByTagName("a")[0].href;
-    // console.log(profileLink)
     const match = profileLink.match(regexProfileLink);
     if (match && match.length > 1) {
       const userid = match[1].toString();
       for (let j = 0; j < data.length; j++) {
         let reportedUser = data[j];
-        console.log(userid, reportedUser.userid)
         if (reportedUser.userid === userid) {
           ud.classList.add(`${classPrefix}${reportedUser.tags[0]}`);
-          // console.log(userid, reportedUser.tags[0], ud);
           break;
         }
       }
@@ -212,9 +209,9 @@ async function applyLabel(data) {
 
 function handleRemoveLabel() {
   // Remove classes
-  let divs = document.querySelectorAll(`div[class^="${chupmu_css_class_prefix}"]`);
-  for (let i = 0; i < divs.length; i++) {
-    divs[i].classList.remove(chupmu_css_class_prefix_Regex.exec(divs[i].className)[0]);
+  let allUserDetails = document.querySelectorAll(`div[class*="${classPrefix}"]`);
+  for (let i = 0; i < allUserDetails.length; i++) {
+    allUserDetails[i].classList.remove(classPrefixRegex.exec(allUserDetails[i].className)[0]);
   }
   // Remove css
   removeElementById(styleElementId);

@@ -133,19 +133,21 @@ async function handleLabelifySignal() {
     active: true, windowId: browser.windows.WINDOW_ID_CURRENT
   });
 
-  const onError = (error) => console.log(
-    `Error injecting script in tab ${tab.id}: ${error}
-    `);
+  await toggleLabelify(tab, currentUrl, contentScriptPath);
 
-  const onExecuted = (result) => {
-    console.log(`Injected script in tab ${tab.id}: ${currentUrl}`);
-    toggleLabelify(tab);
-  };
+  // const onError = (error) => console.log(
+  //   `Error injecting script in tab ${tab.id}: ${error}
+  //   `);
 
-  const executing = browser.tabs.executeScript(
-    tab.id, { file: contentScriptPath }
-  );
-  executing.then(onExecuted, onError);
+  // const onExecuted = (result) => {
+  //   console.log(`Injected script in tab ${tab.id}: ${currentUrl}`);
+  //   toggleLabelify(tab);
+  // };
+
+  // const executing = browser.tabs.executeScript(
+  //   tab.id, { file: contentScriptPath }
+  // );
+  // executing.then(onExecuted, onError);
 }
 
 /**
