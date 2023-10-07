@@ -74,30 +74,45 @@ let portChannelContent;
 let portChannelSidebar;
 
 /**
+ * Sends a message to the content script.
  * 
- * @param {String} reference 
- * @param {Object} message 
+ * @param {String} reference - The reference for the message.
+ * @param {Object} message - The message to send.
+ * @returns {Promise} - A Promise that resolves when the message is sent.
  */
-function sendMsgToContent(reference, message) {
-  portChannelContent.postMessage({
-    info: MSG_EXT_NAME, reference: reference,
-    source: MSG_TARGET_BACKGROUND, target: MSG_TARGET_CONTENT,
-    message: message
+async function sendMsgToContent(reference, message) {
+  return new Promise((resolve) => {
+    portChannelContent.postMessage({
+      info: MSG_EXT_NAME,
+      reference: reference,
+      source: MSG_TARGET_BACKGROUND,
+      target: MSG_TARGET_CONTENT,
+      message: message,
+    });
+    resolve();
   });
 }
 
 /**
+ * Sends a message to the sidebar script.
  * 
- * @param {String} reference 
- * @param {Object} message 
+ * @param {String} reference - The reference for the message.
+ * @param {Object} message - The message to send.
+ * @returns {Promise} - A Promise that resolves when the message is sent.
  */
-function sendMsgToSidebar(reference, message) {
-  portChannelSidebar.postMessage({
-    info: MSG_EXT_NAME, reference: reference,
-    source: MSG_TARGET_BACKGROUND, target: MSG_TARGET_SIDEBAR,
-    message: message
+async function sendMsgToSidebar(reference, message) {
+  return new Promise((resolve) => {
+    portChannelSidebar.postMessage({
+      info: MSG_EXT_NAME,
+      reference: reference,
+      source: MSG_TARGET_BACKGROUND,
+      target: MSG_TARGET_SIDEBAR,
+      message: message,
+    });
+    resolve();
   });
 }
+
 
 /* Create context menu for picker */
 browser.contextMenus.create({
@@ -160,8 +175,123 @@ browser.commands.onCommand.addListener(handleLabelifySignal);
 /* The same if the pageaction icon is clicked */
 browser.pageAction.onClicked.addListener(handleLabelifySignal);
 
-// TODO: inject css using tab id: sender.sender.tab.id
-// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/insertCSS
+async function connected(p) {
+  if (p && p.name === "port-cs") {
+    portChannelContent = p;
+    portChannelContent.onMessage.addListener(async (message, sender) => {
+      if (
+        message.info != "chupmu_extension" ||
+        message.source != "chupmu_content_script" ||
+        message.target != "chupmu_background_script"
+      ) {
+        console.log("B: unknown message: ", message);
+        return;
+      }
+
+      if (message.reference == "requestRecords") {
+        console.log("Request C->B: requestRecords", message.message);
+        try {
+          const reportedUsers = await get_reported_users_from_remote(
+            dbOnlineQueryUrl,
+            API_GET_RUSERS,
+            message.message.userids,
+            "stackoverflow.com"
+          );
+          console.log(reportedUsers);
+          await sendMsgToContent("responseRecords", reportedUsers);
+        } catch (error) {
+          console.error("Error fetching reported users:", error);
+        }
+      } else if (message.reference === "responsePickedItems") {
+        async function captureAndPush(rect, url) {
+          const imageDetails = { format: "png", quality: 100, rect: rect, scale: 1.0 };
+
+          try {
+            const dataUrl = await browser.tabs.captureVisibleTab(imageDetails);
+            return {
+              dataUrl: dataUrl,
+              captureUrl: url,
+            };
+          } catch (error) {
+            console.error("Error capturing visible tab:", error);
+            return null;
+          }
+        }
+
+        try {
+          const tabs = await browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT });
+          const url = tabs[0].url;
+          const capturePromises = message.message.imgRects.map((rect) => captureAndPush(rect, url));
+
+          try {
+            const results = await Promise.all(capturePromises);
+            const validResults = results.filter((result) => result !== null);
+            await sendMsgToSidebar("responsePickedItems", {
+              pickedItemPng: validResults,
+              unixTime: Date.now(),
+            });
+          } catch (error) {
+            console.error("Error capturing DOM screenshots:", error);
+          }
+        } catch (error) {
+          console.error("Error querying active tab: ", error);
+        }
+      }
+    });
+  } else if (p && p.name === "port-sidebar") {
+    portChannelSidebar = p;
+    portChannelSidebar.onMessage.addListener(async (message, sender) => {
+      if (message.source !== "chupmu_sidebar_script") {
+        console.log("Warning B: portChannelSidebar received message from unknown source: ", message);
+        return;
+      }
+      if (message.reference === "getCurrentPickedUrl") {
+        try {
+          let parsedUrl = new URL(currentPickedUrl);
+          if (!SUPPORTED_PROTOCOL.includes(parsedUrl.protocol.slice(0, -1))) {
+            console.log(`Picker: Only supported '${SUPPORTED_PROTOCOL}' protocols. Url is '${currentPickedUrl}'`);
+            return;
+          }
+          // TODO: improve guessing
+          let suggestedPlatformUrl = parsedUrl.origin.replace(parsedUrl.protocol, "").slice(2);
+          let suggestedUserId = parsedUrl.pathname.match(getUserFromUrl)[1];
+
+          try {
+            const dbNamesAndTheirTagNames = await getAllFilterDbNamesAndTheirTags(true);
+            await sendMsgToSidebar("responseGetCurrentPickedUrl", {
+              currentPickedUrl: currentPickedUrl,
+              dbNamesAndTheirTagNames: dbNamesAndTheirTagNames,
+              suggestedPlatformUrl: suggestedPlatformUrl,
+              suggestedUserId: suggestedUserId,
+            });
+          } catch (error) {
+            console.error("Error fetching DB names and tag names:", error);
+          }
+        } catch (error) {
+          console.log(`Picker: Error parsing URL '${currentPickedUrl}'`);
+          return Promise.resolve({ error: `Failed parsing URL: '${currentPickedUrl}'` });
+        }
+      } else if (message.reference === "submitNewUser") {
+        handleSubmitNewUserToDb(message.message);
+      } else if (message.reference === "togglePicker") {
+        console.log(`SB->B: `, message.reference);
+        await sendMsgToContent("togglePicker", {});
+      } else if (message.reference === "requestPickedItems") {
+        console.log(`SB->B: `, message.reference);
+        await sendMsgToContent("requestPickedItems", {});
+      } else if (message.reference === "clearPickedItems") {
+        console.log(`SB->B: `, message.reference);
+        await sendMsgToContent("clearPickedItems", {});
+      }
+    });
+  }
+}
+
+browser.runtime.onConnect.addListener(connected);
+
+
+
+/* 
 function connected(p) {
   if (p && p.name === "port-cs") {
     portChannelContent = p;
@@ -264,3 +394,4 @@ function connected(p) {
 }
 
 browser.runtime.onConnect.addListener(connected);
+ */
