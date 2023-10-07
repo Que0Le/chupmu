@@ -15,22 +15,35 @@ let portContent = browser.runtime.connect({ name: "port-cs" });
  * @param {String} reference 
  * @param {Object} message 
  */
-function sendMsgToBackground(reference, message) {
-  portContent.postMessage({
-    info: "chupmu_extension", reference: reference,
-    source: "chupmu_content_script", target: "chupmu_background_script",
-    message: message
+async function sendMsgToBackground(reference, message) {
+  return new Promise((resolve, reject) => {
+    portContent.postMessage({
+      info: "chupmu_extension",
+      reference: reference,
+      source: "chupmu_content_script",
+      target: "chupmu_background_script",
+      message: message,
+    });
+
+    // Resolve when the message is sent successfully
+    portContent.onMessage.addListener((response) => {
+      resolve(response);
+    });
+
+    // Reject if there's an error sending the message
+    portContent.onDisconnect.addListener(() => {
+      reject(new Error("Port disconnected"));
+    });
   });
 }
 
 function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
   let str = `
-<span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
-    <p>Tags: ${tagnames}</p>
-    <p>Note: ${note}</p>
-    <p>View full record: <a href="${recordUrl}">chup-mu.org</a></p>
-</span>
-`
+  <span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
+      <p>Tags: ${tagnames}</p>
+      <p>Note: ${note}</p>
+      <p>View full record: <a href="${recordUrl}">chup-mu.org</a></p>
+  </span>`;
   return str;
 }
 
@@ -39,7 +52,7 @@ let pickedElements = [];
 let currentPickingElement;
 // this variable is a attempt to reduce risk of endless loop
 // when remove highlight effect on howevered and picked items
-let encounterHovers = 0;  
+let encounterHovers = 0;
 
 function togglePicker() {
   pickerActive = !pickerActive;
@@ -112,7 +125,7 @@ function removePickedItem() {
     highlightedElement = document.querySelector('[style="outline: green solid 2px;"]');
   }
   pickedElements = [];
-currentPickingElement = null;
+  currentPickingElement = null;
 }
 
 
@@ -223,12 +236,62 @@ function handleRemoveLabel() {
   // }
 }
 
-function askBackgroundForRecords(userids) {
-  sendMsgToBackground("requestRecords", { 
-    "currentUrl": document.location.href, "userids": userids 
+async function askBackgroundForRecords(userids) {
+  await sendMsgToBackground("requestRecords", {
+    "currentUrl": document.location.href,
+    "userids": userids
   });
 }
 
+const handleMessage = async (message) => {
+  if (message.info !== "chupmu_extension" ||
+    message.source !== "chupmu_background_script" ||
+    message.target !== "chupmu_content_script") {
+    return;
+  }
+
+  if (message.reference === "toggleLabelify") {
+    console.log("Request B->C: toggleLabelify ...");
+    if (message.message === "label") {
+      console.log("command: label");
+      const userids = await getAllUserIdsOnPageSO();
+      await askBackgroundForRecords(userids);
+    } else if (message.message === "removeLabel") {
+      console.log("command: removeLabel");
+      handleRemoveLabel();
+    }
+  } else if (message.reference === "responseRecords") {
+    /* Data is an array of db's meta, and records */
+    console.log(`Get responseRecords records data from background: `, message.message);
+    applyLabel(message.message);
+  } else if (message.reference === "togglePicker") {
+    console.log("B->C: togglePicker");
+    togglePicker();
+  } else if (message.reference === "requestPickedItems") {
+    let imgRects = [];
+    pickedElements.forEach(element => {
+      // Get position of the selected elements and send to Background to make a screenshot
+      // TODO: remove duplicated
+      let domRect = element.getBoundingClientRect();
+      // https://developer.mozilla.org/en-US/docs/Mozilla/
+      // Add-ons/WebExtensions/API/extensionTypes/ImageDetails
+      let rect = {
+        x: domRect.x + document.documentElement.scrollLeft,
+        y: domRect.y + document.documentElement.scrollTop,
+        width: domRect.width, height: domRect.height
+      };
+      imgRects.push(rect);
+    });
+    sendMsgToBackground("responsePickedItems", { "imgRects": imgRects });
+  } else if (message.reference === "clearPickedItems") {
+    console.log("B->C: clearPickedItems");
+    removePickedItem();
+  }
+};
+
+portContent.onMessage.addListener(handleMessage);
+
+/* 
 portContent.onMessage.addListener((message) => {
   if (message.info !== "chupmu_extension" ||
     message.source !== "chupmu_background_script" ||
@@ -241,17 +304,15 @@ portContent.onMessage.addListener((message) => {
     if (message.message === "label") {
       console.log("command: label")
       getAllUserIdsOnPageSO()
-      .then(userids => {
-        askBackgroundForRecords(userids);
-      })
+        .then(userids => {
+          askBackgroundForRecords(userids);
+        })
     } else if (message.message === "removeLabel") {
       console.log("command: removeLabel")
       handleRemoveLabel();
-      // Send the current CSS code back to background to be removed
-      // sendMsgToBackground("removeCurrentCss", { "currentCss": currentCss });
     }
   } else if (message.reference === "responseRecords") {
-    /* Data is a array of db's meta, and records */
+    // Data is a array of db's meta, and records 
     console.log(`Get responseRecords records data from background: `, message.message);
     applyLabel(message.message);
   } else if (message.reference === "togglePicker") {
@@ -263,10 +324,11 @@ portContent.onMessage.addListener((message) => {
       // Get position of the selected elements and send to Background to make screenshot
       // TODO: remove duplicated
       let domRect = element.getBoundingClientRect();
-      // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/extensionTypes/ImageDetails
+      // https://developer.mozilla.org/en-US/docs/Mozilla/
+      // Add-ons/WebExtensions/API/extensionTypes/ImageDetails
       let rect = {
-        x: domRect.x + document.documentElement.scrollLeft, 
-        y: domRect.y + document.documentElement.scrollTop, 
+        x: domRect.x + document.documentElement.scrollLeft,
+        y: domRect.y + document.documentElement.scrollTop,
         width: domRect.width, height: domRect.height
       };
       imgRects.push(rect);
@@ -278,3 +340,4 @@ portContent.onMessage.addListener((message) => {
   }
 });
 
+ */

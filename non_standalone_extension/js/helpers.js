@@ -1,4 +1,6 @@
 
+let loadedContentScriptOnTabIds = [];
+
 async function getCurrentTabUrl() {
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   return tabs[0].url;
@@ -78,9 +80,27 @@ async function toggleLabelify(tab, currentUrl, contentScriptPath) {
   const onError = async (error) => {
     console.log(`Error injecting script in tab ${tab.id}: ${error}`);
   };
-  
+
   const onExecuted = async (result) => {
     console.log(`Injected script in tab ${tab.id}: ${currentUrl}`);
+    loadedContentScriptOnTabIds.push(tab.id);
+  };
+
+  async function executeContentScript() {
+    try {
+      await browser.tabs.executeScript(tab.id, { file: contentScriptPath });
+      await onExecuted();
+    } catch (error) {
+      await onError(error);
+    }
+  }
+
+  async function toggleLabel() {
+    browser.pageAction.setIcon({ tabId: tab.id, path: "icons/on.svg" });
+    browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_REMOVE });
+    if (!loadedContentScriptOnTabIds.includes(tab.id)) {
+      await executeContentScript();
+    }
     portChannelContent.postMessage({
       info: "chupmu_extension",
       reference: "toggleLabelify",
@@ -88,34 +108,28 @@ async function toggleLabelify(tab, currentUrl, contentScriptPath) {
       target: "chupmu_content_script",
       message: "label",
     });
-  };
-  
-  async function toggle(title) {
-    if (title === TITLE_APPLY) {
-      browser.pageAction.setIcon({ tabId: tab.id, path: "icons/on.svg" });
-      browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_REMOVE });
-      try {
-        await browser.tabs.executeScript(tab.id, { file: contentScriptPath });
-        await onExecuted();
-      } catch (error) {
-        await onError(error);
-      }
-    } else {
-      browser.pageAction.setIcon({ tabId: tab.id, path: "icons/off.svg" });
-      browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
-      portChannelContent.postMessage({
-        info: "chupmu_extension",
-        reference: "toggleLabelify",
-        source: "chupmu_background_script",
-        target: "chupmu_content_script",
-        message: "removeLabel",
-      });
-    }
+  }
+
+  async function removeLabel() {
+    browser.pageAction.setIcon({ tabId: tab.id, path: "icons/off.svg" });
+    browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
+    portChannelContent.postMessage({
+      info: "chupmu_extension",
+      reference: "toggleLabelify",
+      source: "chupmu_background_script",
+      target: "chupmu_content_script",
+      message: "removeLabel",
+    });
   }
 
   // Use async/await to get the page action title
   const title = await browser.pageAction.getTitle({ tabId: tab.id });
-  await toggle(title);
+
+  if (title === TITLE_APPLY) {
+    await toggleLabel();
+  } else {
+    await removeLabel();
+  }
 }
 
 /*
