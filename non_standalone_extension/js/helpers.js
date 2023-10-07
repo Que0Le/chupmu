@@ -1,6 +1,12 @@
 
 let loadedContentScriptOnTabIds = [];
 
+function removeDuplicates(array) {
+  return array.filter((value, index, self) => {
+    return self.indexOf(value) === index;
+  });
+}
+
 async function getCurrentTabUrl() {
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   return tabs[0].url;

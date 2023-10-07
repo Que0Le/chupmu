@@ -9,6 +9,11 @@ const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
 let currentCss = [];
 let portContent = browser.runtime.connect({ name: "port-cs" });
 
+function removeDuplicates(array) {
+  return array.filter((value, index, self) => {
+    return self.indexOf(value) === index;
+  });
+}
 
 /**
  * 
@@ -158,8 +163,8 @@ async function getAllUserIdsOnPageSO() {
       }
     }
   }));
-  console.log(userids)
-  return userids;
+  // console.log(userids)
+  return removeDuplicates(userids);
 }
 
 async function removeElementById(id) {

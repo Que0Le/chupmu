@@ -12,7 +12,7 @@ const API_GET_RUSERS = "reported-user/get-many";
  */
 async function get_reported_users_from_remote(baseUrl, apiPath, userids, platformUrl) {
   try {
-    const payload = userids.map((userId) => ({
+    const payload = removeDuplicates(userids).map((userId) => ({
       userid: userId,
       platformUrl: platformUrl,
     }));
