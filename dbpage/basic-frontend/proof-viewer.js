@@ -53,7 +53,7 @@ function generateReportViewerHtml(reportData) {
       <span class="font-semibold">Reported User:</span> ${reportData.reporter}
     </div>
     <div class="mb-2">
-      <span class="font-semibold">Tags:</span> ${reportData.tags.join(", ")}
+      <span class="font-semibold">Suggested Tags:</span> ${reportData.tags.join(", ")}
     </div>
     <div class="mb-2">
       <span class="font-semibold">Recorded Url:</span> ${reportData.urlRecorded}

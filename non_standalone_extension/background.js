@@ -1,6 +1,7 @@
 "use strict";
 
 let dbOnlineQueryUrl = "";
+let dbOnlineUserFilesQueryUrl = "";
 
 /* Set default Setting */
 // browser.storage.local.get(`${EXT_NAME}_config`)
@@ -62,7 +63,8 @@ async function initializePageActionAllSupportedTabs() {
 
   let data = await browser.storage.local.get(`${EXT_NAME}_config`);
   dbOnlineQueryUrl = data.chupmu_config.dbSources[0].dbOnlineQueryUrl;
-  console.log(`dbOnlineQueryUrl: ${dbOnlineQueryUrl}`);
+  dbOnlineUserFilesQueryUrl = data.chupmu_config.dbSources[0].dbOnlineUserFilesQueryUrl;
+  console.log(`dbOnlineQueryUrl: ${dbOnlineQueryUrl} | dbOnlineUserFilesQueryUrl: ${dbOnlineUserFilesQueryUrl}`);
 })();
 
 
@@ -200,7 +202,10 @@ async function connected(p) {
             "stackoverflow.com"
           );
           console.log(reportedUsers);
-          await sendMsgToContent("responseRecords", reportedUsers);
+          await sendMsgToContent("responseRecords", {
+            reportedUsers: reportedUsers,
+            dbOnlineUserFilesQueryUrl: dbOnlineUserFilesQueryUrl
+          });
         } catch (error) {
           console.error("Error fetching reported users:", error);
         }

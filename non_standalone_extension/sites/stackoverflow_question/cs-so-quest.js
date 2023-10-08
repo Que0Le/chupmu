@@ -6,6 +6,42 @@ const regexProfileLink = /\/users\/(\d+)\//;
 // const chupmu_css_class_prefix = "chupmu_css_";
 // const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
 
+const classPrefix = "cm_";
+const classPrefixRegex = /(cm_)\S*/;
+const cmPopupContentClassname = "cm-popup-content";
+const cmPopupContainerClassname = "cm-popup-container";
+const cmPopupPrefixId = "cm-popup-userid-";
+
+const cssString = `
+.cm_nice-answer {
+  background: green;
+}
+.cm_polite {
+  background: blue;
+}
+.cm_creative {
+  background: red;
+}
+.${cmPopupContainerClassname} {
+  position: relative;
+  display: inline-block;
+}
+
+.${cmPopupContentClassname} {
+  position: absolute;
+  display: none;
+  background-color: #f1f1f1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.${cmPopupContainerClassname}:hover .${cmPopupContentClassname} {
+  display: block;
+}`;
+
+let styleElementId = "chupmu_css";
 // let currentCss = [];
 let portContent = browser.runtime.connect({ name: "port-cs" });
 
@@ -42,15 +78,22 @@ async function sendMsgToBackground(reference, message) {
   });
 }
 
-// function createTooltipHtml(tootipId, tagnames, note, recordUrl) {
-//   let str = `
-//   <span class="${chupmu_class_prefix} tooltiptext" id="${tootipId}">
-//       <p>Tags: ${tagnames}</p>
-//       <p>Note: ${note}</p>
-//       <p>View full record: <a href="${recordUrl}">chup-mu.org</a></p>
-//   </span>`;
-//   return str;
-// }
+function generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl) {
+  let tagsString = reportedUser.tags.join(", ");
+  let onlineUserFileString = `${dbOnlineUserFilesQueryUrl}`
+    + `?userid=${reportedUser.userid}` 
+    + `&platform=${reportedUser.platformUrl}`;
+  let innerHtml = `
+  <div class="${cmPopupContentClassname}" id="${cmPopupPrefixId}${reportedUser.userid}">
+    <p>UserId: 
+    <a href="${onlineUserFileString}">${reportedUser.userid}</a><br>
+    </p>
+    <p>Tags: ${tagsString}</p>
+    <div>Note: ${reportedUser.note}</div>
+  </div>
+  `;
+  return innerHtml;
+}
 
 let pickerActive = false;
 let pickedElements = [];
@@ -177,22 +220,6 @@ async function removeElementById(id) {
   }
 }
 
-const classPrefix = "cm_";
-const classPrefixRegex = /(cm_)\S*/;
-
-const cssString = `
-.cm_nice-answer {
-  background: green;
-}
-.cm_polite {
-  background: blue;
-}
-.cm_creative {
-  background: red;
-}`;
-
-let styleElementId = "chupmu_css";
-
 async function applyLabel(data) {
   // Cleanup
   removeElementById(styleElementId);
@@ -200,11 +227,12 @@ async function applyLabel(data) {
   // Add css
   const styleElement = document.createElement("style");
   styleElement.setAttribute("id", "styleElement");
-  // const cssRule = ".my-class { background: green; }";
   styleElement.innerText = cssString;
   document.head.appendChild(styleElement);
 
   // Add css class to element
+  let reportedUsers = data.reportedUsers;
+  let dbOnlineUserFilesQueryUrl = data.dbOnlineUserFilesQueryUrl;
   let udElements = document.getElementsByClassName("user-details");
   for (let i = 0; i < udElements.length; i++) {
     let ud = udElements[i];
@@ -214,10 +242,14 @@ async function applyLabel(data) {
     const match = profileLink.match(regexProfileLink);
     if (match && match.length > 1) {
       const userid = match[1].toString();
-      for (let j = 0; j < data.length; j++) {
-        let reportedUser = data[j];
+      for (let j = 0; j < reportedUsers.length; j++) {
+        let reportedUser = reportedUsers[j];
         if (reportedUser.userid === userid) {
+          // Add highlight effects
+          ud.classList.add(`${cmPopupContainerClassname}`);
           ud.classList.add(`${classPrefix}${reportedUser.tags[0]}`);
+          // Add popup
+          ud.innerHTML += generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl);
           break;
         }
       }
@@ -226,7 +258,7 @@ async function applyLabel(data) {
 }
 
 function handleRemoveLabel() {
-  // Remove classes
+  // Remove highlight classes from page's nodes
   let allUserDetails = document.querySelectorAll(`div[class*="${classPrefix}"]`);
   for (let i = 0; i < allUserDetails.length; i++) {
     allUserDetails[i].classList.remove(classPrefixRegex.exec(allUserDetails[i].className)[0]);
@@ -234,11 +266,11 @@ function handleRemoveLabel() {
   // Remove css
   removeElementById(styleElementId);
 
-  // Tooltips
-  // const elements = document.getElementsByClassName(chupmu_class_prefix);
-  // while (elements.length > 0) {
-  //   elements[0].parentNode.removeChild(elements[0]);
-  // }
+  // Remove popup
+  const elements = document.getElementsByClassName(cmPopupContentClassname);
+  while (elements.length > 0) {
+    elements[0].parentNode.removeChild(elements[0]);
+  }
 }
 
 async function askBackgroundForRecords(userids) {
