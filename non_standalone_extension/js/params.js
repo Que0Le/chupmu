@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS = {
   dbSources: [
     {
       dbOnlineQueryUrl: "http://localhost:8080/",
-      dbOnlineUserFilesQueryUrl: "http://localhost:8080/user-files/",
+      dbOnlineUserFilesQueryUrl: "http://localhost:8080/user-file-viewer.html",
     }
   ],
   supportedSites: [

@@ -73,6 +73,16 @@ async def retrieve_report_meta() -> List[ReportDataMeta]:
     report_meta_list = await report_meta_collection.all().to_list()
     return report_meta_list
 
+async def retrieve_report_meta_by_uid_and_platform(
+    uid: str, platform_url: str
+) -> List[ReportDataMeta]:
+    print(uid, platform_url)
+    report_meta_list = await report_meta_collection.all().find(
+        ReportDataMeta.reported_user == uid,
+        ReportDataMeta.platformUrl == platform_url
+    ).to_list()
+    return report_meta_list
+
 async def add_reported_user(new_reported_user: ReportedUser) -> ReportedUser:
     reported_user = await new_reported_user.create()
     return reported_user

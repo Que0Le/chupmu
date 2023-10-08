@@ -1,6 +1,13 @@
 
+
+
 const getReportMetaUrl = "http://localhost:8080/report-meta/";
 const getReportDataUrl = "http://localhost:8080/report-data/";
+const getReportedUserUrl = "http://localhost:8080/reported-user/get-many";
+
+function generateCustomReportMeta(userid, platformUrl) {
+  return `http://localhost:8080/report-meta?uid=${userid}&platform_url=${platformUrl}`;
+}
 
 function convertUnixTimestamp(unixTimestamp) {
   const date = new Date(unixTimestamp); // Convert to milliseconds
@@ -41,7 +48,7 @@ function generateReportViewerHtml(reportData) {
   let relatedPlatformsInnerHtml = "";
   reportData.relatedPlatforms.forEach(url => {
     relatedPlatformsInnerHtml += `<br><a href="${url}" class="text-blue-500">${url}</a>\n`;
-  });
+  })
 
 
   let innerHtml = `<div class="bg-white rounded-lg shadow-lg p-6">
@@ -80,50 +87,117 @@ function generateReportViewerHtml(reportData) {
   return innerHtml;
 }
 
-
-function handleMetaContainerClick(event) {
-  let reportid  = this.getAttribute("reportid");
-  if (!reportid) {return}
-  fetch(`${getReportDataUrl}${reportid}`)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`Error getting report id=${reportid} from server. Status: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log(data);
-    let viewScroll = document.getElementById("y-scroll-right");
-    let viewContainer = generateReportViewerHtml(data.data);
-    viewScroll.innerHTML = viewContainer ? viewContainer : "Error viewing data!";
-  })
-  .catch(error => {
-    console.error('Fetch error:', error);
+function generateTitleAreaHtml(reportedUser) {
+  let relatedPlatformsInnerHtml = "";
+  reportedUser.relatedPlatforms.forEach(url => {
+    relatedPlatformsInnerHtml += `<a href="${url}" class="text-blue-500">${url}</a>`
   });
+  let tagsInnerHtml = "";
+  reportedUser.relatedPlatforms.forEach(tag => {
+    tagsInnerHtml += `<span>${tag}</span>`
+  });
+
+  let innerHtml = `<div class="bg-white rounded-lg shadow p-4 mb-4">
+    <h1 class="text-lg font-semibold mb-2">Viewer for User's File</h1>
+    <div>
+      <span class="font-semibold">Reported User:</span>
+      <span class="font-semibold">${reportedUser.userid}</span>
+    </div>
+    <div>
+      <span class="font-semibold">Platform:</span>
+      <a href="${reportedUser.platformUrl}" class="text-blue-500">${reportedUser.platformUrl}</a>
+    </div>
+    <div>
+      <span class="font-semibold">Related Platform:</span>
+      ${relatedPlatformsInnerHtml}
+    </div>
+    <div>
+      <span class="font-semibold">Tags:</span>
+      ${tagsInnerHtml}
+    </div>
+    <div>
+      <span class="font-semibold">Note:</span>
+      <p>${reportedUser.note}</p>
+    </div>
+  </div>`;
+
+  return innerHtml;
 }
 
-fetch(getReportMetaUrl)
-  .then(response => {
+function handleMetaContainerClick(event) {
+  let reportid = this.getAttribute("reportid");
+  if (!reportid) { return }
+  fetch(`${getReportDataUrl}${reportid}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Error getting report id=${reportid} from server. Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log(data);
+      let viewScroll = document.getElementById("y-scroll-right");
+      let viewContainer = generateReportViewerHtml(data.data);
+      viewScroll.innerHTML = viewContainer ? viewContainer : "Error viewing data!";
+    })
+    .catch(error => {
+      console.error('Fetch error:', error);
+    });
+}
+
+async function startup() {
+  try {
+    const urlParams = new URLSearchParams(document.location.search);
+    let response;
+    // Create title area
+    response = await fetch(getReportedUserUrl, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        [{userid: urlParams.get("userid"), platformUrl: urlParams.get("platform")}]
+      )
+    });
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
-    return response.json();
-  })
-  .then(data => {
-    // Handle the JSON data
+
+    reportedUser = (await response.json()).data[0];
+    if (!reportedUser) {
+      console.log("No such user: ", urlParams.get("userid"), urlParams.get("platform"));
+      return;
+    }
+    let titleArea = document.getElementById("title-area");
+    titleArea.innerHTML = generateTitleAreaHtml(reportedUser);
+
+    // Get and create meta reports
+    response = await fetch(generateCustomReportMeta(urlParams.get("userid"), urlParams.get("platform")));
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    const metaReports = data.data;
     console.log(data);
+
     let metaScroll = document.getElementById("y-scroll-left");
-    data.data.forEach(reportMeta => {
-      console.log(reportMeta)
+
+    for (const reportMeta of metaReports) {
+      console.log(reportMeta);
       let meta = `at ${convertUnixTimestamp(reportMeta.unixTime)} by ${reportMeta.reporter}`;
-      let metaContainer = generateMetaContainerHtml(reportMeta._id, reportMeta.reported_user, meta, reportMeta.url);
+      let metaContainer = generateMetaContainerHtml(reportMeta._id, reportMeta._id, meta, reportMeta.url);
       metaScroll.innerHTML += metaContainer;
-    });
+    }
+
     const clickableElements = document.querySelectorAll('.meta-container');
     clickableElements.forEach(element => {
       element.addEventListener('click', handleMetaContainerClick);
     });
-  })
-  .catch(error => {
+  } catch (error) {
     console.error('Fetch error:', error);
-  });
+  }
+}
+
+// Call the asynchronous function to fetch and process the data
+startup();

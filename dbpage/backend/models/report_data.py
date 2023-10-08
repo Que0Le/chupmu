@@ -29,7 +29,7 @@ class ReportDataMeta(Document):
     platformUrl: str
     relatedPlatforms: list[str]
     unixTime: int
-    data_url_array: list[DataUrlPayload]
+    # data_url_array: list[DataUrlPayload]
 
     # class Config:
     #     schema_extra = {

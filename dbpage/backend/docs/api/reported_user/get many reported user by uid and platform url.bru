@@ -4,14 +4,9 @@ meta {
   seq: 7
 }
 
-get {
-  url: http://localhost:8080/reported-user/?uid=user7&platform_url=stackoverflow.com
+post {
+  url: http://localhost:8080/reported-user/
   body: json
-}
-
-query {
-  uid: user7
-  platform_url: stackoverflow.com
 }
 
 body:json {

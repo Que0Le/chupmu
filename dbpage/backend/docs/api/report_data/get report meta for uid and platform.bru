@@ -1,0 +1,15 @@
+meta {
+  name: get report meta for uid and platform
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8080/report-meta/?uid=1389110&platform_url=stackoverflow.com
+  body: none
+}
+
+query {
+  uid: 1389110
+  platform_url: stackoverflow.com
+}
