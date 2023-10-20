@@ -93,8 +93,8 @@ function generateTitleAreaHtml(reportedUser) {
     relatedPlatformsInnerHtml += `<a href="${url}" class="text-blue-500">${url}</a>`
   });
   let tagsInnerHtml = "";
-  reportedUser.relatedPlatforms.forEach(tag => {
-    tagsInnerHtml += `<span>${tag}</span>`
+  reportedUser.tags.forEach(tag => {
+    tagsInnerHtml += `<span>${tag}</span> `
   });
 
   let innerHtml = `<div class="bg-white rounded-lg shadow p-4 mb-4">

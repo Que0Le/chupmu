@@ -3,16 +3,71 @@
 
 <head>
   <title>Sidebar panel for Chupmu</title>
-  <link rel="stylesheet" type="text/css" href="panel.css">
+  <!-- <link rel="stylesheet" type="text/css" href="panel.css"> -->
+  <link rel="stylesheet" type="text/css" href="tailwind-2.2.19.min.css">
 </head>
 
 <body>
-  <div>
-    <p id="sidebar-status"></p>
+  <div class="p-4 bg-gray-200">
+    <p id="sidebar-status" class="text-sm text-gray-600">Running as a stand-alone HTML file.</p>
   </div>
-  <div id="input-area" class="input-area"></div>
+
+  <div id="input-area" class="input-area p-4 bg-white rounded shadow-md">
+    <div class="container-1 mb-4">
+      <label class="block text-sm text-gray-700">Raw URL:</label>
+      <textarea rows="3" id="raw-url"
+        class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-blue-400"></textarea>
+    </div>
+    <div class="container-1 mb-4">
+      <label class="block text-sm text-gray-700">Platform URL:</label>
+      <textarea rows="1" id="platform-url"
+        class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-blue-400"></textarea>
+    </div>
+    <div class="container-1 mb-4">
+      <label class="block text-sm text-gray-700">Related Platform URLs (separated with a comma):</label>
+      <textarea rows="1" id="related-platforms"
+        class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-blue-400"></textarea>
+    </div>
+    <div class="container-1 mb-4">
+      <label class="block text-sm text-gray-700">Note:</label>
+      <textarea rows="1" id="note"
+        class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-blue-400"></textarea>
+    </div>
+    <div class="container-1 mb-4">
+      <label class="block text-sm text-gray-700">User ID:</label>
+      <input type="text" id="user-id"
+        class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-blue-400">
+    </div>
+    <div class="container-1">
+      <label class="block text-sm text-gray-700">New tags (split with a comma):</label>
+      <input type="text" id="tags"
+        class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:border-blue-400">
+    </div>
+
+    <div class="mt-4">
+      <button id="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Submit
+      </button>
+    </div>
+    <div class="mt-4">
+      <button id="toggle-picker-button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+        Toggle Picker
+      </button>
+    </div>
+    <div class="mt-4">
+      <button id="include-picked-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+        Include Picked Items
+      </button>
+    </div>
+    <div class="mt-4">
+      <button id="clear-picked-button" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+        Clear Picked Items
+      </button>
+    </div>
+  </div>
   <p>Screenshot from picked items:</p>
-  <div id="screenshot-area" class="screenshot-area"></div>
+  <div id="screenshot-area" class="screenshot-area">
+  </div>
 
   <script src="panel.js"></script>
 </body>

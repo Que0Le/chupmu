@@ -4,14 +4,10 @@ const newTagInputId = "new-tag-input";
 let portSidebar;
 let currentPickedData = [];
 let currentPickedUnixTime = 0;
-// let currentPickedUrl = "";
-// let currentPickedUser = "";
 
 function resetPickedData() {
   currentPickedData = [];
   currentPickedUnixTime = 0;
-  // currentPickedUrl = "";
-  // currentPickedUser = "";
 }
 
 let currentScreenshotDataId = 0; 
@@ -33,49 +29,6 @@ function splitTrimFilterEmpty(string, delimiterChar) {
   return string.split(delimiterChar).map(substring => substring.trim()).filter(item => item !== '')
 }
 
-const DEFAULT_INPUT_AREA = `<div class="container-1">
-  <p><label>Raw URL:</label></p>
-  <textarea rows=3 id="raw-url"></textarea>
-</div>
-<div class="container-1">
-  <p><label>Platform URL:</label></p>
-  <textarea rows=1 id="platform-url"></textarea>
-</div>
-<div class="container-1">
-  <p><label>Related Platform URLs (separated by comma):</label></p>
-  <textarea rows=1 id="related-platforms"></textarea>
-</div>
-<div class="container-1">
-  <p><label>User ID:</label></p>
-  <input type="text" id="user-id"></input>
-</div>
-<div class="container-1">
-  <div>
-    <p><label>Note:</label></p>
-    <textarea rows=5 id="note"></textarea>
-  </div>
-</div>
-<div class="container-1">
-  <div>
-    <p><label>Tags:</label></p>
-    <textarea rows=5 id="tags"></textarea>
-  </div>
-</div>
-
-<div>
-  <button id="submit">Submit</button>
-</div>
-<div>
-  <button id="toggle-picker-button">Toogle Picker</button>
-</div>
-<div>
-  <button id="include-picked-button">Include picked items</button>
-</div>
-<div>
-  <button id="clear-picked-button">Clear picked items</button>
-</div>`;
-
-
 function generateHtmlScreenshotContainer(url, timestamp, dataUrl, screenshotId) {
   let innerHtml = `
   <div class="screenshot-container">
@@ -87,55 +40,11 @@ function generateHtmlScreenshotContainer(url, timestamp, dataUrl, screenshotId) 
   return innerHtml;
 }
 
-
-// function generateInnerHtmlDbContainer(dbName, tagNames) {
-//   let innerHtml = `<div class="db-container">
-//     <div class="db-entry">
-//       <label>DB name:</label>
-//       <label><input type="checkbox" value="${dbName}" isdbname>${dbName}</label>
-//     </div>
-//     <div class="tag-entry">`;
-//   if (tagNames && tagNames.length > 0) {
-//     innerHtml += `<p><label>Tag names:</label></p>`
-//   }
-//   for (const tagName of tagNames) {
-//     innerHtml += `<label><input type="checkbox" value="${tagName}" dbname="${dbName}">${tagName}</label>`
-//   }
-//   innerHtml += `</div>
-//     <p><label>New tags (split with comma):</label></p>
-//     <input type="text" dbname="${dbName}">
-//   </div>`
-//   return innerHtml;
-// }
-
-// function generateContainerForNewDb() {
-//   let innerHtml = `<div class="db-container">
-//     <div class="db-entry">
-//     <p><label>New DB name:</label></p>
-//     <input type="text" id="${newDbNameInputId}">
-//     </div>
-//     <div class="tag-entry">`;
-//   innerHtml += `</div>
-//     <p><label>New tags (split with comma):</label></p>
-//     <input type="text" id="${newTagInputId}">
-//   </div>`
-//   return innerHtml;
-// }
-
-
 function addDomOnStartUp(msg) {
-  document.getElementById("input-area").innerHTML = DEFAULT_INPUT_AREA;
   document.getElementById("raw-url").value = msg.currentPickedUrl;
   document.getElementById("platform-url").value = msg.suggestedPlatformUrl;
   document.getElementById("user-id").value = msg.suggestedUserId;
   document.getElementById("tags").value = msg.suggestedTags.join(', ');
-  // let dbArea = document.getElementById("db-area");
-  // for (const [key, value] of Object.entries(msg.dbNamesAndTheirTagNames)) {
-  //   dbArea.innerHTML += generateInnerHtmlDbContainer(key, value)
-  // }
-  // dbArea.innerHTML += generateContainerForNewDb("__newDb");
-
-  // currentPickedUser = msg.suggestedUserId;
 }
 
 
@@ -165,104 +74,6 @@ function getDbTagData() {
     dbAndTags.push({ "dbName": newDbName, "tagNames": newTagNames });
   }
   return dbAndTags;
-}
-
-function runAsStandAloneHtml() {
-  let pickerActive = false;
-  let pickedElements = [];
-  let currentPickingElement;
-  let encounterHovers = 0;
-  const msg = {
-    "currentPickedUrl": "https://voz.vn/u/baby-diehard.71866/",
-    "suggestedPlatformUrl": "voz.vn",
-    "suggestedUserId": "baby-diehard.71866",
-    "dbNamesAndTheirTagNames": {
-      "_db1": ["_tag11", "_tag12"],
-      "_db2": ["_tag22", "_tag23"],
-    }
-  }
-  addDomOnStartUp(msg);
-
-  function handleSubmit() {
-    let platformUrls = splitTrimFilterEmpty(document.getElementById("platform-url").value, ",");
-    let userId = document.getElementById("user-id").value;
-    let note = document.getElementById("note").value;
-    let dbNamesAndTheirTagNames = getDbTagData();
-    console.log({
-      "platformUrls": platformUrls,
-      "userId": userId,
-      "note": note,
-      "targetDbNamesAndTheirTagNames": dbNamesAndTheirTagNames
-    })
-  }
-
-  document.getElementById("submit").addEventListener("click", handleSubmit);
-
-
-  function togglePicker() {
-    pickerActive = !pickerActive;
-    if (pickerActive) {
-      // Add event listener to highlight elements on mouseover
-      document.addEventListener('mouseover', handleElementMouseOver);
-      // Add event listener to capture element click
-      document.addEventListener('click', handleElementClick);
-    } else {
-      // Remove event listeners
-      document.removeEventListener('mouseover', handleElementMouseOver);
-      document.removeEventListener('click', handleElementClick);
-      // Remove any highlighting
-      removeHighlight();
-    }
-  }
-
-  function handleElementMouseOver(event) {
-    if (!pickerActive) {
-      return;
-    }
-
-    if (currentPickingElement !== event.target) {
-      if (currentPickingElement && !pickedElements.includes(currentPickingElement)) {
-        currentPickingElement.style.outline = '';
-      }
-      currentPickingElement = event.target;
-      if (!pickedElements.includes(currentPickingElement)) {
-        currentPickingElement.style.outline = '2px solid red';
-      }
-    }
-    encounterHovers += 1;
-  }
-
-
-  function handleElementClick(event) {
-    if (pickerActive) {
-      if (pickedElements.includes(event.target)) {
-        // Remove from list
-        event.target.style.outline = '';
-        pickedElements.splice(pickedElements.indexOf(event.target), 1);
-      } else {
-        // Mark the element green
-        event.target.style.outline = '2px solid green';
-        pickedElements.push(event.target);
-      }
-    }
-  }
-
-  function removeHighlight() {
-    let i = 0;
-    let highlightedElement = document.querySelector('[style="outline: 2px solid red;"]');
-    while (i < encounterHovers * 2 && highlightedElement) {
-      highlightedElement.style.outline = '';
-      i++;
-      highlightedElement = document.querySelector('[style="outline: 2px solid red;"]');
-    }
-  }
-
-  document.getElementById("toggle-picker-button").addEventListener("click", togglePicker);
-
-  function handleIncludePickedItems() {
-    // Doesn't support screenshot with standalone HTML!
-  }
-  document.getElementById("include-picked-button").addEventListener("click", handleIncludePickedItems);
 }
 
 function handleTEMP1(data) {
@@ -386,8 +197,8 @@ function startUp() {
       }
     })
   } else /* if (window.location.protocol === "file:")  */ {
-    document.getElementById("sidebar-status").textContent = "Running as stand alone html file.";
-    runAsStandAloneHtml();
+    document.getElementById("sidebar-status").textContent = "Running as a stand alone html file.";
+    // runAsStandAloneHtml();
   }
 }
 
