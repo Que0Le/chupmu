@@ -25,6 +25,10 @@ const DEFAULT_SETTINGS = {
     {
       url: "stackoverflow.com",
       contentScript: "./sites/stackoverflow_question/cs-so-quest.js" 
+    },
+    {
+      url: "twitter.com",
+      contentScript: "./sites/twitter/cs-twitter.js" 
     }
   ]
 }
