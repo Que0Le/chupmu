@@ -210,14 +210,14 @@ async function connected(p) {
           console.error("Error fetching reported users:", error);
         }
       } else if (message.reference === "responsePickedItems") {
-        async function captureAndPush(rect, url) {
+        async function captureAndPush(rect, screenshotNote) {
           const imageDetails = { format: "png", quality: 100, rect: rect, scale: 1.0 };
 
           try {
             const dataUrl = await browser.tabs.captureVisibleTab(imageDetails);
             return {
-              dataUrl: dataUrl,
-              captureUrl: url,
+              dataUrl: dataUrl,   // this is the png data
+              screenshotNote: screenshotNote,
             };
           } catch (error) {
             console.error("Error capturing visible tab:", error);
@@ -226,9 +226,11 @@ async function connected(p) {
         }
 
         try {
-          const tabs = await browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT });
-          const url = tabs[0].url;
-          const capturePromises = message.message.imgRects.map((rect) => captureAndPush(rect, url));
+          // const tabs = await browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT });
+          // const url = tabs[0].url;
+          const capturePromises = message.message.imgDescs.map(
+            (imgDesc) => captureAndPush(imgDesc.rect, imgDesc.screenshotNote)
+          );
 
           try {
             const results = await Promise.all(capturePromises);
@@ -251,7 +253,7 @@ async function connected(p) {
           dbOnlineQueryUrl, API_GET_RUSERS,
           [suggestedUserId], suggestedPlatformUrl
         );
-        console.log(reportedUsers)
+        // console.log(reportedUsers)
         if (reportedUsers.length > 0) { // TODO: handle multiple results
           suggestedTags = reportedUsers[0].tags
         }

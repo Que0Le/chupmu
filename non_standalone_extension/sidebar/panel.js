@@ -29,13 +29,13 @@ function splitTrimFilterEmpty(string, delimiterChar) {
   return string.split(delimiterChar).map(substring => substring.trim()).filter(item => item !== '')
 }
 
-function generateHtmlScreenshotContainer(url, timestamp, dataUrl, screenshotId) {
+function generateHtmlScreenshotContainer(screenshotNote, timestamp, dataUrl, screenshotId) {
   let innerHtml = `
   <div class="screenshot-container">
-    <div class="screenshot-url">${url}</div>
+    <div class="screenshot-note">${screenshotNote}</div>
     <div class="screenshot-timestamp">${timestamp}</div>
     <img src="${dataUrl}">
-    <input placeholder="Description" screenshot-id="${screenshotId}">
+    <input placeholder="Description" screenshot-id="${screenshotId}" value=${screenshotNote}>
   </div>`;
   return innerHtml;
 }
@@ -184,12 +184,12 @@ function startUp() {
             currentPickedData.push({
               screenshotId: currentScreenshotDataId,
               dataUrl: data.dataUrl,
-              description: "",
+              description: data.screenshotNote,
             });
             // TODO: check if added success, then add raw data to currentPickedData
             // TODO: support editing dataUrl (screenshot data) before submission
             screenshotArea.innerHTML += generateHtmlScreenshotContainer(
-              data.captureUrl, timestamp, data.dataUrl, currentScreenshotDataId
+              data.screenshotNote, timestamp, data.dataUrl, currentScreenshotDataId
             );
             currentScreenshotDataId += 1;
           }

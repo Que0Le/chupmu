@@ -314,7 +314,7 @@ const handleMessage = async (message) => {
     console.log(`B->C: ${message.reference}`);
     togglePicker();
   } else if (message.reference === "requestPickedItems") {
-    let imgRects = [];
+    let imgDescs = [];
     pickedElements.forEach(element => {
       // Get position of the selected elements and send to Background to make a screenshot
       // TODO: remove duplicated
@@ -326,9 +326,9 @@ const handleMessage = async (message) => {
         y: domRect.y + document.documentElement.scrollTop,
         width: domRect.width, height: domRect.height
       };
-      imgRects.push(rect);
+      imgDescs.push({rect: rect, screenshotNote: ""});
     });
-    sendMsgToBackground("responsePickedItems", { "imgRects": imgRects });
+    sendMsgToBackground("responsePickedItems", { imgDescs: imgDescs });
   } else if (message.reference === "clearPickedItems") {
     console.log("B->C: clearPickedItems");
     removePickedItem();
