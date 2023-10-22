@@ -1,6 +1,51 @@
 
 let loadedContentScriptOnTabIds = [];
 
+/**
+ * 
+ * @param {String} id 
+ * @param {Boolean} status 
+ */
+async function updateVisibilityMenuItem(id, status) {
+  await browser.contextMenus.update(id, {
+    enabled: status,
+  });
+}
+
+async function createContextMenus() {
+  const createMenu = async (menuOptions) => {
+    return new Promise((resolve, reject) => {
+      browser.contextMenus.create(menuOptions, () => {
+        if (browser.runtime.lastError) {
+          reject(browser.runtime.lastError);
+        } else {
+          resolve();
+        }
+      });
+    });
+  };
+
+  try {
+    await createMenu({
+      id: "chupmu_pick_this_user",
+      title: "Chupmu: Pick this user ...",
+      contexts: ["link"],
+    });
+
+    await createMenu({
+      id: "chupmu_pick_this_element",
+      title: "Chupmu: Pick this element",
+      contexts: ["all"],
+      enabled: false,
+    });
+
+    console.log("Context menus created successfully.");
+  } catch (error) {
+    console.error("Error creating context menus:", error);
+  }
+}
+
+
 function removeDuplicates(array) {
   return array.filter((value, index, self) => {
     return self.indexOf(value) === index;

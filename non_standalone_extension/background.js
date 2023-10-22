@@ -2,18 +2,9 @@
 
 let dbOnlineQueryUrl = "";
 let dbOnlineUserFilesQueryUrl = "";
+let isPickingScreenshot = false;
 
 /* Set default Setting */
-// browser.storage.local.get(`${EXT_NAME}_config`)
-//   .then(data => {
-//     if (Object.keys(data).length == 0) {
-//       console.log("No config found. Set to default ...");
-//       let obj = {};
-//       obj[`${EXT_NAME}_config`] = DEFAULT_SETTINGS;
-//       browser.storage.local.set(obj);
-//     }
-//   })
-//   .then();
 async function initializeConfig() {
   const data = await browser.storage.local.get(`${EXT_NAME}_config`);
   if (Object.keys(data).length === 0) {
@@ -27,24 +18,13 @@ async function initializeConfig() {
 /*
 Each time a tab is updated, reset the page action for that tab.
 */
-// browser.tabs.onUpdated.addListener((id, changeInfo, tab) => {
-//   initializePageAction(tab);
-// });
 async function initializePageActionOnUpdated(tabId, changeInfo, tab) {
   await initializePageAction(tab);
 }
 
-
-
 /*
 When first loaded, initialize the page action (icon on the url bar) for all tabs.
 */
-// let gettingAllTabs = browser.tabs.query({});
-// gettingAllTabs.then((tabs) => {
-//   for (let tab of tabs) {
-//     initializePageAction(tab);
-//   }
-// });
 async function initializePageActionAllSupportedTabs() {
   const tabs = await browser.tabs.query({});
   for (let tab of tabs) {
@@ -115,33 +95,30 @@ async function sendMsgToSidebar(reference, message) {
   });
 }
 
-
-/* Create context menu for picker */
-browser.contextMenus.create({
-  id: "chupmu_pick_this_user",
-  title: "Chupmu: Pick this user ...",
-  contexts: ["link"],
-},
-  // See 
-  // https://extensionworkshop.com/documentation/develop/
-  // manifest-v3-migration-guide/#event-pages-and-backward-compatibility
-  // for information on the purpose of this error capture.
-  () => void browser.runtime.lastError,
-);
-
 let currentPickedUrl = "";
 let suggestedUserId = "";
 let suggestedPlatformUrl = "";
 let suggestedTags = [];
 
-browser.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === "chupmu_pick_this_user") {
-    currentPickedUrl = info.linkUrl;
-    await browser.sidebarAction.open();
-    await sendMsgToSidebar("forceReloadSidebar", {});
+(async () => {
+  try {
+    await createContextMenus();
+    // Events
+    browser.contextMenus.onClicked.addListener(async (info, tab) => {
+      if (info.menuItemId === "chupmu_pick_this_user") {
+        currentPickedUrl = info.linkUrl;
+        isPickingScreenshot = true;
+        await browser.sidebarAction.open();
+        // Wait for sidebar to open and establish the com
+        // await new Promise(resolve => setTimeout(resolve, 500));
+        await sendMsgToSidebar("forceReloadSidebar", {});
+        await updateVisibilityMenuItem("chupmu_pick_this_element", true);
+      }
+    });
+  } catch (error) {
+    console.error("Error creating context menu items:", error);
   }
-});
-
+})();
 
 async function handleLabelifySignal() {
   const [currentUrl, supportedUrl, contentScriptPath] = await
@@ -153,20 +130,6 @@ async function handleLabelifySignal() {
   });
 
   await toggleLabelify(tab, currentUrl, contentScriptPath);
-
-  // const onError = (error) => console.log(
-  //   `Error injecting script in tab ${tab.id}: ${error}
-  //   `);
-
-  // const onExecuted = (result) => {
-  //   console.log(`Injected script in tab ${tab.id}: ${currentUrl}`);
-  //   toggleLabelify(tab);
-  // };
-
-  // const executing = browser.tabs.executeScript(
-  //   tab.id, { file: contentScriptPath }
-  // );
-  // executing.then(onExecuted, onError);
 }
 
 /**
@@ -320,110 +283,3 @@ async function connected(p) {
 }
 
 browser.runtime.onConnect.addListener(connected);
-
-
-
-/* 
-function connected(p) {
-  if (p && p.name === "port-cs") {
-    portChannelContent = p;
-    portChannelContent.onMessage.addListener((message, sender) => {
-      if (message.info != "chupmu_extension" ||
-        message.source != "chupmu_content_script" ||
-        message.target != "chupmu_background_script") {
-        console.log("B: unknown message: ", message);
-        return;
-      }
-
-      if (message.reference == "requestRecords") {
-        console.log("Request C->B: requestRecords", message.message);
-        get_reported_users_from_remote(
-          dbOnlineQueryUrl, API_GET_RUSERS,
-          message.message.userids, "stackoverflow.com"
-        ).then(reportedUsers => {
-          console.log(reportedUsers)
-          sendMsgToContent("responseRecords", reportedUsers);
-        })
-      } else if (message.reference === "responsePickedItems") {
-
-        function captureAndPush(rect, url) {
-          const imageDetails = { format: "png", quality: 100, rect: rect, scale: 1.0 };
-          
-          return browser.tabs.captureVisibleTab(imageDetails)
-            .then(dataUrl => ({
-              dataUrl: dataUrl,
-              captureUrl: url
-            }))
-            .catch(error => {
-              console.error("Error capturing visible tab:", error);
-              return null;
-            });
-        }
-      
-        browser.tabs.query({ active: true, windowId: browser.windows.WINDOW_ID_CURRENT })
-          .then(tabs => {
-            const url = tabs[0].url;
-            const capturePromises = message.message.imgRects.map(rect => captureAndPush(rect, url));
-            
-            Promise.all(capturePromises)
-              .then(results => {
-                const validResults = results.filter(result => result !== null);
-                sendMsgToSidebar("responsePickedItems", { 
-                  "pickedItemPng": validResults, unixTime: Date.now() 
-                });
-              })
-              .catch(error => {
-                console.error("Error capturing DOM screenshots:", error);
-              });
-          })
-          .catch(error => console.log("Error querying active tab: ", error));
-      }
-    });
-  } else if (p && p.name === "port-sidebar") {
-    portChannelSidebar = p;
-    portChannelSidebar.onMessage.addListener((message, sender) => {
-      if (message.source !== "chupmu_sidebar_script") {
-        console.log("Warning B: portChannelSidebar received messsage from unknown source: ", message);
-        return
-      }
-      if (message.reference === 'getCurrentPickedUrl') {
-        try {
-          let parsedUrl = new URL(currentPickedUrl);
-          if (!SUPPORTED_PROTOCOL.includes(parsedUrl.protocol.slice(0, -1))) {
-            console.log(`Picker: Only supported '${SUPPORTED_PROTOCOL}' protocols. Url is '${currentPickedUrl}'`);
-            return;
-          }
-          // TODO: improve guessing
-          let suggestedPlatformUrl = parsedUrl.origin.replace(parsedUrl.protocol, "").slice(2);
-          let suggestedUserId = parsedUrl.pathname.match(getUserFromUrl)[1];
-          getAllFilterDbNamesAndTheirTags(true)
-            .then(dbNamesAndTheirTagNames => {
-              sendMsgToSidebar("responseGetCurrentPickedUrl",
-                {
-                  "currentPickedUrl": currentPickedUrl, "dbNamesAndTheirTagNames": dbNamesAndTheirTagNames,
-                  "suggestedPlatformUrl": suggestedPlatformUrl, "suggestedUserId": suggestedUserId
-                }
-              );
-            });
-        } catch (error) {
-          console.log(`Picker: Error parsing url '${currentPickedUrl}'`);
-          return Promise.resolve({ error: `Failed parsing url: '${currentPickedUrl}'` });
-        }
-      } else if (message.reference === 'submitNewUser') {
-        handleSubmitNewUserToDb(message.message);
-      } else if (message.reference === "togglePicker") {
-        console.log(`SB->B: `, message.reference);
-        sendMsgToContent("togglePicker", {});
-      } else if (message.reference === "requestPickedItems") {
-        console.log(`SB->B: `, message.reference);
-        sendMsgToContent("requestPickedItems", {});
-      } else if (message.reference === "clearPickedItems") {
-        console.log(`SB->B: `, message.reference);
-        sendMsgToContent("clearPickedItems", {});
-      }    
-    });
-  }
-}
-
-browser.runtime.onConnect.addListener(connected);
- */
