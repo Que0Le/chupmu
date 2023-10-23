@@ -49,6 +49,8 @@ Popup: https://github.com/gorhill/uBlock/blob/master/src/popup-fenix.html.<br>Co
 
 
 # TODO:
+- [ ] Properly open and close the picker panel: panel, menu item, status variable
+- [ ] Support "pick this element" screenshot using item in context menu. Page such as Twitter has onClicked events on almost every elements and therefore renders our picker useless.
 - [x] ~~Switch to IndexedDB for DB storing, and local storage for css and settings and stuffs~~
 - [ ] ~~Implement pick account and add to DB (similar to ublock's `element picker`) (WIP)~~
 - [ ] ~~Define and store supported platform based on the URL (come with each db)~~

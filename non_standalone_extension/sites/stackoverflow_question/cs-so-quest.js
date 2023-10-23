@@ -1,6 +1,7 @@
 console.log("Startup stackoverflow script ...");
 
 const regexProfileLink = /\/users\/(\d+)\//;
+const thisPlatformUrl = "stackoverflow.com";
 
 // const chupmu_class_prefix = "chupmu_";
 // const chupmu_css_class_prefix = "chupmu_css_";
@@ -275,8 +276,9 @@ function handleRemoveLabel() {
 
 async function askBackgroundForRecords(userids) {
   await sendMsgToBackground("requestRecords", {
-    "currentUrl": document.location.href,
-    "userids": userids
+    currentUrl: document.location.href,
+    userids: userids,
+    thisPlatformUrl: thisPlatformUrl,
   });
 }
 

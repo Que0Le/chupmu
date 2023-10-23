@@ -1,5 +1,5 @@
 
-const API_GET_RUSERS = "reported-user/get-many";
+const API_GET_REPORTED_USERS = "reported-user/get-many";
 
 
 /**

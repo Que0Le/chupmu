@@ -1,6 +1,7 @@
 console.log("Startup stackoverflow script ...");
 
 const regexProfileLink = /twitter\.com\/([^/]+)/;
+const thisPlatformUrl = "twitter.com";
 
 
 const classPrefix = "cm_";
@@ -270,11 +271,12 @@ function handleRemoveLabel() {
 }
 
 async function askBackgroundForRecords(userids) {
-  await sendMsgToBackground("requestRecords", {
-    "currentUrl": document.location.href,
-    "userids": userids
-  });
-}
+    await sendMsgToBackground("requestRecords", {
+      currentUrl: document.location.href,
+      userids: userids,
+      thisPlatformUrl: thisPlatformUrl,
+    });
+  }
 
 const handleMessage = async (message) => {
   if (message.info !== "chupmu_extension" ||

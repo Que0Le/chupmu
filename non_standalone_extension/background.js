@@ -132,6 +132,14 @@ async function handleLabelifySignal() {
   await toggleLabelify(tab, currentUrl, contentScriptPath);
 }
 
+function handleEndPickingSession() {
+  isPickingScreenshot = false;
+  currentPickedUrl = "";
+  suggestedUserId = "";
+  suggestedPlatformUrl = "";
+  suggestedTags = [];
+}
+
 /**
  * Fired when a registered command is activated using a keyboard shortcut.
  *
@@ -160,9 +168,9 @@ async function connected(p) {
         try {
           const reportedUsers = await get_reported_users_from_remote(
             dbOnlineQueryUrl,
-            API_GET_RUSERS,
+            API_GET_REPORTED_USERS,
             message.message.userids,
-            "stackoverflow.com"
+            message.message.thisPlatformUrl
           );
           console.log(reportedUsers);
           await sendMsgToContent("responseRecords", {
@@ -213,7 +221,7 @@ async function connected(p) {
         suggestedUserId = message.message.userid;
         // Get some user data
         const reportedUsers = await get_reported_users_from_remote(
-          dbOnlineQueryUrl, API_GET_RUSERS,
+          dbOnlineQueryUrl, API_GET_REPORTED_USERS,
           [suggestedUserId], suggestedPlatformUrl
         );
         // console.log(reportedUsers)
@@ -277,6 +285,9 @@ async function connected(p) {
       } else if (message.reference === "clearPickedItems") {
         console.log(`SB->B: `, message.reference);
         await sendMsgToContent("clearPickedItems", {});
+      } else if (message.reference === "endPickSession") {
+        console.log(`SB->B: `, message.reference);
+        handleEndPickingSession();
       }
     });
   }

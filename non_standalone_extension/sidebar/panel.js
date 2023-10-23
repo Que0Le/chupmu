@@ -139,10 +139,15 @@ function handleTEMP1(data) {
     sendMsgToBackground("clearPickedItems", {});
   }
 
+  function handleEndPick() {
+    sendMsgToBackground("endPickSession", {});
+  }
+
   document.getElementById("submit").addEventListener("click", handleSubmit);
   document.getElementById("toggle-picker-button").addEventListener("click", handleTogglePicker);
   document.getElementById("include-picked-button").addEventListener("click", handleIncludePickedItems);
   document.getElementById("clear-picked-button").addEventListener("click", handleClearPickedItems);
+  document.getElementById("end-pick-button").addEventListener("click", handleEndPick);
 
 }
 
