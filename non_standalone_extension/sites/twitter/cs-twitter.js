@@ -2,24 +2,27 @@ console.log("Startup Twitter script ...");
 
 const regexProfileLink = /twitter\.com\/([^/]+)/;
 const thisPlatformUrl = "twitter.com";
-
-
 const classPrefix = "cm_";
 const classPrefixRegex = /(cm_)\S*/;
 const cmPopupContentClassname = "cm-popup-content";
 const cmPopupContainerClassname = "cm-popup-container";
 const cmPopupPrefixId = "cm-popup-userid-";
 
-const cssString = `
-.cm_nice-answer {
-  background: green;
+const tag_color = {
+  "humble": {color: "#5ea758", tid: "1"},
+  "wise": {color: "#47894b", tid: "2"},
+  "good-news-source": {color: "#5ea758", tid: "3"},
+  "pro-uca": {color: "#52b8ff", tid: "6"},
+  "neutral": {color: "#f3faff", tid: "4"},
+  "pro-palestine": {color: "#ff7251", tid: "5"},
+  "fake-news": {color: "#181716", tid: "7"},
+  "idiot": {color: "#553311", tid: "8"},
+  "spammer": {color: "#ccaa66", tid: "9"},
+  "pro-rus": {color: "#9b2948", tid: "10"},
 }
-.cm_polite {
-  background: blue;
-}
-.cm_creative {
-  background: red;
-}
+const default_tag_color = "blue";
+
+const cssStringPopup = `
 .${cmPopupContainerClassname} {
   position: relative;
   display: inline-block;
@@ -28,17 +31,17 @@ const cssString = `
 .${cmPopupContentClassname} {
   position: absolute;
   display: none;
-  background-color: #f1f1f1;
+  background-color: rgba(241, 241, 241, 1);
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1;
 }
 
 .${cmPopupContainerClassname}:hover .${cmPopupContentClassname} {
   display: block;
 }`;
-
 let styleElementId = "chupmu_css";
 // let currentCss = [];
 let portContent = browser.runtime.connect({ name: "port-cs" });
@@ -181,31 +184,18 @@ function removePickedItem() {
  * 
  * @returns {String[]}
  */
-
-async function getAllUserIdsOnPageSO() {
+async function getAllUserIdsOnPage() {
   let userids = [];
 
-  // Use async queries and loops
-  const allUserDetailsA = document.querySelectorAll('div.user-details a');
-  await Promise.all(Array.from(allUserDetailsA).map(async (uda) => {
-    if (uda.href) {
-      const match = uda.href.match(regexProfileLink);
-      if (match && match.length > 1) {
-        userids.push(match[1].toString());
-      }
+  let spanElements;
+  spanElements = document.querySelectorAll('span');
+  spanElements.forEach(span => {
+    const textContent = span.textContent;
+    if (textContent.startsWith('@')) {
+      userids.push(textContent.slice(1));
     }
-  }));
-
-  const allCommentA = document.querySelectorAll('div.d-inline-flex.ai-center a');
-  await Promise.all(Array.from(allCommentA).map(async (uda) => {
-    if (uda.href) {
-      const match = uda.href.match(regexProfileLink);
-      if (match && match.length > 1) {
-        userids.push(match[1].toString());
-      }
-    }
-  }));
-  // console.log(userids)
+  });
+  console.log(userids)
   return removeDuplicates(userids);
 }
 
@@ -222,38 +212,57 @@ async function removeElementById(id) {
 async function applyLabel(data) {
   // Cleanup
   removeElementById(styleElementId);
-
-  // Add css
-  const styleElement = document.createElement("style");
-  styleElement.setAttribute("id", "styleElement");
-  styleElement.innerText = cssString;
-  document.head.appendChild(styleElement);
+  let customCss = "";
 
   // Add css class to element
   let reportedUsers = data.reportedUsers;
   let dbOnlineUserFilesQueryUrl = data.dbOnlineUserFilesQueryUrl;
-  let udElements = document.getElementsByClassName("user-details");
-  for (let i = 0; i < udElements.length; i++) {
-    let ud = udElements[i];
-    let a = ud.getElementsByTagName("a")[0];
-    if (!a) continue;
-    let profileLink = a.href
-    const match = profileLink.match(regexProfileLink);
-    if (match && match.length > 1) {
-      const userid = match[1].toString();
-      for (let j = 0; j < reportedUsers.length; j++) {
-        let reportedUser = reportedUsers[j];
-        if (reportedUser.userid === userid) {
-          // Add highlight effects
-          ud.classList.add(`${cmPopupContainerClassname}`);
-          ud.classList.add(`${classPrefix}${reportedUser.tags[0]}`);
-          // Add popup
-          ud.innerHTML += generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl);
-          break;
+  let spanUsers = []
+  let spanElements = document.querySelectorAll('span');
+  spanElements.forEach(span => {
+    const textContent = span.textContent;
+    if (textContent.startsWith('@')) {
+      spanUsers.push(span);
+    }
+  });
+  // console.log(spanUsers)
+
+  for (let i = 0; i < spanUsers.length; i++) {
+    let su = spanUsers[i];
+    const userid = su.textContent;
+    for (let j = 0; j < reportedUsers.length; j++) {
+      let reportedUser = reportedUsers[j];
+      if (`@${reportedUser.userid}` === userid) {
+        console.log(reportedUser)
+        // Create CSS class if needed
+        let stepWide = Math.floor(100/reportedUser.tags.length)
+        let dashKeyframes = `@keyframes dash_${i}_${j} {\n`;
+        let dashClass = `.${classPrefix}_${i}_${j} {
+          border: 4px dashed white;
+          animation: dash_${i}_${j} 5s infinite;
+        }`
+        for (let k = 0; k < reportedUser.tags.length; k++) {
+          let thisColor = tag_color[reportedUser.tags[k]] ? 
+            tag_color[reportedUser.tags[k]].color : default_tag_color;
+            dashKeyframes += `${k * stepWide}% {border-color: ${thisColor};}\n`;
         }
+        dashKeyframes += "}";
+        customCss += `${dashKeyframes}\n${dashClass}\n`;
+        
+        // Add CSS class highlight effects
+        su.classList.add(`${cmPopupContainerClassname}`);
+        su.classList.add(`${classPrefix}_${i}_${j}`);
+        // Add popup
+        su.innerHTML += generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl);
+        // break;
       }
     }
   }
+  customCss += `${cssStringPopup}`;
+  const styleElement = document.createElement("style");
+  styleElement.setAttribute("id", styleElementId);
+  styleElement.innerText = customCss;
+  document.head.appendChild(styleElement);
 }
 
 function handleRemoveLabel() {
@@ -291,7 +300,7 @@ const handleMessage = async (message) => {
     console.log("Request B->C: toggleLabelify ...");
     if (message.message === "label") {
       console.log("command: label");
-      const userids = await getAllUserIdsOnPageSO();
+      const userids = await getAllUserIdsOnPage();
       await askBackgroundForRecords(userids);
     } else if (message.message === "removeLabel") {
       console.log("command: removeLabel");

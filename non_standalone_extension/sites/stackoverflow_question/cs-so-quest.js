@@ -1,28 +1,32 @@
-console.log("Startup stackoverflow script ...");
+console.log("Startup Stackoverflow script ...");
 
 const regexProfileLink = /\/users\/(\d+)\//;
 const thisPlatformUrl = "stackoverflow.com";
-
-// const chupmu_class_prefix = "chupmu_";
-// const chupmu_css_class_prefix = "chupmu_css_";
-// const chupmu_css_class_prefix_Regex = /(chupmu_css_)\S*/;
-
 const classPrefix = "cm_";
 const classPrefixRegex = /(cm_)\S*/;
 const cmPopupContentClassname = "cm-popup-content";
 const cmPopupContainerClassname = "cm-popup-container";
 const cmPopupPrefixId = "cm-popup-userid-";
 
-const cssString = `
-.cm_nice-answer {
-  background: green;
+const tag_color = {
+  "nice-answer": {color: "#aad688", tid: "14"},
+  "humble": {color: "#5ea758", tid: "1"},
+  "wise": {color: "#47894b", tid: "2"},
+  "creative": {color: "#00e6ff", tid: "3"},
+  "compassionate":{color:  "#adf7ff", tid: "4"},
+  "Humorous": {color: "#1b65cd", tid: "5"},
+  "Easy-going": {color: "#9fc7ff", tid: "6"},
+  "Amusing": {color: "#fdff78", tid: "7"},
+  "polite": {color: "#ce5a57", tid: "8"},
+  "Aggressive": {color: "#ff7251", tid: "9"},
+  "bossy": {color: "#9b2948", tid: "10"},
+  "volatile": {color: "#efc070", tid: "11"},
+  "Stubborn": {color: "#e47025", tid: "12"},
+  "hectic": {color: "#634217", tid: "13"},
 }
-.cm_polite {
-  background: blue;
-}
-.cm_creative {
-  background: red;
-}
+const default_tag_color = "blue";
+
+const cssStringPopup = `
 .${cmPopupContainerClassname} {
   position: relative;
   display: inline-block;
@@ -31,11 +35,12 @@ const cssString = `
 .${cmPopupContentClassname} {
   position: absolute;
   display: none;
-  background-color: #f1f1f1;
+  background-color: rgba(241, 241, 241, 1);
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1;
 }
 
 .${cmPopupContainerClassname}:hover .${cmPopupContentClassname} {
@@ -184,7 +189,7 @@ function removePickedItem() {
  */
 // const regexProfileLink = /\/users\/(\d+)\//;
 
-async function getAllUserIdsOnPageSO() {
+async function getAllUserIdsOnPage() {
   let userids = [];
 
   // Use async queries and loops
@@ -224,12 +229,7 @@ async function removeElementById(id) {
 async function applyLabel(data) {
   // Cleanup
   removeElementById(styleElementId);
-
-  // Add css
-  const styleElement = document.createElement("style");
-  styleElement.setAttribute("id", "styleElement");
-  styleElement.innerText = cssString;
-  document.head.appendChild(styleElement);
+  let customCss = "";
 
   // Add css class to element
   let reportedUsers = data.reportedUsers;
@@ -246,16 +246,36 @@ async function applyLabel(data) {
       for (let j = 0; j < reportedUsers.length; j++) {
         let reportedUser = reportedUsers[j];
         if (reportedUser.userid === userid) {
-          // Add highlight effects
+          // Create CSS class if needed
+          let stepWide = Math.floor(100/reportedUser.tags.length)
+          let dashKeyframes = `@keyframes dash_${i}_${j} {\n`;
+          let dashClass = `.${classPrefix}_${i}_${j} {
+            border: 4px dashed white;
+            animation: dash_${i}_${j} 5s infinite;
+          }`
+          for (let k = 0; k < reportedUser.tags.length; k++) {
+            let thisColor = tag_color[reportedUser.tags[k]] ? 
+              tag_color[reportedUser.tags[k]].color : default_tag_color;
+              dashKeyframes += `${k * stepWide}% {border-color: ${thisColor};}\n`;
+          }
+          dashKeyframes += "}";
+          customCss += `${dashKeyframes}\n${dashClass}\n`;
+          
+          // Add CSS class highlight effects
           ud.classList.add(`${cmPopupContainerClassname}`);
-          ud.classList.add(`${classPrefix}${reportedUser.tags[0]}`);
+          ud.classList.add(`${classPrefix}_${i}_${j}`);
           // Add popup
           ud.innerHTML += generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl);
-          break;
+          // break;
         }
       }
     }
   }
+  customCss += `${cssStringPopup}`;
+  const styleElement = document.createElement("style");
+  styleElement.setAttribute("id", styleElementId);
+  styleElement.innerText = customCss;
+  document.head.appendChild(styleElement);
 }
 
 function handleRemoveLabel() {
@@ -293,7 +313,7 @@ const handleMessage = async (message) => {
     console.log("Request B->C: toggleLabelify ...");
     if (message.message === "label") {
       console.log("command: label");
-      const userids = await getAllUserIdsOnPageSO();
+      const userids = await getAllUserIdsOnPage();
       await askBackgroundForRecords(userids);
     } else if (message.message === "removeLabel") {
       console.log("command: removeLabel");

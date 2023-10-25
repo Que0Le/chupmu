@@ -39,5 +39,11 @@
   "page_action": {
     "default_icon": "icons/off.svg",
     "browser_style": true
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": ["./sites/cs-common.js"]
+    }
+  ]
 }

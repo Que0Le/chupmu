@@ -46,6 +46,46 @@ Popup: https://github.com/gorhill/uBlock/blob/master/src/popup-fenix.html.<br>Co
 - Cross platform: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Build_a_cross_browser_extension
 - ublock `element picker`: https://github.com/gorhill/uBlock/wiki/Element-picker
 - css selector: https://www.w3.org/TR/selectors/#overview
+- Fun css border animation:
+
+    <details>
+    <summary>Click me</summary>
+
+    ```HTML
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        @keyframes dash {
+        0% {
+            border-color: blue;
+        }
+        33.33% {
+            border-color: red;
+        }
+        66.67% {
+            border-color: green;
+        }
+        100% {
+            border-color: blue;
+        }
+        }
+
+        .dashed-border {
+        width: 100px;
+        height: 100px;
+        border: 2px dashed blue;
+        animation: dash 3s infinite;
+        }
+    </style>
+    </head>
+    <body>
+    <div class="dashed-border"></div>
+    </body>
+    </html>
+    ```
+    </details>
+
 
 
 # TODO:
