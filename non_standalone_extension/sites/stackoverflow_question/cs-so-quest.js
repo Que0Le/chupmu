@@ -139,14 +139,14 @@ function handleElementMouseOver(event) {
 
 function handleElementClick(event) {
   if (pickerActive) {
-    if (pickedElements.includes(event.target)) {
+    if (pickedElements.includes(currentPickingElement)) {
       // Remove from list
-      event.target.style.outline = '';
-      pickedElements.splice(pickedElements.indexOf(event.target), 1);
+      currentPickingElement.style.outline = '';
+      pickedElements.splice(pickedElements.indexOf(currentPickingElement), 1);
     } else {
       // Mark the element green
-      event.target.style.outline = 'green solid 2px';
-      pickedElements.push(event.target);
+      currentPickingElement.style.outline = 'green solid 2px';
+      pickedElements.push(currentPickingElement);
     }
   }
 }
@@ -338,58 +338,17 @@ const handleMessage = async (message) => {
   } else if (message.reference === "clearPickedItems") {
     console.log("B->C: clearPickedItems");
     removePickedItem();
+  } else if (message.reference === "pickCurrentDomElement") {
+    console.log(`B->C: ${message.reference}`);
+    handleElementClick(null);
+  } else if (message.reference === "endPickSession") {
+    console.log(`B->C: ${message.reference}`);
+    document.removeEventListener('mouseover', handleElementMouseOver);
+    document.removeEventListener('click', handleElementClick);
+    removeHoverHighlight();
+    removePickedItem();
+    pickerActive = false;
   }
 };
 
 portContent.onMessage.addListener(handleMessage);
-
-/* 
-portContent.onMessage.addListener((message) => {
-  if (message.info !== "chupmu_extension" ||
-    message.source !== "chupmu_background_script" ||
-    message.target !== "chupmu_content_script") {
-    return;
-  }
-
-  if (message.reference === "toggleLabelify") {
-    console.log("Request B->C: toggleLabelify ...");
-    if (message.message === "label") {
-      console.log("command: label")
-      getAllUserIdsOnPageSO()
-        .then(userids => {
-          askBackgroundForRecords(userids);
-        })
-    } else if (message.message === "removeLabel") {
-      console.log("command: removeLabel")
-      handleRemoveLabel();
-    }
-  } else if (message.reference === "responseRecords") {
-    // Data is a array of db's meta, and records 
-    console.log(`Get responseRecords records data from background: `, message.message);
-    applyLabel(message.message);
-  } else if (message.reference === "togglePicker") {
-    console.log("B->C: togglePicker");
-    togglePicker();
-  } else if (message.reference === "requestPickedItems") {
-    let imgRects = [];
-    pickedElements.forEach(element => {
-      // Get position of the selected elements and send to Background to make screenshot
-      // TODO: remove duplicated
-      let domRect = element.getBoundingClientRect();
-      // https://developer.mozilla.org/en-US/docs/Mozilla/
-      // Add-ons/WebExtensions/API/extensionTypes/ImageDetails
-      let rect = {
-        x: domRect.x + document.documentElement.scrollLeft,
-        y: domRect.y + document.documentElement.scrollTop,
-        width: domRect.width, height: domRect.height
-      };
-      imgRects.push(rect);
-    });
-    sendMsgToBackground("responsePickedItems", { "imgRects": imgRects });
-  } else if (message.reference === "clearPickedItems") {
-    console.log("B->C: clearPickedItems");
-    removePickedItem();
-  }
-});
-
- */

@@ -141,6 +141,7 @@ function handleTEMP1(data) {
 
   function handleEndPick() {
     sendMsgToBackground("endPickSession", {});
+    browser.sidebarAction.close();
   }
 
   document.getElementById("submit").addEventListener("click", handleSubmit);

@@ -1,4 +1,4 @@
-console.log("Startup stackoverflow script ...");
+console.log("Startup Twitter script ...");
 
 const regexProfileLink = /twitter\.com\/([^/]+)/;
 const thisPlatformUrl = "twitter.com";
@@ -42,6 +42,8 @@ const cssString = `
 let styleElementId = "chupmu_css";
 // let currentCss = [];
 let portContent = browser.runtime.connect({ name: "port-cs" });
+
+// let currentMouseOverDomElement;
 
 function removeDuplicates(array) {
   return array.filter((value, index, self) => {
@@ -136,14 +138,14 @@ function handleElementMouseOver(event) {
 
 function handleElementClick(event) {
   if (pickerActive) {
-    if (pickedElements.includes(event.target)) {
+    if (pickedElements.includes(currentPickingElement)) {
       // Remove from list
-      event.target.style.outline = '';
-      pickedElements.splice(pickedElements.indexOf(event.target), 1);
+      currentPickingElement.style.outline = '';
+      pickedElements.splice(pickedElements.indexOf(currentPickingElement), 1);
     } else {
       // Mark the element green
-      event.target.style.outline = 'green solid 2px';
-      pickedElements.push(event.target);
+      currentPickingElement.style.outline = 'green solid 2px';
+      pickedElements.push(currentPickingElement);
     }
   }
 }
@@ -334,23 +336,18 @@ const handleMessage = async (message) => {
   } else if (message.reference === "clearPickedItems") {
     console.log("B->C: clearPickedItems");
     removePickedItem();
+  } else if (message.reference === "pickCurrentDomElement") {
+    console.log(`B->C: ${message.reference}`);
+    handleElementClick(null);
+  } else if (message.reference === "endPickSession") {
+    console.log(`B->C: ${message.reference}`);
+    document.removeEventListener('mouseover', handleElementMouseOver);
+    document.removeEventListener('click', handleElementClick);
+    removeHoverHighlight();
+    removePickedItem();
+    pickerActive = false;
   }
 };
 
 portContent.onMessage.addListener(handleMessage);
 
-
-/* 
-// Get all account on page
-const spanElements = document.querySelectorAll('span'); // Select all <span> elements on the page
-const filteredSpanElements = [];
-const filteredSpanContents = [];
-
-spanElements.forEach(span => {
-  const textContent = span.textContent;
-  if (textContent.startsWith('@')) {
-    filteredSpanElements.push(span);
-    filteredSpanContents.push(textContent);
-  }
-}); 
-*/

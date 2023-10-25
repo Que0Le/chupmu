@@ -113,6 +113,8 @@ let suggestedTags = [];
         // await new Promise(resolve => setTimeout(resolve, 500));
         await sendMsgToSidebar("forceReloadSidebar", {});
         await updateVisibilityMenuItem("chupmu_pick_this_element", true);
+      } else if (info.menuItemId === "chupmu_pick_this_element") {
+        await sendMsgToContent("pickCurrentDomElement", {});
       }
     });
   } catch (error) {
@@ -132,12 +134,14 @@ async function handleLabelifySignal() {
   await toggleLabelify(tab, currentUrl, contentScriptPath);
 }
 
-function handleEndPickingSession() {
+async function handleEndPickingSession() {
   isPickingScreenshot = false;
   currentPickedUrl = "";
   suggestedUserId = "";
   suggestedPlatformUrl = "";
   suggestedTags = [];
+  await sendMsgToContent("endPickSession", {});
+  await updateVisibilityMenuItem("chupmu_pick_this_element", false);
 }
 
 /**
