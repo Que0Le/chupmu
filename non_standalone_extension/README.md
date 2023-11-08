@@ -82,13 +82,16 @@ Popup: https://github.com/gorhill/uBlock/blob/master/src/popup-fenix.html.<br>Co
     <body>
     <div class="dashed-border"></div>
     </body>
-    </html>
+    </html>wm
     ```
     </details>
 
 
 
 # TODO:
+- [ ] Improve highlight effect, popup info on hover user for Twitter page.
+- [ ] Adapt to Twitter's non-static page. The page updates constantly and our extension has little to no highlight effect on the page.
+- [x] Create better highlight effect. Dashed border now has transition animation between colors based on tags
 - [x] Properly open and close the picker panel: panel, menu item, status variable
 - [ ] Close the sidebar of our ext, but not the panel of there is still sidebar of other ext (i.e, treetab)
 - [ ] Support "pick this element" screenshot using item in context menu. Page such as Twitter has onClicked events on almost every elements and therefore renders our picker useless.

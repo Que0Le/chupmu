@@ -1,3 +1,9 @@
+# Environment:
+```bash
+pip install autopep8
+pip install pylint
+```
+
 # FastAPI and MongoDB Boilerplate
 
 A simple starter for building RESTful APIs with FastAPI and MongoDB. 

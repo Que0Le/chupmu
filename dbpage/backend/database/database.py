@@ -33,22 +33,27 @@ async def retrieve_student(id: PydanticObjectId) -> Student:
     student = await student_collection.get(id)
     if student:
         return student
-    
+
+
 async def delete_student(id: PydanticObjectId) -> bool:
     student = await student_collection.get(id)
     if student:
         await student.delete()
         return True
 
+
 async def delete_report_data(id: PydanticObjectId) -> bool:
     report_data = await report_data_collection.get(id)
     if report_data:
         await report_data.delete()
         return True
-    
+    return False
+
+
 async def update_student_data(id: PydanticObjectId, data: dict) -> Union[bool, Student]:
     des_body = {k: v for k, v in data.items() if v is not None}
-    update_query = {"$set": {field: value for field, value in des_body.items()}}
+    update_query = {
+        "$set": {field: value for field, value in des_body.items()}}
     student = await student_collection.get(id)
     if student:
         await student.update(update_query)
@@ -60,18 +65,33 @@ async def add_report_data(new_report_data: ReportData) -> ReportData:
     report_data = await new_report_data.create()
     return report_data
 
+
 async def retrieve_report_data_by_id(id: PydanticObjectId) -> ReportData:
-    report_data = await report_data_collection.get(id)
-    if report_data:
-        return report_data
+    try:
+        report_data = await report_data_collection.get(id)
+        if report_data:
+            return report_data
+    except Exception as e:
+        print(e)
+        return None
+
+# async def update_report_data(status: str) -> bool:
+#     report_data = await report_data_collection.get(id)
+#     if report_data:
+#         await report_data.delete()
+#         return True
+#     return False
+
 
 async def retrieve_report_data() -> List[ReportData]:
     report_data_list = await report_data_collection.all().to_list()
     return report_data_list
 
+
 async def retrieve_report_meta() -> List[ReportDataMeta]:
     report_meta_list = await report_meta_collection.all().to_list()
     return report_meta_list
+
 
 async def retrieve_report_meta_by_uid_and_platform(
     uid: str, platform_url: str
@@ -83,9 +103,11 @@ async def retrieve_report_meta_by_uid_and_platform(
     ).to_list()
     return report_meta_list
 
+
 async def add_reported_user(new_reported_user: ReportedUser) -> ReportedUser:
     reported_user = await new_reported_user.create()
     return reported_user
+
 
 # async def add_many_reported_user(
 #     new_reported_users: List[ReportedUser]
@@ -102,12 +124,14 @@ async def retrieve_reported_user_by_id(id: PydanticObjectId) -> ReportedUser:
     if reported_user:
         return reported_user
 
+
 async def retrieve_reported_user_by_uid(uid: PydanticObjectId) -> ReportedUser:
     reported_user = await reported_user_collection.find(
         {"userid": uid}
     ).first_or_none()
     if reported_user:
         return reported_user
+
 
 async def retrieve_reported_user_by_uid_and_platformurl(
     uid: str, platform_url: str
@@ -119,6 +143,7 @@ async def retrieve_reported_user_by_uid_and_platformurl(
     if reported_user:
         return reported_user
 
+
 async def retrieve_many_reported_users_by_uid_and_platformurl(
     ruqs: list[ReportedUserQuery]
 ) -> list[ReportedUser]:
@@ -129,6 +154,5 @@ async def retrieve_many_reported_users_by_uid_and_platformurl(
             ReportedUser.platformUrl == ruq.platformUrl
         ).first_or_none()
         if reported_user:
-            reported_users.append(reported_user) 
+            reported_users.append(reported_user)
     return reported_users
-

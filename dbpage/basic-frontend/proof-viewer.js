@@ -1,6 +1,8 @@
 
-const getReportMetaUrl = "http://localhost:8080/report-meta/";
-const getReportDataUrl = "http://localhost:8080/report-data/";
+const baseUrl =  "http://localhost:8080/";
+const getReportMetaUrl = baseUrl + "report-meta/";
+const getReportDataUrl = baseUrl + "report-data/";
+const deleteReportDataUrl = baseUrl + "report-data/";
 
 function convertUnixTimestamp(unixTimestamp) {
   const date = new Date(unixTimestamp); // Convert to milliseconds
@@ -47,6 +49,20 @@ function generateReportViewerHtml(reportData) {
   let innerHtml = `<div class="bg-white rounded-lg shadow-lg p-6">
     <h2 class="text-xl font-semibold mb-4">Report Details</h2>
     <div class="mb-2">
+      <span class="font-semibold">Report status:</span> unknown
+    </div>
+    <div>
+      <button id="delete-report" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded">
+        Delete Report
+      </button>
+      <button id="confirm-report" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-2 rounded">
+        Confirm Report
+      </button>
+      <button id="unconfirm-report" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-2 rounded">
+        Unconfirm Report
+      </button>
+    </div>
+    <div class="mb-2">
       <span class="font-semibold">Reporter:</span> r1
     </div>
     <div class="mb-2">
@@ -80,6 +96,15 @@ function generateReportViewerHtml(reportData) {
   return innerHtml;
 }
 
+let currentSelectedReport = null;
+
+function handleDeleteReport(event) {
+  fetch(
+    deleteReportDataUrl + currentSelectedReport._id,
+    {method: "DELETE"}
+  );
+  // todo: RELOAD PAGE
+}
 
 function handleMetaContainerClick(event) {
   let reportid  = this.getAttribute("reportid");
@@ -92,10 +117,15 @@ function handleMetaContainerClick(event) {
     return response.json();
   })
   .then(data => {
-    console.log(data);
+    currentSelectedReport = data.data;
+    console.log(currentSelectedReport);
     let viewScroll = document.getElementById("y-scroll-right");
     let viewContainer = generateReportViewerHtml(data.data);
     viewScroll.innerHTML = viewContainer ? viewContainer : "Error viewing data!";
+    // buttons
+    document.getElementById("delete-report").addEventListener("click", handleDeleteReport);
+    // document.getElementById("confirm-report").addEventListener();
+    // document.getElementById("unconfirm-report").addEventListener();
   })
   .catch(error => {
     console.error('Fetch error:', error);
@@ -119,10 +149,20 @@ fetch(getReportMetaUrl)
       let metaContainer = generateMetaContainerHtml(reportMeta._id, reportMeta.reported_user, meta, reportMeta.url);
       metaScroll.innerHTML += metaContainer;
     });
-    const clickableElements = document.querySelectorAll('.meta-container');
-    clickableElements.forEach(element => {
+    const metaContainers = document.querySelectorAll('.meta-container');
+    metaContainers.forEach(element => {
       element.addEventListener('click', handleMetaContainerClick);
     });
+    // Select first meta container by default:
+    if (metaContainers[0]) {
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+      });
+      
+      metaContainers[0].dispatchEvent(clickEvent);
+    }
   })
   .catch(error => {
     console.error('Fetch error:', error);

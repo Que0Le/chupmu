@@ -75,6 +75,17 @@ class ReportData(Document):
         name = "report_data"
 
 
+# class ReportDataExtra(ReportData):
+#     def __init__(self, reporter, reported_user, note, 
+#                  tags, urlRecorded, platformUrl, 
+#                  relatedPlatforms, unixTime, data_url_array, status
+#     ):
+#         super().__init__(reporter, reported_user, note, 
+#                         tags, urlRecorded, platformUrl, 
+#                         relatedPlatforms, unixTime, data_url_array)
+#         self.status = status
+
+
 # class UpdateReportDataModel(BaseModel):
 #     reporter: Optional[str]
 #     reported_user: Optional[str]

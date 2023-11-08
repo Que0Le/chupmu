@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, HTTPException
 
 from database.database import *
 from models.report_data import *
@@ -40,11 +40,8 @@ async def get_report_data_by_id(id: PydanticObjectId):
             "description": "Report Data retrieved successfully",
             "data": report_data,
         }
-    return {
-        "status_code": 404,
-        "response_type": "error",
-        "description": "Report Data doesn't exist",
-    }
+    raise HTTPException(
+        status_code=404, detail=f"Report Data with ID not found: {id} ")
 
 
 @router.post(
@@ -65,6 +62,7 @@ async def add_report_data_to_db(new_report_data: ReportData = Body(...)):
 @router.delete("/{id}", response_description="Report Data deleted from the database")
 async def delete_report_data_from_db(id: PydanticObjectId):
     is_deleted = await delete_report_data(id)
+    print(is_deleted)
     if is_deleted:
         return {
             "status_code": 200,
@@ -72,12 +70,8 @@ async def delete_report_data_from_db(id: PydanticObjectId):
             "description": "Report Data with ID: {} removed".format(id),
             "data": True,
         }
-    return {
-        "status_code": 404,
-        "response_type": "error",
-        "description": "Report Data with id {0} doesn't exist".format(id),
-        "data": False,
-    }
+    raise HTTPException(
+        status_code=404, detail=f"Report Data with ID not found: {id} ")
 
 
 # @router.put("/{id}", response_model=Response)
