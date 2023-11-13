@@ -8,6 +8,9 @@ const unconfirmReportDataUrl = baseUrl + "report-data/";
 const confirmedText = "confirmed";
 const unconfirmedText = "unconfirmed";
 
+let currentSelectedReport = null;
+let currentSelectedMetaContainer = null;
+
 function convertUnixTimestamp(unixTimestamp) {
   const date = new Date(unixTimestamp); // Convert to milliseconds
 
@@ -22,11 +25,28 @@ function convertUnixTimestamp(unixTimestamp) {
   return formattedDate;
 }
 
-function generateMetaContainerHtml(reportId, title, meta, mainText) {
-  let innerHtml = `<div class="bg-white rounded-lg shadow p-4 mb-4 meta-container" reportid="${reportId}">
-    <h2 class="text-lg font-semibold mb-2">${title}</h2>
-    <p>${meta}</p>
-    <p>${mainText}</p>
+function generateStatusHtml(reportStatus) {
+  let statusHtml = ``;
+  if (reportStatus) {
+    if (reportStatus === confirmedText) {
+      statusHtml = `<span class="bg-green-500">${reportStatus}</span>`;
+    } else if (reportStatus === unconfirmedText) {
+      statusHtml = `<span class="bg-yellow-500">${reportStatus}</span>`;
+    }
+  }
+  if (!statusHtml) {
+    statusHtml = `<span class="bg-red-500">unknow</span>`;
+  }
+  return statusHtml;
+}
+
+function generateMetaContainerHtml(reportMeta) {
+  let statusHtml = generateStatusHtml(reportMeta.status);
+  let creationDetails = `at ${convertUnixTimestamp(reportMeta.unixTime)} by ${reportMeta.reporter}`;
+  let innerHtml = `<div class="bg-white rounded-lg shadow p-4 mb-4 meta-container" reportid="${reportMeta._id}">
+    <h2 class="text-lg font-semibold mb-2">${reportMeta._id}</h2>
+    <p>${creationDetails}</p>
+    ${statusHtml}
   </div>`;
   return innerHtml;
 }
@@ -49,17 +69,7 @@ function generateReportViewerHtml(reportData) {
     relatedPlatformsInnerHtml += `<br><a href="${url}" class="text-blue-500">${url}</a>\n`;
   });
 
-  let statusHtml = ``;
-  if (reportData.status) {
-    if (reportData.status === confirmedText) {
-      statusHtml = `<span class="bg-green-500">${reportData.status}</span>`;
-    } else if (reportData.status === unconfirmedText) {
-      statusHtml = `<span class="bg-yellow-500">${reportData.status}</span>`;
-    }
-  }
-  if (!statusHtml) {
-    statusHtml = `<span class="bg-red-500">${unknown}</span>`;
-  }
+  let statusHtml = generateStatusHtml(reportData.status);
 
 
   let innerHtml = `<div class="bg-white rounded-lg shadow-lg p-6">
@@ -113,8 +123,7 @@ function generateReportViewerHtml(reportData) {
   return innerHtml;
 }
 
-let currentSelectedReport = null;
-let currentSelectedMetaContainer = null;
+
 
 async function reloadCurrentReportViewer() {
   const clickEvent = new MouseEvent('click', {
@@ -234,8 +243,11 @@ async function startupViewerPage() {
 
     data.data.forEach(reportMeta => {
       console.log(reportMeta)
-      let meta = `at ${convertUnixTimestamp(reportMeta.unixTime)} by ${reportMeta.reporter}`;
-      let metaContainer = generateMetaContainerHtml(reportMeta._id, reportMeta.reported_user, meta, reportMeta.url);
+      // let meta = `at ${convertUnixTimestamp(reportMeta.unixTime)} by ${reportMeta.reporter}`;
+      let metaContainer = generateMetaContainerHtml(reportMeta);
+      // let metaContainer = generateMetaContainerHtml(
+      //     reportMeta._id, reportMeta.reported_user, meta, reportMeta.url
+      // );
       metaScroll.innerHTML += metaContainer;
     });
 
