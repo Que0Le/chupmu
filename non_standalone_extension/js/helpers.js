@@ -310,11 +310,11 @@ function handleSubmitNewUserToDb(data) {
   console.log(data);
   getAllFilterDbNamesAndTheirTags()
     .then(dbNamesAndTheirTags => {
-      return getConfigFromLocalStorage().then(config => { 
-        return { dbNamesAndTheirTags, config }; 
+      return getConfigFromLocalStorage().then(config => {
+        return { dbNamesAndTheirTags, config };
       })
     })
-    .then(({dbNamesAndTheirTags, config}) => {
+    .then(({ dbNamesAndTheirTags, config }) => {
       for (const targetDbNameAndTagNames of data.targetDbNamesAndTheirTagNames) {
         if (dbNamesAndTheirTags[targetDbNameAndTagNames.dbName]) {
           // add new tags to temp settings
@@ -325,7 +325,7 @@ function handleSubmitNewUserToDb(data) {
           if (oldAndNewTagIds.length >= newTagIds.length) {
             browser.storage.local.get(`${EXT_NAME}_config`).then(data => {
               let config = data[`${EXT_NAME}_config`];
-              for (let i =0; i < config.dbSources.length; i++) {
+              for (let i = 0; i < config.dbSources.length; i++) {
                 if (config.dbSources[i].dbName === targetDbNameAndTagNames.dbName) {
                   config.dbSources[i].tags = newTagsObject;
                   let obj = {};
@@ -339,7 +339,7 @@ function handleSubmitNewUserToDb(data) {
           }
           // add to the existing db
           writeEntryToDb(
-            targetDbNameAndTagNames.dbName, 
+            targetDbNameAndTagNames.dbName,
             {
               "userid": data.userId,
               "note": data.note,

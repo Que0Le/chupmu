@@ -16,6 +16,7 @@ async def get_report_meta_list(uid: str, platform_url: str):
         "data": report_meta_list,
     }
 
+
 @router.get("/", response_description="Report Meta retrieved", response_model=Response)
 async def get_report_meta_list():
     report_meta_list = await retrieve_report_meta()
@@ -25,4 +26,3 @@ async def get_report_meta_list():
         "description": "Report Data Meta retrieved successfully",
         "data": report_meta_list,
     }
-

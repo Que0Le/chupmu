@@ -10,7 +10,7 @@ function resetPickedData() {
   currentPickedUnixTime = 0;
 }
 
-let currentScreenshotDataId = 0; 
+let currentScreenshotDataId = 0;
 let currentPickedUrl = "";
 /**
  * 
@@ -100,7 +100,7 @@ function handleTEMP1(data) {
         }
       }
     }
- 
+
     /* Send proof to server */
     fetch('http://localhost:8080/report-data/', {
       method: 'POST',
@@ -114,7 +114,7 @@ function handleTEMP1(data) {
         "note": note,
         "tags": tags,
         "unixTime": currentPickedUnixTime,
-        "urlRecorded": data.urlRecorded, 
+        "urlRecorded": data.urlRecorded,
         "platformUrl": platformUrl,
         "relatedPlatforms": relatedPlatforms,
         "data_url_array": currentPickedData
@@ -161,8 +161,8 @@ function startUp() {
 
     portSidebar.onMessage.addListener((message, sender) => {
       if (message.info != "chupmu_extension" ||
-      message.source != "chupmu_background_script" ||
-      message.target != "chupmu_sidebar_script") {
+        message.source != "chupmu_background_script" ||
+        message.target != "chupmu_sidebar_script") {
         console.log("SB: unknown message: ", message);
         return;
       }

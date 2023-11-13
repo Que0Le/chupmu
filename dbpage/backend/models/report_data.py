@@ -20,6 +20,7 @@ class DataUrlPayload(BaseModel):
 #     dbName: str
 #     tagNames: list[str]
 
+
 class ReportDataMeta(Document):
     reporter: str
     status: Optional[str] = Field(None, description="")
@@ -46,6 +47,7 @@ class ReportDataMeta(Document):
     class Settings:
         name = "report_data"
 
+
 class ReportData(Document):
     reporter: str
     status: Optional[str] = Field(None, description="")
@@ -67,7 +69,7 @@ class ReportData(Document):
     #             "url": "url1",
     #             "unixTime": 12345643232,
     #             "data_url_array": [
-    #                 {"description": "desc1", "dataUrl": "data_url_1"}, 
+    #                 {"description": "desc1", "dataUrl": "data_url_1"},
     #                 {"description": "desc2", "dataUrl": "data_url_2"}
     #             ],
     #         }
@@ -78,12 +80,12 @@ class ReportData(Document):
 
 
 # class ReportDataExtra(ReportData):
-#     def __init__(self, reporter, reported_user, note, 
-#                  tags, urlRecorded, platformUrl, 
+#     def __init__(self, reporter, reported_user, note,
+#                  tags, urlRecorded, platformUrl,
 #                  relatedPlatforms, unixTime, data_url_array, status
 #     ):
-#         super().__init__(reporter, reported_user, note, 
-#                         tags, urlRecorded, platformUrl, 
+#         super().__init__(reporter, reported_user, note,
+#                         tags, urlRecorded, platformUrl,
 #                         relatedPlatforms, unixTime, data_url_array)
 #         self.status = status
 
@@ -100,7 +102,8 @@ class UpdateReportDataModel(BaseModel):
     platformUrl: Optional[str] = Field(None, description="")
     relatedPlatforms: Optional[list[str]] = Field(None, description="")
     unixTime: Optional[int] = Field(None, description="")
-    data_url_array: Optional[list[DataUrlPayload]] = Field(None, description="")
+    data_url_array: Optional[list[DataUrlPayload]
+                             ] = Field(None, description="")
 
     class Collection:
         name = "report_data"

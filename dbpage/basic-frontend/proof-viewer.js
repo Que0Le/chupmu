@@ -1,5 +1,5 @@
 
-const baseUrl =  "http://localhost:8080/";
+const baseUrl = "http://localhost:8080/";
 const getReportMetaUrl = baseUrl + "report-meta/";
 const getReportDataUrl = baseUrl + "report-data/";
 const deleteReportDataUrl = baseUrl + "report-data/";
@@ -58,7 +58,7 @@ function generateReportViewerHtml(reportData) {
     }
   }
   if (!statusHtml) {
-    statusHtml = `<span class="bg-red-500">${reportData.status}</span>`;
+    statusHtml = `<span class="bg-red-500">${unknown}</span>`;
   }
 
 
@@ -118,9 +118,9 @@ let currentSelectedMetaContainer = null;
 
 async function reloadCurrentReportViewer() {
   const clickEvent = new MouseEvent('click', {
-      bubbles: true,
-      cancelable: true,
-      view: window
+    bubbles: true,
+    cancelable: true,
+    view: window
   });
   currentSelectedMetaContainer.dispatchEvent(clickEvent);
 }
@@ -129,62 +129,62 @@ async function reloadPage() {
   location.reload();
   const metaContainers = document.querySelectorAll('.meta-container');
   if (metaContainers[0]) {
-      const clickEvent = new MouseEvent('click', {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-      });
-      metaContainers[0].dispatchEvent(clickEvent);
+    const clickEvent = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+    });
+    metaContainers[0].dispatchEvent(clickEvent);
   }
 }
 
 async function handleDeleteReport(event) {
   try {
-      const response = await fetch(deleteReportDataUrl + currentSelectedReport._id, { method: "DELETE" });
+    const response = await fetch(deleteReportDataUrl + currentSelectedReport._id, { method: "DELETE" });
 
-      if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
 
-      await reloadPage();
+    await reloadPage();
   } catch (error) {
-      console.error('Fetch error:', error);
+    console.error('Fetch error:', error);
   }
 }
 
 async function handleConfirmReport(event) {
   try {
-      const response = await fetch(confirmReportDataUrl + currentSelectedReport._id, {
-          method: "PUT",
-          body: JSON.stringify({ "status": confirmedText }),
-          headers: { 'Content-Type': 'application/json' }
-      });
+    const response = await fetch(confirmReportDataUrl + currentSelectedReport._id, {
+      method: "PUT",
+      body: JSON.stringify({ "status": confirmedText }),
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-      if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
 
-      await reloadCurrentReportViewer();
+    await reloadCurrentReportViewer();
   } catch (error) {
-      console.error('Fetch error:', error);
+    console.error('Fetch error:', error);
   }
 }
 
 async function handleUnconfirmReport(event) {
   try {
-      const response = await fetch(unconfirmReportDataUrl + currentSelectedReport._id, {
-          method: "PUT",
-          body: JSON.stringify({ "status": unconfirmedText }),
-          headers: { 'Content-Type': 'application/json' }
-      });
+    const response = await fetch(unconfirmReportDataUrl + currentSelectedReport._id, {
+      method: "PUT",
+      body: JSON.stringify({ "status": unconfirmedText }),
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-      if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
 
-      await reloadCurrentReportViewer();
+    await reloadCurrentReportViewer();
   } catch (error) {
-      console.error('Fetch error:', error);
+    console.error('Fetch error:', error);
   }
 }
 
@@ -195,68 +195,68 @@ async function handleMetaContainerClick(event) {
   if (!reportid) { return; }
 
   try {
-      const response = await fetch(`${getReportDataUrl}${reportid}`);
+    const response = await fetch(`${getReportDataUrl}${reportid}`);
 
-      if (!response.ok) {
-          throw new Error(`Error getting report id=${reportid} from server. Status: ${response.status}`);
-      }
+    if (!response.ok) {
+      throw new Error(`Error getting report id=${reportid} from server. Status: ${response.status}`);
+    }
 
-      const data = await response.json();
-      currentSelectedReport = data.data;
-      console.log(currentSelectedReport);
+    const data = await response.json();
+    currentSelectedReport = data.data;
+    console.log(currentSelectedReport);
 
-      let viewScroll = document.getElementById("y-scroll-right");
-      let viewContainer = generateReportViewerHtml(data.data);
-      viewScroll.innerHTML = viewContainer ? viewContainer : "Error viewing data!";
+    let viewScroll = document.getElementById("y-scroll-right");
+    let viewContainer = generateReportViewerHtml(data.data);
+    viewScroll.innerHTML = viewContainer ? viewContainer : "Error viewing data!";
 
-      // buttons
-      document.getElementById("delete-report").addEventListener("click", handleDeleteReport);
-      document.getElementById("confirm-report").addEventListener("click", handleConfirmReport);
-      document.getElementById("unconfirm-report").addEventListener("click", handleUnconfirmReport);
+    // buttons
+    document.getElementById("delete-report").addEventListener("click", handleDeleteReport);
+    document.getElementById("confirm-report").addEventListener("click", handleConfirmReport);
+    document.getElementById("unconfirm-report").addEventListener("click", handleUnconfirmReport);
   } catch (error) {
-      console.error('Fetch error:', error);
+    console.error('Fetch error:', error);
   }
 }
 
 async function startupViewerPage() {
   try {
-      const response = await fetch(getReportMetaUrl);
+    const response = await fetch(getReportMetaUrl);
 
-      if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
 
-      const data = await response.json();
+    const data = await response.json();
 
-      // Handle the JSON data
-      console.log(data);
-      let metaScroll = document.getElementById("y-scroll-left");
+    // Handle the JSON data
+    console.log(data);
+    let metaScroll = document.getElementById("y-scroll-left");
 
-      data.data.forEach(reportMeta => {
-          console.log(reportMeta)
-          let meta = `at ${convertUnixTimestamp(reportMeta.unixTime)} by ${reportMeta.reporter}`;
-          let metaContainer = generateMetaContainerHtml(reportMeta._id, reportMeta.reported_user, meta, reportMeta.url);
-          metaScroll.innerHTML += metaContainer;
+    data.data.forEach(reportMeta => {
+      console.log(reportMeta)
+      let meta = `at ${convertUnixTimestamp(reportMeta.unixTime)} by ${reportMeta.reporter}`;
+      let metaContainer = generateMetaContainerHtml(reportMeta._id, reportMeta.reported_user, meta, reportMeta.url);
+      metaScroll.innerHTML += metaContainer;
+    });
+
+    const metaContainers = document.querySelectorAll('.meta-container');
+
+    metaContainers.forEach(element => {
+      element.addEventListener('click', handleMetaContainerClick);
+    });
+
+    // Select the first meta container by default:
+    if (metaContainers[0]) {
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
       });
 
-      const metaContainers = document.querySelectorAll('.meta-container');
-
-      metaContainers.forEach(element => {
-          element.addEventListener('click', handleMetaContainerClick);
-      });
-
-      // Select the first meta container by default:
-      if (metaContainers[0]) {
-          const clickEvent = new MouseEvent('click', {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-          });
-
-          metaContainers[0].dispatchEvent(clickEvent);
-      }
+      metaContainers[0].dispatchEvent(clickEvent);
+    }
   } catch (error) {
-      console.error('Fetch error:', error);
+    console.error('Fetch error:', error);
   }
 }
 

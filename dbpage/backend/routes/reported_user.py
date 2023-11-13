@@ -112,7 +112,7 @@ async def get_many_reported_users_by_uid_and_platformurl(ruqs: List[ReportedUser
         "response_type": "success",
         "description": "Many Reported User retrieved successfully",
         "data": reported_users,
-    } 
+    }
 
 
 @router.get(

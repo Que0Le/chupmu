@@ -9,20 +9,20 @@ const cmPopupContainerClassname = "cm-popup-container";
 const cmPopupPrefixId = "cm-popup-userid-";
 
 const tag_color = {
-  "nice-answer": {color: "#aad688", tid: "14"},
-  "humble": {color: "#5ea758", tid: "1"},
-  "wise": {color: "#47894b", tid: "2"},
-  "creative": {color: "#00e6ff", tid: "3"},
-  "compassionate":{color:  "#adf7ff", tid: "4"},
-  "Humorous": {color: "#1b65cd", tid: "5"},
-  "Easy-going": {color: "#9fc7ff", tid: "6"},
-  "Amusing": {color: "#fdff78", tid: "7"},
-  "polite": {color: "#ce5a57", tid: "8"},
-  "Aggressive": {color: "#ff7251", tid: "9"},
-  "bossy": {color: "#9b2948", tid: "10"},
-  "volatile": {color: "#efc070", tid: "11"},
-  "Stubborn": {color: "#e47025", tid: "12"},
-  "hectic": {color: "#634217", tid: "13"},
+  "nice-answer": { color: "#aad688", tid: "14" },
+  "humble": { color: "#5ea758", tid: "1" },
+  "wise": { color: "#47894b", tid: "2" },
+  "creative": { color: "#00e6ff", tid: "3" },
+  "compassionate": { color: "#adf7ff", tid: "4" },
+  "Humorous": { color: "#1b65cd", tid: "5" },
+  "Easy-going": { color: "#9fc7ff", tid: "6" },
+  "Amusing": { color: "#fdff78", tid: "7" },
+  "polite": { color: "#ce5a57", tid: "8" },
+  "Aggressive": { color: "#ff7251", tid: "9" },
+  "bossy": { color: "#9b2948", tid: "10" },
+  "volatile": { color: "#efc070", tid: "11" },
+  "Stubborn": { color: "#e47025", tid: "12" },
+  "hectic": { color: "#634217", tid: "13" },
 }
 const default_tag_color = "blue";
 
@@ -87,7 +87,7 @@ async function sendMsgToBackground(reference, message) {
 function generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl) {
   let tagsString = reportedUser.tags.join(", ");
   let onlineUserFileString = `${dbOnlineUserFilesQueryUrl}`
-    + `?userid=${reportedUser.userid}` 
+    + `?userid=${reportedUser.userid}`
     + `&platform=${reportedUser.platformUrl}`;
   let innerHtml = `
   <div class="${cmPopupContentClassname}" id="${cmPopupPrefixId}${reportedUser.userid}">
@@ -247,20 +247,20 @@ async function applyLabel(data) {
         let reportedUser = reportedUsers[j];
         if (reportedUser.userid === userid) {
           // Create CSS class if needed
-          let stepWide = Math.floor(100/reportedUser.tags.length)
+          let stepWide = Math.floor(100 / reportedUser.tags.length)
           let dashKeyframes = `@keyframes dash_${i}_${j} {\n`;
           let dashClass = `.${classPrefix}_${i}_${j} {
             border: 4px dashed white;
             animation: dash_${i}_${j} 5s infinite;
           }`
           for (let k = 0; k < reportedUser.tags.length; k++) {
-            let thisColor = tag_color[reportedUser.tags[k]] ? 
+            let thisColor = tag_color[reportedUser.tags[k]] ?
               tag_color[reportedUser.tags[k]].color : default_tag_color;
-              dashKeyframes += `${k * stepWide}% {border-color: ${thisColor};}\n`;
+            dashKeyframes += `${k * stepWide}% {border-color: ${thisColor};}\n`;
           }
           dashKeyframes += "}";
           customCss += `${dashKeyframes}\n${dashClass}\n`;
-          
+
           // Add CSS class highlight effects
           ud.classList.add(`${cmPopupContainerClassname}`);
           ud.classList.add(`${classPrefix}_${i}_${j}`);
@@ -327,8 +327,8 @@ const handleMessage = async (message) => {
     console.log(`B->C: ${message.reference}`);
     let userid = "";
     const match = message.message.currentPickedUrl.match(regexProfileLink);
-      if (match && match.length > 1) {
-        userid = match[1].toString();
+    if (match && match.length > 1) {
+      userid = match[1].toString();
     }
     // try {
     //   const response = await browser.runtime.sendMessage({ "userid": userid });
@@ -352,7 +352,7 @@ const handleMessage = async (message) => {
         y: domRect.y + document.documentElement.scrollTop,
         width: domRect.width, height: domRect.height
       };
-      imgDescs.push({rect: rect, screenshotNote: ""});
+      imgDescs.push({ rect: rect, screenshotNote: "" });
     });
     sendMsgToBackground("responsePickedItems", { imgDescs: imgDescs });
   } else if (message.reference === "clearPickedItems") {

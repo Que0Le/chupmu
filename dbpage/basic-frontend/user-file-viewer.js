@@ -157,7 +157,7 @@ async function startup() {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(
-        [{userid: urlParams.get("userid"), platformUrl: urlParams.get("platform")}]
+        [{ userid: urlParams.get("userid"), platformUrl: urlParams.get("platform") }]
       )
     });
     if (!response.ok) {

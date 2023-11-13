@@ -36,11 +36,12 @@ function sendMsgToBackground(reference, msg) {
 // TODO: multi dbsources
 function loadDbDataFromLocalStorage() {
   browser.storage.local.get(`${EXT_NAME}_config`).then(config => {
-    if (config[`${EXT_NAME}_config`]["dbSources"] && config[`${EXT_NAME}_config`]["dbSources"].length > 0) {
+    if (config[`${EXT_NAME}_config`]["dbSources"] &&
+      config[`${EXT_NAME}_config`]["dbSources"].length > 0) {
       let dbSources = config[`${EXT_NAME}_config`]["dbSources"];
       let dbContainer = document.getElementsByClassName("db-container")[0];
       dbContainer.querySelector('textarea[name="db-online-query-url"]').value =
-          dbSources[0]["dbOnlineQueryUrl"] ? dbSources[0]["dbOnlineQueryUrl"] : "";
+        dbSources[0]["dbOnlineQueryUrl"] ? dbSources[0]["dbOnlineQueryUrl"] : "";
     }
   });
 }
@@ -50,11 +51,10 @@ function handleSaveTextareaButton() {
   let dbSources = [];
   let dbContainer = document.getElementsByClassName("db-container")[0];
   let dbOnlineQueryUrls = splitTrimFilterEmpty(
-    dbContainer.querySelector('textarea[name="db-online-query-url"]').value, ",")
-  ;
+    dbContainer.querySelector('textarea[name="db-online-query-url"]').value, ",");
   if (dbOnlineQueryUrls.length == 0) return;
 
-  dbSources.push({"dbOnlineQueryUrl": dbOnlineQueryUrls[0]});
+  dbSources.push({ "dbOnlineQueryUrl": dbOnlineQueryUrls[0] });
 
   // Store current db in local storage
   browser.storage.local.get(`${EXT_NAME}_config`).then(config => {

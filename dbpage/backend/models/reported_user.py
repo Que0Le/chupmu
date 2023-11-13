@@ -8,6 +8,7 @@ class ReportedUserQuery(Document):
     userid: str
     platformUrl: str
 
+
 class ReportedUser(Document):
     userid: Indexed(str, unique=True)
     tags: list[str]
@@ -20,10 +21,11 @@ class ReportedUser(Document):
         # indexes = [
         #     IndexModel(
         #         [("userid", TEXT), ("platformUrl", TEXT)],
-        #         unique=True, 
+        #         unique=True,
         #         name="uid_platformurl_unique",
         #     )
-        # ]   
+        # ]
+
 
 class Response(BaseModel):
     status_code: int
@@ -39,4 +41,4 @@ class Response(BaseModel):
                 "description": "Operation successful",
                 "data": "Sample data",
             }
-        }  
+        }
