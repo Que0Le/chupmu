@@ -156,3 +156,14 @@ async def retrieve_many_reported_users_by_uid_and_platformurl(
         if reported_user:
             reported_users.append(reported_user)
     return reported_users
+
+
+async def update_report_data(id: PydanticObjectId, data: dict) -> Union[bool, ReportData]:
+    des_body = {k: v for k, v in data.items() if v is not None}
+    update_query = {
+        "$set": {field: value for field, value in des_body.items()}}
+    report_data = await report_data_collection.get(id)
+    if report_data:
+        await report_data.update(update_query)
+        return report_data
+    return False

@@ -1,7 +1,7 @@
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 from beanie import Document
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # class FDbMetaData(BaseModel):
@@ -22,6 +22,7 @@ class DataUrlPayload(BaseModel):
 
 class ReportDataMeta(Document):
     reporter: str
+    status: Optional[str] = Field(None, description="")
     reported_user: str
     note: str
     tags: list[str]
@@ -47,6 +48,7 @@ class ReportDataMeta(Document):
 
 class ReportData(Document):
     reporter: str
+    status: Optional[str] = Field(None, description="")
     reported_user: str
     note: str
     tags: list[str]
@@ -86,25 +88,22 @@ class ReportData(Document):
 #         self.status = status
 
 
-# class UpdateReportDataModel(BaseModel):
-#     reporter: Optional[str]
-#     reported_user: Optional[str]
-#     filter_dbs: Optional[list[DbAndTheirTagNames]]
-#     url: Optional[list[str]]
-#     data_url_array: Optional[list[DataUrlPayload]]
+# TODO: this  = Field(None, description="")
+# is necessary, otherwise pydantic complains "Field required"
+class UpdateReportDataModel(BaseModel):
+    reporter: Optional[str] = Field(None, description="")
+    status: Optional[str] = Field(None, description="")
+    reported_user: Optional[str] = Field(None, description="")
+    note: Optional[str] = Field(None, description="")
+    tags: Optional[List[str]] = Field(None, description="")
+    urlRecorded: Optional[str] = Field(None, description="")
+    platformUrl: Optional[str] = Field(None, description="")
+    relatedPlatforms: Optional[list[str]] = Field(None, description="")
+    unixTime: Optional[int] = Field(None, description="")
+    data_url_array: Optional[list[DataUrlPayload]] = Field(None, description="")
 
-#     class Collection:
-#         name = "report_data"
-
-#     class Config:
-#         schema_extra = {
-#             "example": {
-#                 "reporter": "r1",
-#                 "reported_user": "u1",
-#                 "url": "url1",
-#                 "data_url_array": ["data_url_1", "data_url_2"],
-#             }
-#         }
+    class Collection:
+        name = "report_data"
 
 
 class Response(BaseModel):

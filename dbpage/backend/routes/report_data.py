@@ -74,19 +74,17 @@ async def delete_report_data_from_db(id: PydanticObjectId):
         status_code=404, detail=f"Report Data with ID not found: {id} ")
 
 
-# @router.put("/{id}", response_model=Response)
-# async def update_student(id: PydanticObjectId, req: UpdateStudentModel = Body(...)):
-#     updated_student = await update_student_data(id, req.dict())
-#     if updated_student:
-#         return {
-#             "status_code": 200,
-#             "response_type": "success",
-#             "description": "Student with ID: {} updated".format(id),
-#             "data": updated_student,
-#         }
-#     return {
-#         "status_code": 404,
-#         "response_type": "error",
-#         "description": "An error occurred. Student with ID: {} not found".format(id),
-#         "data": False,
-#     }
+@router.put("/{id}", response_model=Response)
+async def update_report_data_by_id(id: PydanticObjectId, req: UpdateReportDataModel = Body(...)):
+    # updated_report = await update_report_data(id, req.dict())
+    print(req)
+    updated_report = await update_report_data(id, req.model_dump())
+    if updated_report:
+        return {
+            "status_code": 200,
+            "response_type": "success",
+            "description": "Report Data with ID: {} updated".format(id),
+            "data": updated_report,
+        }
+    raise HTTPException(
+        status_code=404, detail=f"Report Data with ID not found: {id} ")

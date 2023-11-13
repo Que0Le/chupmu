@@ -1,0 +1,16 @@
+meta {
+  name: change report status by id
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:8080/report-data/65240157f7076aab637deb3b
+  body: json
+}
+
+body:json {
+  {
+    "status": "unconfirmed"
+  }
+}
