@@ -62,7 +62,6 @@ async def add_report_data_to_db(new_report_data: ReportData = Body(...)):
 @router.delete("/{id}", response_description="Report Data deleted from the database")
 async def delete_report_data_from_db(id: PydanticObjectId):
     is_deleted = await delete_report_data(id)
-    print(is_deleted)
     if is_deleted:
         return {
             "status_code": 200,
@@ -76,8 +75,6 @@ async def delete_report_data_from_db(id: PydanticObjectId):
 
 @router.put("/{id}", response_model=Response)
 async def update_report_data_by_id(id: PydanticObjectId, req: UpdateReportDataModel = Body(...)):
-    # updated_report = await update_report_data(id, req.dict())
-    print(req)
     updated_report = await update_report_data(id, req.model_dump())
     if updated_report:
         return {

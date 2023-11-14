@@ -1,6 +1,9 @@
+// Test url
+// http://localhost:8080/proof-viewer.html?uid=365102&platform-url=stackoverflow.com
 
 const baseUrl = "http://localhost:8080/";
-const getReportMetaUrl = baseUrl + "report-meta/";
+const getReportMetaUrl = baseUrl + "report-meta/all";
+const getReportMetaManyUrl = baseUrl + "report-meta/many";
 const getReportDataUrl = baseUrl + "report-data/";
 const deleteReportDataUrl = baseUrl + "report-data/";
 const confirmReportDataUrl = baseUrl + "report-data/";
@@ -38,6 +41,39 @@ function generateStatusHtml(reportStatus) {
     statusHtml = `<span class="bg-red-500">unknow</span>`;
   }
   return statusHtml;
+}
+
+function generateUserRecordHtml(uid, platform, relatedPlatforms, tags, status) {
+  let tagsHtml = "";
+  let relatedPlatformsHtml = "";
+  relatedPlatforms.forEach(rp => {
+    relatedPlatformsHtml += `<a  style="padding-left:4px" href="${rp}" class="text-blue-500">${rp}</a>`;
+  });
+  tags.forEach(tag => {
+    tagsHtml += `<span  style="padding-left:7px">${tag}</span>`;
+  });
+  let innerHtml = `
+  <div class="bg-white rounded-lg shadow p-4 mb-4">
+    <h1 class="text-lg font-semibold mb-2">User Record</h1>
+    <div>
+      <span class="font-semibold">Reported User:</span>
+      <span class="font-semibold">${uid}</span>
+    </div>
+    <div>
+      <span class="font-semibold">Platform:</span>
+      <a href="${platform}" class="text-blue-500">${platform}</a>
+    </div>
+    <div>
+      <span class="font-semibold">Related Platform:</span>
+      ${relatedPlatformsHtml}
+    </div>
+    <div>
+      <span class="font-semibold">Tags:</span>
+      ${tagsHtml}
+    </div>
+  </div>
+  `;
+  return innerHtml;
 }
 
 function generateMetaContainerHtml(reportMeta) {
@@ -90,10 +126,10 @@ function generateReportViewerHtml(reportData) {
       </button>
     </div>
     <div class="mb-2">
-      <span class="font-semibold">Reporter:</span> r1
+      <span class="font-semibold">Reporter:</span> ${reportData.reporter}
     </div>
     <div class="mb-2">
-      <span class="font-semibold">Reported User:</span> ${reportData.reporter}
+      <span class="font-semibold">Reported User:</span> ${reportData.reported_user}
     </div>
     <div class="mb-2">
       <span class="font-semibold">Suggested Tags:</span> ${reportData.tags.join(", ")}
@@ -227,48 +263,88 @@ async function handleMetaContainerClick(event) {
   }
 }
 
+let queryUserId = "";
+let queryPlatform = "";
+
 async function startupViewerPage() {
+  const urlParams = new URLSearchParams(document.location.search);
+  queryUserId = urlParams.get("uid");
+  queryPlatform = urlParams.get("platform-url");
+  // force reload page if query invalid
+  if ((!queryUserId) ^ (!queryPlatform)) {
+    location.href = location.href.split('?')[0];
+  }
+
+  let data = null;
+  let response = null;
+  // Fetch data from server
   try {
-    const response = await fetch(getReportMetaUrl);
-
+    // For queried mode
+    if (queryUserId && queryPlatform) {
+      console.log(`Page with query: queryUserId=${queryUserId} queryPlatform=${queryPlatform}`);
+      response = await fetch(
+        `${getReportMetaManyUrl}?uid=${queryUserId}&platform_url=${queryPlatform}`,
+      );
+    // For all mode. TODO: pagination
+    } else {
+      console.log(`Page without query. Getting all meta data.`);
+      response = await fetch(getReportMetaUrl);
+    }
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`Get report data meta: HTTP error! Status: ${response.status}`);
     }
-
-    const data = await response.json();
-
-    // Handle the JSON data
+    data = (await response.json()).data;
     console.log(data);
-    let metaScroll = document.getElementById("y-scroll-left");
-
-    data.data.forEach(reportMeta => {
-      console.log(reportMeta)
-      // let meta = `at ${convertUnixTimestamp(reportMeta.unixTime)} by ${reportMeta.reporter}`;
-      let metaContainer = generateMetaContainerHtml(reportMeta);
-      // let metaContainer = generateMetaContainerHtml(
-      //     reportMeta._id, reportMeta.reported_user, meta, reportMeta.url
-      // );
-      metaScroll.innerHTML += metaContainer;
-    });
-
-    const metaContainers = document.querySelectorAll('.meta-container');
-
-    metaContainers.forEach(element => {
-      element.addEventListener('click', handleMetaContainerClick);
-    });
-
-    // Select the first meta container by default:
-    if (metaContainers[0]) {
-      const clickEvent = new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-      });
-
-      metaContainers[0].dispatchEvent(clickEvent);
-    }
   } catch (error) {
     console.error('Fetch error:', error);
+  }
+
+  // Create User view if needed:
+  if (queryUserId && queryPlatform) {
+    let userRecordArea = document.getElementById("user-record-area");
+    let ruRelatedPlatforms = [];  // ru = reported user
+    let ruTags = [];
+    let ruStatus = "";
+    for (let i = 0; i < data.length; i++) {
+      let reportMeta = data[i]
+      if (reportMeta && reportMeta.status && reportMeta.status === confirmedText) {
+        if (!ruStatus) { ruStatus = confirmedText };
+        ruTags = [...ruTags, ...reportMeta.tags];
+        ruRelatedPlatforms = [...ruRelatedPlatforms, ...reportMeta.relatedPlatforms];
+      }
+    }
+    ruTags = [...(new Set(ruTags))];
+    ruRelatedPlatforms = [...(new Set(ruRelatedPlatforms))];
+
+    let userRecordHtml = generateUserRecordHtml(
+      queryUserId, queryPlatform, ruRelatedPlatforms, ruTags, ruStatus
+    );
+    userRecordArea.innerHTML = userRecordHtml;
+  }
+
+  // Display data in meta containers
+  let metaScroll = document.getElementById("y-scroll-left");
+  
+  data.forEach(reportMeta => {
+    console.log(reportMeta)
+    let metaContainer = generateMetaContainerHtml(reportMeta);
+    metaScroll.innerHTML += metaContainer;
+  });
+  
+  const metaContainers = document.querySelectorAll('.meta-container');
+  
+  metaContainers.forEach(element => {
+    element.addEventListener('click', handleMetaContainerClick);
+  });
+  
+  // Select the first meta container by default:
+  if (metaContainers[0]) {
+    const clickEvent = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+    });
+    metaContainers[0].dispatchEvent(clickEvent);
   }
 }
 
