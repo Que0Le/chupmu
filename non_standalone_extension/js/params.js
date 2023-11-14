@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS = {
   dbSources: [
     {
       dbOnlineQueryUrl: "http://localhost:8080/",
-      dbOnlineUserFilesQueryUrl: "http://localhost:8080/user-file-viewer.html",
+      dbOnlineUserFilesQueryUrl: "http://localhost:8080/proof-viewer.html",
     }
   ],
   supportedSites: [
@@ -29,6 +29,10 @@ const DEFAULT_SETTINGS = {
     {
       url: "twitter.com",
       contentScript: "./sites/twitter/cs-twitter.js" 
+    },
+    {
+      url: "voz.vn",
+      contentScript: "./sites/voz/cs-voz.js" 
     }
   ]
 }

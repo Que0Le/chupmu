@@ -1,6 +1,6 @@
 console.log("Startup VOZ script ...");
 
-const regexProfileLink = /\/users\/(\d+)\//;
+const regexProfileLink = /\/u\/\S+\.(\d+)/;
 const thisPlatformUrl = "voz.vn";
 const classPrefix = "cm_";
 const classPrefixRegex = /(cm_)\S*/;
@@ -9,20 +9,20 @@ const cmPopupContainerClassname = "cm-popup-container";
 const cmPopupPrefixId = "cm-popup-userid-";
 
 const tag_color = {
-  "nice-answer": { color: "#aad688", tid: "14" },
-  "humble": { color: "#5ea758", tid: "1" },
-  "wise": { color: "#47894b", tid: "2" },
-  "creative": { color: "#00e6ff", tid: "3" },
-  "compassionate": { color: "#adf7ff", tid: "4" },
+  "thong-minh": { color: "#aad688", tid: "14" },
+  "gioi": { color: "#5ea758", tid: "1" },
+  "biet-nhieu": { color: "#47894b", tid: "2" },
+  "tri-thuc": { color: "#00e6ff", tid: "3" },
+  "noi-hay": { color: "#adf7ff", tid: "4" },
   "Humorous": { color: "#1b65cd", tid: "5" },
   "Easy-going": { color: "#9fc7ff", tid: "6" },
   "Amusing": { color: "#fdff78", tid: "7" },
   "polite": { color: "#ce5a57", tid: "8" },
-  "Aggressive": { color: "#ff7251", tid: "9" },
-  "bossy": { color: "#9b2948", tid: "10" },
-  "volatile": { color: "#efc070", tid: "11" },
-  "Stubborn": { color: "#e47025", tid: "12" },
-  "hectic": { color: "#634217", tid: "13" },
+  "ngu": { color: "#ff7251", tid: "9" },
+  "bo-do": { color: "#9b2948", tid: "10" },
+  "deo-biet-gi": { color: "#efc070", tid: "11" },
+  "pro-nga": { color: "#e47025", tid: "12" },
+  "troll": { color: "#634217", tid: "13" },
 }
 const default_tag_color = "blue";
 
@@ -187,33 +187,18 @@ function removePickedItem() {
  * 
  * @returns {String[]}
  */
-// const regexProfileLink = /\/users\/(\d+)\//;
 
 async function getAllUserIdsOnPage() {
   let userids = [];
-
-  // Use async queries and loops
-  const allUserDetailsA = document.querySelectorAll('section[class="message-user"]');
-  await Promise.all(Array.from(allUserDetailsA).map(async (uda) => {
-    if (uda.href) {
-      const match = uda.href.match(regexProfileLink);
-      if (match && match.length > 1) {
-        userids.push(match[1].toString());
-      }
+  document.querySelectorAll('section.message-user a.username').forEach((aUsername) => {
+    // Extract the last part of the href attribute
+    const userid = aUsername.href.split('.').pop().slice(0, -1);
+    if (userid) {
+      userids.push(userid);
     }
-  }));
+  });
 
-  const allCommentA = document.querySelectorAll('div.d-inline-flex.ai-center a');
-  await Promise.all(Array.from(allCommentA).map(async (uda) => {
-    if (uda.href) {
-      const match = uda.href.match(regexProfileLink);
-      if (match && match.length > 1) {
-        userids.push(match[1].toString());
-      }
-    }
-  }));
-  // console.log(userids)
-  return removeDuplicates(userids);
+  return [...(new Set(userids))]
 }
 
 async function removeElementById(id) {
@@ -227,6 +212,56 @@ async function removeElementById(id) {
 }
 
 async function applyLabel(data) {
+  // Cleanup
+  removeElementById(styleElementId);
+  let customCss = "";
+
+  let reportedUsers = data.reportedUsers;
+  let dbOnlineUserFilesQueryUrl = data.dbOnlineUserFilesQueryUrl;
+
+  // Add css class to element if matched:
+  let allSections = document.querySelectorAll('section.message-user');
+  for (let s = 0; s < allSections.length; s++) {
+    section = allSections[s];
+    let aUsernames = document.querySelectorAll('a.username');
+    if (aUsernames.length == 0) continue;
+    const userid = aUsernames[0].href.split('.').pop().slice(0, -1);
+    for (let j = 0; j < reportedUsers.length; j++) {
+      let reportedUser = reportedUsers[j];
+      if (reportedUser.userid === userid) {
+        // Create CSS class if needed
+        let stepWide = Math.floor(100 / reportedUser.tags.length)
+        let dashKeyframes = `@keyframes dash_${i}_${j} {\n`;
+        let dashClass = `.${classPrefix}_${i}_${j} {
+          border: 4px dashed white;
+          animation: dash_${i}_${j} 5s infinite;
+        }`
+        for (let k = 0; k < reportedUser.tags.length; k++) {
+          let thisColor = tag_color[reportedUser.tags[k]] ?
+            tag_color[reportedUser.tags[k]].color : default_tag_color;
+          dashKeyframes += `${k * stepWide}% {border-color: ${thisColor};}\n`;
+        }
+        dashKeyframes += "}";
+        customCss += `${dashKeyframes}\n${dashClass}\n`;
+
+        // Add CSS class highlight effects
+        section.classList.add(`${cmPopupContainerClassname}`);
+        section.classList.add(`${classPrefix}_${i}_${j}`);
+        // Add popup
+        section.innerHTML += generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl);
+        // break;
+      }
+    }
+  }
+
+  customCss += `${cssStringPopup}`;
+  const styleElement = document.createElement("style");
+  styleElement.setAttribute("id", styleElementId);
+  styleElement.innerText = customCss;
+  document.head.appendChild(styleElement);
+}
+
+async function applyLabel2(data) {
   // Cleanup
   removeElementById(styleElementId);
   let customCss = "";
@@ -324,8 +359,9 @@ const handleMessage = async (message) => {
     console.log(`Get responseRecords records data from background: `, message.message);
     applyLabel(message.message);
   } else if (message.reference === "requestExtractUserIdFromUrl") {
-    console.log(`B->C: ${message.reference}`);
+    console.log(`B->C: ${message.reference}: ${message.message.currentPickedUrl}`);
     let userid = "";
+    console.log({regexProfileLink: regexProfileLink})
     const match = message.message.currentPickedUrl.match(regexProfileLink);
     if (match && match.length > 1) {
       userid = match[1].toString();

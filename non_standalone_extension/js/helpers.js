@@ -128,10 +128,10 @@ const APPLICABLE_PROTOCOLS = ["http:", "https:"];
 
 async function loadContentScriptIfHadnot(tabid, currentUrl, contentScriptPath) {
   const onError = async (error) => {
-    console.log(`Error injecting script in tab ${tabid}: ${error}`);
+    console.log(`Error injecting script "${contentScriptPath}" in tab ${tabid}: ${error}`);
   };
   const onExecuted = async (result) => {
-    console.log(`Injected script in tab ${tabid}: ${currentUrl}`);
+    console.log(`Injected script "${contentScriptPath}" in tab ${tabid}: ${currentUrl}`);
     loadedContentScriptOnTabIds.push(tabid);
   };
   if (!loadedContentScriptOnTabIds.includes(tabid)) {

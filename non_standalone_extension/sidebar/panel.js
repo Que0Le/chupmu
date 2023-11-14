@@ -111,6 +111,7 @@ function handleTEMP1(data) {
       body: JSON.stringify({
         "reporter": "chupmu_default_reporter",
         "reported_user": userId,
+        "status": "unconfirmed",
         "note": note,
         "tags": tags,
         "unixTime": currentPickedUnixTime,
