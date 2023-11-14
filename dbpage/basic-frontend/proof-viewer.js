@@ -52,12 +52,17 @@ function generateUserRecordHtml(uid, platform, relatedPlatforms, tags, status) {
   tags.forEach(tag => {
     tagsHtml += `<span  style="padding-left:7px">${tag}</span>`;
   });
+  let statusHtml = generateStatusHtml(status);
   let innerHtml = `
   <div class="bg-white rounded-lg shadow p-4 mb-4">
     <h1 class="text-lg font-semibold mb-2">User Record</h1>
     <div>
       <span class="font-semibold">Reported User:</span>
       <span class="font-semibold">${uid}</span>
+    </div>
+    <div>
+      <span class="font-semibold">Report status (confirm if at least one report is confirmed):</span>
+      ${statusHtml}
     </div>
     <div>
       <span class="font-semibold">Platform:</span>
