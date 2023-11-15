@@ -156,6 +156,29 @@ async def retrieve_many_reported_users_by_uid_and_platformurl(
             reported_users.append(reported_user)
     return reported_users
 
+async def retrieve_many_confirmed_users_by_uid_and_platformurl(
+    ruqs: list[ReportedUserQuery]
+) -> list[ReportedUser]:
+    reported_users = []
+    for ruq in ruqs:
+        # Get all confirmed reports for this user+platform
+        confirmed_reports = await report_data_collection.all().find(
+            ReportData.reported_user == ruq.userid,
+            ReportData.platformUrl == ruq.platformUrl
+        ).to_list()
+
+        # Extract information to create a ReportedUser object from reports
+        if len(confirmed_reports) > 0:
+            tags = []
+            relatedPlatforms = []
+            for cr in confirmed_reports:
+                tags.extend(cr.tags)
+                relatedPlatforms.extend(cr.relatedPlatforms)
+            ru = ReportedUser(userid=ruq.userid, tags=list(set(tags)),
+                note = "", platformUrl = ruq.platformUrl,
+                relatedPlatforms = list(set(relatedPlatforms)))
+            reported_users.append(ru)
+    return reported_users
 
 async def update_report_data(id: PydanticObjectId, data: dict) -> Union[bool, ReportData]:
     des_body = {k: v for k, v in data.items() if v is not None}

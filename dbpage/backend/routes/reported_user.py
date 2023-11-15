@@ -101,11 +101,13 @@ async def add_many_reported_users_to_db(new_reported_users: List[ReportedUser]):
 #     )
 
 @router.post(
-    "/get-many", response_description="Reported User retrieved by uid and platform url",
+    "/get-many", 
+    response_description="Reported User retrieved by uid and platform url based on confirmed reports",
     response_model=Response
 )
-async def get_many_reported_users_by_uid_and_platformurl(ruqs: List[ReportedUserQuery]):
-    reported_users = await retrieve_many_reported_users_by_uid_and_platformurl(ruqs)
+async def get_many_confirmed_users_by_uid_and_platformurl(ruqs: List[ReportedUserQuery] = Body(...)):
+    print(ruqs)
+    reported_users = await retrieve_many_confirmed_users_by_uid_and_platformurl(ruqs)
     # if reported_users:
     return {
         "status_code": 200,
@@ -114,6 +116,19 @@ async def get_many_reported_users_by_uid_and_platformurl(ruqs: List[ReportedUser
         "data": reported_users,
     }
 
+# @router.post(
+#     "/get-many", response_description="Reported User retrieved by uid and platform url",
+#     response_model=Response
+# )
+# async def get_many_reported_users_by_uid_and_platformurl(ruqs: List[ReportedUserQuery]):
+#     reported_users = await retrieve_many_reported_users_by_uid_and_platformurl(ruqs)
+#     # if reported_users:
+#     return {
+#         "status_code": 200,
+#         "response_type": "success",
+#         "description": "Many Reported User retrieved successfully",
+#         "data": reported_users,
+#     }
 
 @router.get(
     "/id/{id}", response_description="Reported User retrieved by id",
