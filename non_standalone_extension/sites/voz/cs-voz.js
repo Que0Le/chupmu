@@ -221,8 +221,8 @@ async function applyLabel(data) {
 
   // Add css class to element if matched:
   let allSections = document.querySelectorAll('section.message-user');
-  for (let s = 0; s < allSections.length; s++) {
-    section = allSections[s];
+  for (let i = 0; i < allSections.length; i++) {
+    section = allSections[i];
     let aUsernames = document.querySelectorAll('a.username');
     if (aUsernames.length == 0) continue;
     const userid = aUsernames[0].href.split('.').pop().slice(0, -1);

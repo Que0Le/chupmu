@@ -28,6 +28,28 @@ function convertUnixTimestamp(unixTimestamp) {
   return formattedDate;
 }
 
+/**
+ * 
+ * @param {String} reportid 
+ */
+async function getReportDataByReportId(reportid) {
+  try {
+    const response = await fetch(`${getReportDataUrl}${reportid}`);
+
+    if (!response.ok) {
+      const statusText = response.statusText || 'Unknown Status';
+      throw new Error(
+        `Error getting report id=${reportid} from server. Status: ${response.status} (${statusText})`
+      );
+    }
+
+    const data = (await response.json()).data;
+    return data;
+  } catch (error) {
+    console.error('Fetch error for getReportData:', error);
+  }
+}
+
 function generateStatusHtml(reportStatus) {
   let statusHtml = ``;
   if (reportStatus) {
@@ -76,18 +98,24 @@ function generateUserRecordHtml(uid, platform, relatedPlatforms, tags, status) {
       <span class="font-semibold">Tags:</span>
       ${tagsHtml}
     </div>
-  </div>
-  `;
+  </div>`;
   return innerHtml;
 }
 
 function generateMetaContainerHtml(reportMeta) {
   let statusHtml = generateStatusHtml(reportMeta.status);
   let creationDetails = `at ${convertUnixTimestamp(reportMeta.unixTime)} by ${reportMeta.reporter}`;
-  let innerHtml = `<div class="bg-white rounded-lg shadow p-4 mb-4 meta-container" reportid="${reportMeta._id}">
-    <h2 class="text-lg font-semibold mb-2">${reportMeta._id}</h2>
-    <p>${creationDetails}</p>
-    ${statusHtml}
+  let innerHtml = `
+  <div class="bg-white hover:bg-blue-100 rounded-lg shadow p-4 mb-4 meta-container" reportid="${reportMeta._id}">
+    <h2 class="text-lg font-semibold mb-2">${reportMeta.reported_user}</h2>
+    <div class="cont-report-platform">
+      <p>${reportMeta.platformUrl}</p>
+    </div>
+    <p class="cont-platform>${reportMeta.platformUrl}</p>
+    <p class="cont-creation-details>${creationDetails}</p>
+    <div class="cont-report-status">
+      ${statusHtml}
+    </div>
   </div>`;
   return innerHtml;
 }
@@ -166,12 +194,15 @@ function generateReportViewerHtml(reportData) {
 
 
 
-async function reloadCurrentReportViewer() {
-  const clickEvent = new MouseEvent('click', {
-    bubbles: true,
-    cancelable: true,
-    view: window
-  });
+async function reloadCurrentReportViewerAndMetaContainer(reportid) {
+  let data = await getReportDataByReportId(reportid)
+  console.log(data)
+  // Update meta container
+  let statusDom = currentSelectedMetaContainer.querySelectorAll("div.cont-report-status")[0];
+  statusDom.innerHTML = generateStatusHtml(data.status);
+  // Update report data viewer
+  var clickEvent = new Event("click");
+  clickEvent.data = data;
   currentSelectedMetaContainer.dispatchEvent(clickEvent);
 }
 
@@ -204,17 +235,20 @@ async function handleDeleteReport(event) {
 
 async function handleConfirmReport(event) {
   try {
-    const response = await fetch(confirmReportDataUrl + currentSelectedReport._id, {
-      method: "PUT",
-      body: JSON.stringify({ "status": confirmedText }),
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const response = await fetch(
+      confirmReportDataUrl + currentSelectedReport._id,
+      {
+        method: "PUT",
+        body: JSON.stringify({ "status": confirmedText }),
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    await reloadCurrentReportViewer();
+    await reloadCurrentReportViewerAndMetaContainer(currentSelectedReport._id);
   } catch (error) {
     console.error('Fetch error:', error);
   }
@@ -232,40 +266,31 @@ async function handleUnconfirmReport(event) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    await reloadCurrentReportViewer();
+    await reloadCurrentReportViewerAndMetaContainer(currentSelectedReport._id);
   } catch (error) {
     console.error('Fetch error:', error);
   }
 }
 
-async function handleMetaContainerClick(event) {
-  currentSelectedMetaContainer = this;
-  let reportid = this.getAttribute("reportid");
-
-  if (!reportid) { return; }
-
-  try {
-    const response = await fetch(`${getReportDataUrl}${reportid}`);
-
-    if (!response.ok) {
-      throw new Error(`Error getting report id=${reportid} from server. Status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    currentSelectedReport = data.data;
-    console.log(currentSelectedReport);
-
-    let viewScroll = document.getElementById("y-scroll-right");
-    let viewContainer = generateReportViewerHtml(data.data);
-    viewScroll.innerHTML = viewContainer ? viewContainer : "Error viewing data!";
-
-    // buttons
-    document.getElementById("delete-report").addEventListener("click", handleDeleteReport);
-    document.getElementById("confirm-report").addEventListener("click", handleConfirmReport);
-    document.getElementById("unconfirm-report").addEventListener("click", handleUnconfirmReport);
-  } catch (error) {
-    console.error('Fetch error:', error);
+async function showSelectedReportData(event, data = null) {
+  // Use event delegation to make sure the outer div meta container is selected
+  let reportid = event.currentTarget.getAttribute("reportid");
+  if (!reportid) return;
+  // Get report data if not provided
+  if (!data) {
+    data = await getReportDataByReportId(reportid)
+    if (!data) return;
   }
+  console.log(data)
+  currentSelectedReport = data;
+  // Construct the view
+  let viewScroll = document.getElementById("y-scroll-right");
+  let viewContainer = generateReportViewerHtml(data);
+  viewScroll.innerHTML = viewContainer ? viewContainer : "Error viewing data!";
+
+  document.getElementById("delete-report").addEventListener("click", handleDeleteReport);
+  document.getElementById("confirm-report").addEventListener("click", handleConfirmReport);
+  document.getElementById("unconfirm-report").addEventListener("click", handleUnconfirmReport);
 }
 
 let queryUserId = "";
@@ -331,7 +356,7 @@ async function startupViewerPage() {
   let metaScroll = document.getElementById("y-scroll-left");
   
   data.forEach(reportMeta => {
-    console.log(reportMeta)
+    // console.log(reportMeta)
     let metaContainer = generateMetaContainerHtml(reportMeta);
     metaScroll.innerHTML += metaContainer;
   });
@@ -339,7 +364,16 @@ async function startupViewerPage() {
   const metaContainers = document.querySelectorAll('.meta-container');
   
   metaContainers.forEach(element => {
-    element.addEventListener('click', handleMetaContainerClick);
+    element.addEventListener('click', function(event) {
+      // Toggle selection effect
+      if (currentSelectedMetaContainer) {
+        currentSelectedMetaContainer.classList.remove("bg-blue-200");
+      }
+      currentSelectedMetaContainer = event.currentTarget;
+      currentSelectedMetaContainer.classList.add("bg-blue-200");
+      // Handle creating view
+      showSelectedReportData(event)
+    });
   });
   
   // Select the first meta container by default:
