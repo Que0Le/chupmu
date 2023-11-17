@@ -7,6 +7,7 @@ const classPrefixRegex = /(cm_)\S*/;
 const cmPopupContentClassname = "cm-popup-content";
 const cmPopupContainerClassname = "cm-popup-container";
 const cmPopupPrefixId = "cm-popup-userid-";
+const maxTryFindArticleDom = 10;
 
 const tag_color = {
   "thong-minh": { color: "#aad688", tid: "14" },
@@ -108,6 +109,25 @@ let currentPickingElement;
 // when remove highlight effect on howevered and picked items
 let encounterHovers = 0;
 
+/**
+ * Picking article DOM is not easy. 
+ * We enforce this function to help only and always selecting article DOM
+ * @param {Dom element} currentElement 
+ * @returns 
+ */
+function findArticleElement(currentElement) {
+  let parentElement = currentElement;
+  for (let i = 0; i < maxTryFindArticleDom; i++) {
+    if (!parentElement) return null;
+    if (parentElement.tagName.toLowerCase() == 'article' &&
+      parentElement.classList.contains('message')) {
+      return parentElement;
+    }
+    parentElement = parentElement.parentElement;
+  }
+  return null;
+}
+
 function togglePicker() {
   pickerActive = !pickerActive;
   if (pickerActive) {
@@ -128,12 +148,14 @@ function handleElementMouseOver(event) {
   if (!pickerActive) {
     return;
   }
+  let articleElement = findArticleElement(event.target);
+  let potentialPickingElement = articleElement ? articleElement : event.target;
 
-  if (currentPickingElement !== event.target) {
+  if (currentPickingElement !== potentialPickingElement) {
     if (currentPickingElement && !pickedElements.includes(currentPickingElement)) {
       currentPickingElement.style.outline = '';
     }
-    currentPickingElement = event.target;
+    currentPickingElement = potentialPickingElement;
     if (!pickedElements.includes(currentPickingElement)) {
       currentPickingElement.style.outline = 'red solid 2px';
     }
@@ -361,7 +383,6 @@ const handleMessage = async (message) => {
   } else if (message.reference === "requestExtractUserIdFromUrl") {
     console.log(`B->C: ${message.reference}: ${message.message.currentPickedUrl}`);
     let userid = "";
-    console.log({regexProfileLink: regexProfileLink})
     const match = message.message.currentPickedUrl.match(regexProfileLink);
     if (match && match.length > 1) {
       userid = match[1].toString();
