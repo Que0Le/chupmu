@@ -109,13 +109,13 @@ function generateMetaContainerHtml(reportMeta) {
   <div class="bg-white hover:bg-blue-100 rounded-lg shadow p-4 mb-4 meta-container" reportid="${reportMeta._id}">
     <h2 class="text-lg font-semibold mb-2">${reportMeta.reported_user}</h2>
     <div class="cont-report-platform">
-      <p>${reportMeta.platformUrl}</p>
+    <p>${reportMeta.platformUrl}</p>
     </div>
-    <p class="cont-platform>${reportMeta.platformUrl}</p>
-    <p class="cont-creation-details>${creationDetails}</p>
     <div class="cont-report-status">
       ${statusHtml}
     </div>
+    <p class="cont-platform>${reportMeta.platformUrl}</p>
+    <p class="cont-creation-details>${creationDetails}</p>
   </div>`;
   return innerHtml;
 }

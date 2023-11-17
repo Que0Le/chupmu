@@ -8,6 +8,8 @@ from models.admin import Admin
 from models.student import Student
 from tests.conftest import mock_no_authentication
 
+# Run from project folder, same level as main.py and app.py
+# python -m pytest ./tests/test_mock_database.py -s  -W ignore::DeprecationWarning
 
 class TestMockAuthentication:
     @classmethod
@@ -29,7 +31,7 @@ class TestMockAuthentication:
             gpa=4.0,
         ).create()
 
-        response = await client_test.get("student")
+        response = await client_test.get("/student/")
 
         assert response.status_code == 200
 
@@ -47,6 +49,6 @@ class TestMockAuthentication:
             gpa=4.0,
         ).create()
 
-        response = await client_test.get("student")
+        response = await client_test.get("/student/")
 
         assert response.status_code == 200

@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 #     dbSource: str
 #     onlineRecordUrlPrefix: str
 
-# TODO: update schema_extra for each class after update
+# TODO: update json_schema_extra for each class after update
 
 class DataUrlPayload(BaseModel):
     dataUrl: str
@@ -34,7 +34,7 @@ class ReportDataMeta(Document):
     # data_url_array: list[DataUrlPayload]
 
     # class Config:
-    #     schema_extra = {
+    #     json_schema_extra = {
     #         "example": {
     #             "reporter": "r1",
     #             "reported_user": "u1",
@@ -61,7 +61,7 @@ class ReportData(Document):
     data_url_array: list[DataUrlPayload]
 
     # class Config:
-    #     schema_extra = {
+    #     json_schema_extra = {
     #         "example": {
     #             "reporter": "r1",
     #             "reported_user": "u1",
@@ -116,7 +116,7 @@ class Response(BaseModel):
     data: Optional[Any]
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "status_code": 200,
                 "response_type": "success",

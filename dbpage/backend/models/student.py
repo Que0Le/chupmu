@@ -12,7 +12,7 @@ class Student(Document):
     gpa: float
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "fullname": "Abdulazeez Abdulazeez Adeshina",
                 "email": "abdul@school.com",
@@ -37,7 +37,7 @@ class UpdateStudentModel(BaseModel):
         name = "student"
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "fullname": "Abdulazeez Abdulazeez",
                 "email": "abdul@school.com",
@@ -55,7 +55,7 @@ class Response(BaseModel):
     data: Optional[Any]
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "status_code": 200,
                 "response_type": "success",
