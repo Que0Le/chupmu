@@ -257,33 +257,26 @@ async function applyLabel(data) {
         animation: dash_${i}_${j} 5s infinite;
       }`;
       // Count tags that we have color code available
-      let available_tag_colors =  [];
+      let available_tag_colors = [];
       reportedUser.tags.forEach(tag => {
         if (tag_color[tag]) {
           available_tag_colors.push(tag_color[tag])
         }
       });
       if (available_tag_colors.length == 0) {
-        // we don't have pre-defined  color. Use default:
+        // we don't have pre-defined color. Use default:
         dashKeyframes += `100% {border-color: ${default_tag_color};}\n`;
       } else {
+        // Add default color if at least one tag is unknown
         if (available_tag_colors.length < reportedUser.tags.length) {
-          available_tag_colors.push({color: default_tag_color});
+          available_tag_colors.push({ color: default_tag_color });
         }
         let stepWide = Math.floor(100 / available_tag_colors.length)
         for (let k = 0; k < available_tag_colors.length; k++) {
           dashKeyframes += `${k * stepWide}% {border-color: ${available_tag_colors[k].color};}\n`;
         }
       }
-
-      // let stepWide = Math.floor(100 / reportedUser.tags.length)
-      // for (let k = 0; k < reportedUser.tags.length; k++) {
-      //   let thisColor = tag_color[reportedUser.tags[k]] ?
-      //     tag_color[reportedUser.tags[k]].color : default_tag_color;
-      //   dashKeyframes += `${k * stepWide}% {border-color: ${thisColor};}\n`;
-      // }
       dashKeyframes += "}";
-      console.log(dashKeyframes)
       customCss += `${dashKeyframes}\n${dashClass}\n`;
 
       // Add CSS class highlight effects
@@ -291,62 +284,9 @@ async function applyLabel(data) {
       section.classList.add(`${classPrefix}_${i}_${j}`);
       // Add popup
       section.innerHTML += generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl);
-      // break;
     }
   }
 
-  customCss += `${cssStringPopup}`;
-  const styleElement = document.createElement("style");
-  styleElement.setAttribute("id", styleElementId);
-  styleElement.innerText = customCss;
-  document.head.appendChild(styleElement);
-}
-
-async function applyLabel2(data) {
-  // Cleanup
-  removeElementById(styleElementId);
-  let customCss = "";
-
-  // Add css class to element
-  let reportedUsers = data.reportedUsers;
-  let dbOnlineUserFilesQueryUrl = data.dbOnlineUserFilesQueryUrl;
-  let udElements = document.getElementsByClassName("user-details");
-  for (let i = 0; i < udElements.length; i++) {
-    let ud = udElements[i];
-    let a = ud.getElementsByTagName("a")[0];
-    if (!a) continue;
-    let profileLink = a.href
-    const match = profileLink.match(regexProfileLink);
-    if (match && match.length > 1) {
-      const userid = match[1].toString();
-      for (let j = 0; j < reportedUsers.length; j++) {
-        let reportedUser = reportedUsers[j];
-        if (reportedUser.userid === userid) {
-          // Create CSS class if needed
-          let stepWide = Math.floor(100 / reportedUser.tags.length)
-          let dashKeyframes = `@keyframes dash_${i}_${j} {\n`;
-          let dashClass = `.${classPrefix}_${i}_${j} {
-            border: 4px dashed white;
-            animation: dash_${i}_${j} 5s infinite;
-          }`
-          for (let k = 0; k < reportedUser.tags.length; k++) {
-            let thisColor = tag_color[reportedUser.tags[k]] ?
-              tag_color[reportedUser.tags[k]].color : default_tag_color;
-            dashKeyframes += `${k * stepWide}% {border-color: ${thisColor};}\n`;
-          }
-          dashKeyframes += "}";
-          customCss += `${dashKeyframes}\n${dashClass}\n`;
-
-          // Add CSS class highlight effects
-          ud.classList.add(`${cmPopupContainerClassname}`);
-          ud.classList.add(`${classPrefix}_${i}_${j}`);
-          // Add popup
-          ud.innerHTML += generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl);
-          // break;
-        }
-      }
-    }
-  }
   customCss += `${cssStringPopup}`;
   const styleElement = document.createElement("style");
   styleElement.setAttribute("id", styleElementId);
@@ -406,11 +346,6 @@ const handleMessage = async (message) => {
     if (match && match.length > 1) {
       userid = match[1].toString();
     }
-    // try {
-    //   const response = await browser.runtime.sendMessage({ "userid": userid });
-    // } catch (error) {
-    //   console.log(`Error: ${error}`);
-    // }
     sendMsgToBackground("responseExtractUserIdFromUrl", { "userid": userid });
   } else if (message.reference === "togglePicker") {
     console.log(`B->C: ${message.reference}`);
