@@ -65,6 +65,7 @@ function generateStatusHtml(reportStatus) {
   return statusHtml;
 }
 
+// TODO: re-add note entry
 function generateUserRecordHtml(uid, platform, relatedPlatforms, tags, status) {
   let tagsHtml = "";
   let relatedPlatformsHtml = "";

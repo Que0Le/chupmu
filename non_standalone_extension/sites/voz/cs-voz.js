@@ -89,8 +89,8 @@ async function sendMsgToBackground(reference, message) {
 function generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl) {
   let tagsString = reportedUser.tags.join(", ");
   let onlineUserFileString = `${dbOnlineUserFilesQueryUrl}`
-    + `?userid=${reportedUser.userid}`
-    + `&platform=${reportedUser.platformUrl}`;
+    + `?uid=${reportedUser.userid}`
+    + `&platform-url=${reportedUser.platformUrl}`;
   let innerHtml = `
   <div class="${cmPopupContentClassname}" id="${cmPopupPrefixId}${reportedUser.userid}">
     <span>UserId: <a href="${onlineUserFileString}">${reportedUser.userid}</a></span>

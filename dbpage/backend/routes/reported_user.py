@@ -106,7 +106,6 @@ async def add_many_reported_users_to_db(new_reported_users: List[ReportedUser]):
     response_model=Response
 )
 async def get_many_confirmed_users_by_uid_and_platformurl(ruqs: List[ReportedUserQuery] = Body(...)):
-    print(ruqs)
     reported_users = await retrieve_many_confirmed_users_by_uid_and_platformurl(ruqs)
     # if reported_users:
     return {
