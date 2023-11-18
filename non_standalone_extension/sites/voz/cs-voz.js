@@ -11,6 +11,7 @@ const maxTryFindArticleDom = 10;
 
 const tag_color = {
   "thong-minh": { color: "#aad688", tid: "14" },
+  "private-list": { color: "red", tid: "15" },
   "gioi": { color: "#5ea758", tid: "1" },
   "biet-nhieu": { color: "#47894b", tid: "2" },
   "tri-thuc": { color: "#00e6ff", tid: "3" },
@@ -92,9 +93,7 @@ function generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl) {
     + `&platform=${reportedUser.platformUrl}`;
   let innerHtml = `
   <div class="${cmPopupContentClassname}" id="${cmPopupPrefixId}${reportedUser.userid}">
-    <p>UserId: 
-    <a href="${onlineUserFileString}">${reportedUser.userid}</a><br>
-    </p>
+    <span>UserId: <a href="${onlineUserFileString}">${reportedUser.userid}</a></span>
     <p>Tags: ${tagsString}</p>
     <div>Note: ${reportedUser.note}</div>
   </div>
@@ -245,34 +244,54 @@ async function applyLabel(data) {
   let allSections = document.querySelectorAll('section.message-user');
   for (let i = 0; i < allSections.length; i++) {
     section = allSections[i];
-    let aUsernames = document.querySelectorAll('a.username');
+    let aUsernames = section.querySelectorAll('a.username');
     if (aUsernames.length == 0) continue;
     const userid = aUsernames[0].href.split('.').pop().slice(0, -1);
     for (let j = 0; j < reportedUsers.length; j++) {
       let reportedUser = reportedUsers[j];
-      if (reportedUser.userid === userid) {
-        // Create CSS class if needed
-        let stepWide = Math.floor(100 / reportedUser.tags.length)
-        let dashKeyframes = `@keyframes dash_${i}_${j} {\n`;
-        let dashClass = `.${classPrefix}_${i}_${j} {
-          border: 4px dashed white;
-          animation: dash_${i}_${j} 5s infinite;
-        }`
-        for (let k = 0; k < reportedUser.tags.length; k++) {
-          let thisColor = tag_color[reportedUser.tags[k]] ?
-            tag_color[reportedUser.tags[k]].color : default_tag_color;
-          dashKeyframes += `${k * stepWide}% {border-color: ${thisColor};}\n`;
+      if (reportedUser.userid !== userid) continue;
+      // Create CSS class if needed
+      let dashKeyframes = `@keyframes dash_${i}_${j} {\n`;
+      let dashClass = `.${classPrefix}_${i}_${j} {
+        border: 4px dashed white;
+        animation: dash_${i}_${j} 5s infinite;
+      }`;
+      // Count tags that we have color code available
+      let available_tag_colors =  [];
+      reportedUser.tags.forEach(tag => {
+        if (tag_color[tag]) {
+          available_tag_colors.push(tag_color[tag])
         }
-        dashKeyframes += "}";
-        customCss += `${dashKeyframes}\n${dashClass}\n`;
-
-        // Add CSS class highlight effects
-        section.classList.add(`${cmPopupContainerClassname}`);
-        section.classList.add(`${classPrefix}_${i}_${j}`);
-        // Add popup
-        section.innerHTML += generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl);
-        // break;
+      });
+      if (available_tag_colors.length == 0) {
+        // we don't have pre-defined  color. Use default:
+        dashKeyframes += `100% {border-color: ${default_tag_color};}\n`;
+      } else {
+        if (available_tag_colors.length < reportedUser.tags.length) {
+          available_tag_colors.push({color: default_tag_color});
+        }
+        let stepWide = Math.floor(100 / available_tag_colors.length)
+        for (let k = 0; k < available_tag_colors.length; k++) {
+          dashKeyframes += `${k * stepWide}% {border-color: ${available_tag_colors[k].color};}\n`;
+        }
       }
+
+      // let stepWide = Math.floor(100 / reportedUser.tags.length)
+      // for (let k = 0; k < reportedUser.tags.length; k++) {
+      //   let thisColor = tag_color[reportedUser.tags[k]] ?
+      //     tag_color[reportedUser.tags[k]].color : default_tag_color;
+      //   dashKeyframes += `${k * stepWide}% {border-color: ${thisColor};}\n`;
+      // }
+      dashKeyframes += "}";
+      console.log(dashKeyframes)
+      customCss += `${dashKeyframes}\n${dashClass}\n`;
+
+      // Add CSS class highlight effects
+      section.classList.add(`${cmPopupContainerClassname}`);
+      section.classList.add(`${classPrefix}_${i}_${j}`);
+      // Add popup
+      section.innerHTML += generatePopupHtml(reportedUser, dbOnlineUserFilesQueryUrl);
+      // break;
     }
   }
 

@@ -55,34 +55,33 @@ Popup: https://github.com/gorhill/uBlock/blob/master/src/popup-fenix.html.<br>Co
     <!DOCTYPE html>
     <html>
     <head>
-    <style>
-        @keyframes dash {
-        0% {
-            border-color: blue;
-        }
-        33.33% {
-            border-color: red;
-        }
-        66.67% {
-            border-color: green;
-        }
-        100% {
-            border-color: blue;
-        }
-        }
-
-        .dashed-border {
-        width: 100px;
-        height: 100px;
-        border: 2px dashed blue;
-        animation: dash 3s infinite;
-        }
-    </style>
+        <style>
+            @keyframes dash {
+                0% {
+                    border-color: blue;
+                }
+                33.33% {
+                    border-color: red;
+                }
+                66.67% {
+                    border-color: green;
+                }
+                100% {
+                    border-color: blue;
+                }
+            }
+            .dashed-border {
+                width: 100px;
+                height: 100px;
+                border: 2px dashed blue;
+                animation: dash 3s infinite;
+            }
+        </style>
     </head>
     <body>
-    <div class="dashed-border"></div>
+        <div class="dashed-border"></div>
     </body>
-    </html>wm
+    </html>
     ```
     </details>
 
