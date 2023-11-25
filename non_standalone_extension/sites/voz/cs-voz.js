@@ -324,23 +324,21 @@ const handleMessage = async (message) => {
     message.target !== "chupmu_content_script") {
     return;
   }
+  console.log(`Request B->C: ${message.reference}`, message.message);
 
   if (message.reference === "toggleLabelify") {
-    console.log("Request B->C: toggleLabelify ...");
     if (message.message === "label") {
-      console.log("command: label");
+      console.log("... command: label");
       const userids = await getAllUserIdsOnPage();
       await askBackgroundForRecords(userids);
     } else if (message.message === "removeLabel") {
-      console.log("command: removeLabel");
+      console.log("... command: removeLabel");
       handleRemoveLabel();
     }
   } else if (message.reference === "responseRecords") {
     /* Data is an array of db's meta, and records */
-    console.log(`Get responseRecords records data from background: `, message.message);
     applyLabel(message.message);
   } else if (message.reference === "requestExtractUserIdFromUrl") {
-    console.log(`B->C: ${message.reference}: ${message.message.currentPickedUrl}`);
     let userid = "";
     const match = message.message.currentPickedUrl.match(regexProfileLink);
     if (match && match.length > 1) {
@@ -348,7 +346,6 @@ const handleMessage = async (message) => {
     }
     sendMsgToBackground("responseExtractUserIdFromUrl", { "userid": userid });
   } else if (message.reference === "togglePicker") {
-    console.log(`B->C: ${message.reference}`);
     togglePicker();
   } else if (message.reference === "requestPickedItems") {
     let imgDescs = [];
@@ -367,13 +364,10 @@ const handleMessage = async (message) => {
     });
     sendMsgToBackground("responsePickedItems", { imgDescs: imgDescs });
   } else if (message.reference === "clearPickedItems") {
-    console.log("B->C: clearPickedItems");
     removePickedItem();
   } else if (message.reference === "pickCurrentDomElement") {
-    console.log(`B->C: ${message.reference}`);
     handleElementClick(null);
   } else if (message.reference === "endPickSession") {
-    console.log(`B->C: ${message.reference}`);
     document.removeEventListener('mouseover', handleElementMouseOver);
     document.removeEventListener('click', handleElementClick);
     removeHoverHighlight();

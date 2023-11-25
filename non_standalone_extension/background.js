@@ -133,7 +133,6 @@ async function handleLabelifySignal(tab) {
   // const [tab] = await browser.tabs.query({
   //   active: true, windowId: browser.windows.WINDOW_ID_CURRENT
   // });
-  console.log(tab)
 
   await toggleLabelify(tab, currentUrl, contentScriptPath);
 }
@@ -173,9 +172,9 @@ async function connected(p) {
         console.log("B: unknown message: ", message);
         return;
       }
+      console.log(`Request C->B: ${message.reference}`, message.message);
 
       if (message.reference == "requestRecords") {
-        console.log("Request C->B: requestRecords", message.message);
         try {
           const reportedUsers = await get_reported_users_from_remote(
             dbOnlineQueryUrl,
@@ -183,7 +182,7 @@ async function connected(p) {
             message.message.userids,
             message.message.thisPlatformUrl
           );
-          console.log(reportedUsers);
+          console.log("Server returned reportedUsers: ", reportedUsers);
           await sendMsgToContent(sender.sender.tab.id, "responseRecords", {
             reportedUsers: reportedUsers,
             dbOnlineUserFilesQueryUrl: dbOnlineUserFilesQueryUrl
@@ -228,7 +227,7 @@ async function connected(p) {
           console.error("Error querying active tab: ", error);
         }
       } else if (message.reference === "responseExtractUserIdFromUrl") {
-        console.log(`Request C->B: ${message.reference}`, message.message);
+        // console.log(`Request C->B: ${message.reference}`, message.message);
         suggestedUserId = message.message.userid;
         // Get some user data
         const reportedUsers = await get_reported_users_from_remote(
@@ -250,7 +249,6 @@ async function connected(p) {
 
       }
     });
-    console.log(p)
     portChannelContents[p.sender.tab.id.toString()] = p;
   } else if (p && p.name === "port-sidebar") {
     portChannelSidebar = p;
@@ -260,8 +258,9 @@ async function connected(p) {
         console.log("Warning B: portChannelSidebar received message from unknown source: ", message);
         return;
       }
+      console.log(`SB->B: ${message.reference}`, message.message);
       if (message.reference === "getCurrentPickedUrl") {
-        console.log(`SB->B: `, message.reference);
+        // console.log(`SB->B: `, message.reference);
         if (currentPickedUrl === "") return;
         // Check if we support this url
         const [currentUrl, supportedUrl, contentScriptPath] = await
@@ -290,16 +289,16 @@ async function connected(p) {
       } else if (message.reference === "submitNewUser") {
         handleSubmitNewUserToDb(message.message);
       } else if (message.reference === "togglePicker") {
-        console.log(`SB->B: `, message.reference);
+        // console.log(`SB->B: `, message.reference);
         await sendMsgToContent(pickingTab.id, "togglePicker", {});
       } else if (message.reference === "requestPickedItems") {
-        console.log(`SB->B: `, message.reference);
+        // console.log(`SB->B: `, message.reference);
         await sendMsgToContent(pickingTab.id, "requestPickedItems", {});
       } else if (message.reference === "clearPickedItems") {
-        console.log(`SB->B: `, message.reference);
+        // console.log(`SB->B: `, message.reference);
         await sendMsgToContent(pickingTab.id, "clearPickedItems", {});
       } else if (message.reference === "endPickSession") {
-        console.log(`SB->B: `, message.reference);
+        // console.log(`SB->B: `, message.reference);
         handleEndPickingSession();
       }
     });

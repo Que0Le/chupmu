@@ -175,7 +175,6 @@ async function toggleLabelify(tab, currentUrl, contentScriptPath) {
   
   // Use async/await to get the page action title
   const title = await browser.pageAction.getTitle({ tabId: tab.id });
-  console.log(title, tab, portChannelContents)
 
   if (title === TITLE_APPLY) {
     await toggleLabel();
