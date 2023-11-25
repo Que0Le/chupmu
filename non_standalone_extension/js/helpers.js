@@ -152,7 +152,7 @@ async function toggleLabelify(tab, currentUrl, contentScriptPath) {
     // if (!loadedContentScriptOnTabIds.includes(tab.id)) {
     //   await loadContentScriptIfHadnot(tab.id, currentUrl, contentScriptPath);
     // }
-    portChannelContent.postMessage({
+    portChannelContents[tab.id.toString()].postMessage({
       info: "chupmu_extension",
       reference: "toggleLabelify",
       source: "chupmu_background_script",
@@ -160,11 +160,11 @@ async function toggleLabelify(tab, currentUrl, contentScriptPath) {
       message: "label",
     });
   }
-
+  
   async function removeLabel() {
     browser.pageAction.setIcon({ tabId: tab.id, path: "icons/off.svg" });
     browser.pageAction.setTitle({ tabId: tab.id, title: TITLE_APPLY });
-    portChannelContent.postMessage({
+    portChannelContents[tab.id.toString()].postMessage({
       info: "chupmu_extension",
       reference: "toggleLabelify",
       source: "chupmu_background_script",
@@ -172,9 +172,10 @@ async function toggleLabelify(tab, currentUrl, contentScriptPath) {
       message: "removeLabel",
     });
   }
-
+  
   // Use async/await to get the page action title
   const title = await browser.pageAction.getTitle({ tabId: tab.id });
+  console.log(title, tab, portChannelContents)
 
   if (title === TITLE_APPLY) {
     await toggleLabel();

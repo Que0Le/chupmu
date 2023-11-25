@@ -3,6 +3,7 @@
 let dbOnlineQueryUrl = "";
 let dbOnlineUserFilesQueryUrl = "";
 let isPickingScreenshot = false;
+let pickingTab = null;
 
 /* Set default Setting */
 async function initializeConfig() {
@@ -53,6 +54,7 @@ async function initializePageActionAllSupportedTabs() {
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/
 // WebExtensions/Content_scripts#connection-based_messaging
 let portChannelContent;
+let portChannelContents = {};
 let portChannelSidebar;
 
 /**
@@ -62,9 +64,9 @@ let portChannelSidebar;
  * @param {Object} message - The message to send.
  * @returns {Promise} - A Promise that resolves when the message is sent.
  */
-async function sendMsgToContent(reference, message) {
+async function sendMsgToContent(tabId, reference, message) {
   return new Promise((resolve) => {
-    portChannelContent.postMessage({
+    portChannelContents[tabId.toString()].postMessage({
       info: MSG_EXT_NAME,
       reference: reference,
       source: MSG_TARGET_BACKGROUND,
@@ -108,13 +110,14 @@ let suggestedTags = [];
       if (info.menuItemId === "chupmu_pick_this_user") {
         currentPickedUrl = info.linkUrl;
         isPickingScreenshot = true;
+        pickingTab = tab;
         await browser.sidebarAction.open();
         // Wait for sidebar to open and establish the com
         // await new Promise(resolve => setTimeout(resolve, 500));
         await sendMsgToSidebar("forceReloadSidebar", {});
         await updateVisibilityMenuItem("chupmu_pick_this_element", true);
       } else if (info.menuItemId === "chupmu_pick_this_element") {
-        await sendMsgToContent("pickCurrentDomElement", {});
+        await sendMsgToContent(tab.id, "pickCurrentDomElement", {});
       }
     });
   } catch (error) {
@@ -122,14 +125,15 @@ let suggestedTags = [];
   }
 })();
 
-async function handleLabelifySignal() {
+async function handleLabelifySignal(tab) {
   const [currentUrl, supportedUrl, contentScriptPath] = await
     isUrlSupported(await getCurrentTabUrl());
   if (!supportedUrl) return;
 
-  const [tab] = await browser.tabs.query({
-    active: true, windowId: browser.windows.WINDOW_ID_CURRENT
-  });
+  // const [tab] = await browser.tabs.query({
+  //   active: true, windowId: browser.windows.WINDOW_ID_CURRENT
+  // });
+  console.log(tab)
 
   await toggleLabelify(tab, currentUrl, contentScriptPath);
 }
@@ -140,8 +144,9 @@ async function handleEndPickingSession() {
   suggestedUserId = "";
   suggestedPlatformUrl = "";
   suggestedTags = [];
-  await sendMsgToContent("endPickSession", {});
+  await sendMsgToContent(pickingTab.id, "endPickSession", {});
   await updateVisibilityMenuItem("chupmu_pick_this_element", false);
+  pickingTab = null;
 }
 
 /**
@@ -150,14 +155,16 @@ async function handleEndPickingSession() {
  * In this sample extension, there is only one registered command: "Ctrl+Shift+U".
  * On Mac, this command will automatically be converted to "Command+Shift+U".
  */
-browser.commands.onCommand.addListener(handleLabelifySignal);
+browser.commands.onCommand.addListener(handleLabelifySignal); //TODO: get current tab
 /* The same if the pageaction icon is clicked */
-browser.pageAction.onClicked.addListener(handleLabelifySignal);
+browser.pageAction.onClicked.addListener((tab, OnClickData) => handleLabelifySignal(tab));
 
 async function connected(p) {
   if (p && p.name === "port-cs") {
-    portChannelContent = p;
-    portChannelContent.onMessage.addListener(async (message, sender) => {
+    // console.log(p)
+    // portChannelContent = p;
+    p.onMessage.addListener(async (message, sender) => {
+      // console.log(sender)
       if (
         message.info != "chupmu_extension" ||
         message.source != "chupmu_content_script" ||
@@ -177,7 +184,7 @@ async function connected(p) {
             message.message.thisPlatformUrl
           );
           console.log(reportedUsers);
-          await sendMsgToContent("responseRecords", {
+          await sendMsgToContent(sender.sender.tab.id, "responseRecords", {
             reportedUsers: reportedUsers,
             dbOnlineUserFilesQueryUrl: dbOnlineUserFilesQueryUrl
           });
@@ -243,6 +250,8 @@ async function connected(p) {
 
       }
     });
+    console.log(p)
+    portChannelContents[p.sender.tab.id.toString()] = p;
   } else if (p && p.name === "port-sidebar") {
     portChannelSidebar = p;
     console.log("Connected with sidebar");
@@ -266,7 +275,7 @@ async function connected(p) {
           await loadContentScriptIfHadnot(tab.id, currentUrl, contentScriptPath);
           // ... and ask CS to extract the userid from URL.
           // See "responseExtractUserIdFromUrl"
-          await sendMsgToContent("requestExtractUserIdFromUrl", {
+          await sendMsgToContent(pickingTab.id, "requestExtractUserIdFromUrl", {
             "currentPickedUrl": currentPickedUrl
           });
         } else {
@@ -282,13 +291,13 @@ async function connected(p) {
         handleSubmitNewUserToDb(message.message);
       } else if (message.reference === "togglePicker") {
         console.log(`SB->B: `, message.reference);
-        await sendMsgToContent("togglePicker", {});
+        await sendMsgToContent(pickingTab.id, "togglePicker", {});
       } else if (message.reference === "requestPickedItems") {
         console.log(`SB->B: `, message.reference);
-        await sendMsgToContent("requestPickedItems", {});
+        await sendMsgToContent(pickingTab.id, "requestPickedItems", {});
       } else if (message.reference === "clearPickedItems") {
         console.log(`SB->B: `, message.reference);
-        await sendMsgToContent("clearPickedItems", {});
+        await sendMsgToContent(pickingTab.id, "clearPickedItems", {});
       } else if (message.reference === "endPickSession") {
         console.log(`SB->B: `, message.reference);
         handleEndPickingSession();
