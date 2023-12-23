@@ -115,8 +115,8 @@ function generateMetaContainerHtml(reportMeta) {
     <div class="cont-report-status">
       ${statusHtml}
     </div>
-    <p class="cont-platform>${reportMeta.platformUrl}</p>
-    <p class="cont-creation-details>${creationDetails}</p>
+    <p class="cont-platform">${reportMeta.platformUrl}</p>
+    <p class="cont-creation-details">${creationDetails}</p>
   </div>`;
   return innerHtml;
 }
